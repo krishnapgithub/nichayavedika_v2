@@ -2,6 +2,7 @@
 
 import { Link } from "react-router-dom";
 import Header from "../components/Header.jsx";
+import weddingHero from "../images/wedding-hero.png";
 function Home() {
 
     const [likedProfiles, setLikedProfiles] = useState([]);
@@ -25,22 +26,58 @@ function Home() {
         <>
             <Header />
 
-            <main>
+            <main className="pt-28">
 
-                {/* Hero */}
-                <section className="bg-gradient-to-r from-red-600 to-pink-600 text-white">
-                    <div className="max-w-7xl mx-auto px-6 py-24">
-                        <h1 className="text-6xl font-bold">
-                            Find Your Perfect Life Partner
-                        </h1>
-                        <p className="mt-6 text-xl">
-                            Trusted Telugu Matrimony Platform
-                        </p>
+                {/* Hero */}                <section
+                    className="relative overflow-hidden text-white h-[50vh] flex items-center"
+                    style={{
+                        backgroundImage: `url(${weddingHero})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center right",
+                    }}
+                >
+                    {/* Dark maroon overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/90 to-[#800020]/10"></div>
+
+                    {/* Extra soft dark layer for readability */}
+                    <div className="absolute inset-0 bg-black/10"></div>
+
+                    <div className="relative z-10 max-w-7xl mx-auto px-6 py-6 w-full">
+                        <div className="max-w-2xl">
+                            <h1 className="text-6xl font-bold leading-tight">
+                                Find Your Perfect Life Partner
+                            </h1>
+
+                            <p className="mt-6 text-xl text-white/90">
+                                Trusted Telugu Matrimony Platform
+                            </p>
+
+                            <div className="mt-8 flex gap-4">
+                                <button
+                                    onClick={() =>
+                                        document
+                                            .getElementById("search-section")
+                                            ?.scrollIntoView({ behavior: "smooth" })
+                                    }
+                                    className="px-6 py-3 bg-amber-400 text-black rounded-xl font-semibold hover:bg-amber-300 transition"
+                                >
+                                    Search Now
+                                </button>
+
+                                <button
+                                    onClick={() => setIsRegisterOpen(true)}
+                                    className="px-6 py-3 border border-white rounded-xl hover:bg-white hover:text-[#800020] transition"
+                                >
+                                    Register Free
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
                 {/* Search */}
-                <div className="max-w-6xl mx-auto -mt-12 px-6">
+                
+                <div id="search-section" className="max-w-6xl mx-auto mt-0 px-6">
                     <div className="bg-white rounded-2xl shadow-xl p-6">
                         <div className="grid md:grid-cols-4 gap-4">
                             <select className="border p-3 rounded-lg">
@@ -62,9 +99,10 @@ function Home() {
                         </div>
                     </div>
                 </div>
+                
 
                 {/* Stats */}
-                <section className="nv-section bg-white">
+                <section className="pt-2 pb-10 bg-white">
                     <div className="max-w-7xl mx-auto px-6">
 
                         <h2 className="text-4xl font-bold text-center text-gray-900">
@@ -134,7 +172,7 @@ function Home() {
                     </div>
                 </section>
 
-                <section className="nv-section bg-gradient-to-b from-rose-50 to-white">
+                <section className="nv-section bg-gradient-to-b from-rose-50 to-white -mt -8">
                     <div className="max-w-7xl mx-auto px-6">
 
                         <h2 className="text-4xl font-bold text-center text-gray-900">

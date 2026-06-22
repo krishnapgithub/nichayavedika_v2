@@ -31,3 +31,12 @@
     .primary-btn:hover {
         background: #5c0017;
     }
+
+.nv-section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+overflow: hidden;
+overflow: auto;
+overflow-y: auto;

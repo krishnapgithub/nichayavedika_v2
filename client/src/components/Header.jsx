@@ -7,12 +7,17 @@ export default function Header() {
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
     return (
 
-        
-        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-
+        <div className="fixed top-0 left-0 w-full z-[9999]">
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
             </div>
+
+
+
+            <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+
+            
+            
 
             <div className="max-w-7xl mx-auto px-6">
 
@@ -111,6 +116,7 @@ export default function Header() {
                 isOpen={isRegisterOpen}
                 onClose={() => setIsRegisterOpen(false)}
             />
-        </header>
+            </header>
+        </div>
     );
 }
