@@ -1,6 +1,91 @@
 import Profile from "../models/Profile.js";
 import User from "../models/User.js";
 
+export const searchProfiles = async (req, res) => {
+    try {
+        const {
+            gender,
+            ageFrom,
+            ageTo,
+            caste,
+            subCaste,
+            education,
+            occupation,
+            city,
+            state,
+            page = 1,
+            limit = 10,
+        } = req.query;
+
+        //const filter = {
+          //  status: "approved",
+        //};
+
+        const filter = {};
+
+        if (gender) filter.gender = gender;
+        if (caste) filter.caste = new RegExp(caste, "i");
+        if (subCaste) filter.subCaste = new RegExp(subCaste, "i");
+        if (education) filter.education = new RegExp(education, "i");
+        if (occupation) filter.occupation = new RegExp(occupation, "i");
+        if (city) filter.city = new RegExp(city, "i");
+        if (state) filter.state = new RegExp(state, "i");
+
+        if (ageFrom || ageTo) {
+            filter.age = {};
+            if (ageFrom) filter.age.$gte = Number(ageFrom);
+            if (ageTo) filter.age.$lte = Number(ageTo);
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const profiles = await Profile.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await Profile.countDocuments(filter);
+
+        res.json({
+            success: true,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / Number(limit)),
+            profiles,
+        });
+    } catch (error) {
+        console.error("Search profiles error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Search failed",
+        });
+    }
+};
+
+export const getProfileById = async (req, res) => {
+    try {
+        const profile = await Profile.findById(req.params.id);
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found",
+            });
+        }
+
+        res.json({
+            success: true,
+            profile,
+        });
+    } catch (error) {
+        console.error("Get profile by id error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch profile",
+        });
+    }
+};
 
 export const createProfile = async (req, res) => {
     try {

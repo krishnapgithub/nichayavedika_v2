@@ -10,11 +10,18 @@ const profileSchema = new mongoose.Schema(
         },
 
         fullName: String,
-        gender: String,
+        gender: {
+            type: String,
+            enum: ["Bride", "Groom"],
+        },
         dateOfBirth: Date,
         age: Number,
         height: String,
-        maritalStatus: String,
+
+        maritalStatus: {
+            type: String,
+            default: "Never Married",
+        },
 
         motherTongue: {
             type: String,

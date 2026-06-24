@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { Toaster } from "react-hot-toast";
 import "./index.css";
+import SearchProfiles from "./pages/SearchProfiles.jsx";
 
 
 
@@ -21,4 +22,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             },
         }} />
     </BrowserRouter>
+
 );

@@ -2,12 +2,13 @@
 import Home from "./pages/Home.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import CreateProfile from "./pages/CreateProfile.jsx";
+import SearchProfiles from "./pages/SearchProfiles.jsx";
 import SessionTimeout from "./components/SessionTimeout.jsx";
 
 function App() {
     const isLoggedIn = !!localStorage.getItem("user");
     console.log("SessionTimeout Loaded", isLoggedIn);
-    console.log("Krishna",  );
+    console.log("Rama & Sita loading..");
     
 
     const handleLogout = () => {
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/profile/:id" element={<ProfilePage />} />
                 <Route path="/create-profile" element={<CreateProfile />} />
+                <Route path="/search" element={<SearchProfiles />} />
             </Routes>
         </>
     );

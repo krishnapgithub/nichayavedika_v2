@@ -1,19 +1,17 @@
 import express from "express";
 import multer from "multer";
 
-
-
 import {
     createProfile,
     updateProfile,
     getProfiles,
     getProfileByUser,
-    checkProfileViewAccess
+    checkProfileViewAccess,
+    searchProfiles,
+    getProfileById,
 } from "../controllers/profileController.js";
 
 const router = express.Router();
-router.put("/users/:userId/profile-view", checkProfileViewAccess);
-
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -27,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 2 * 1024 * 1024, // 2MB
+        fileSize: 2 * 1024 * 1024,
     },
     fileFilter: (req, file, cb) => {
         const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
@@ -39,7 +37,6 @@ const upload = multer({
         cb(null, true);
     },
 });
-
 
 router.post(
     "/create",
@@ -53,15 +50,19 @@ router.put(
     updateProfile
 );
 
-
 router.get("/user/:userId", getProfileByUser);
+
+// Search profiles
+router.get("/search", searchProfiles);
+
 // 5 profile view restriction
 router.put("/users/:userId/profile-view", checkProfileViewAccess);
 
 router.get("/", getProfiles);
 
+router.get("/:id", getProfileById);
+
 // comment this for now
 // router.get("/:id", getProfileById);
-
 
 export default router;

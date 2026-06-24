@@ -9,6 +9,9 @@ export default function CreateProfile({ onClose }) {
 
     
     const [formData, setFormData] = useState({
+
+        user: "6a39857828603c403e7c71bf",
+
         fullName: "",
         gender: "",
         dateOfBirth: "",
@@ -39,10 +42,7 @@ export default function CreateProfile({ onClose }) {
         preferredAgeTo: "",
         preferredCaste: "",
         preferredLocation: "",
-        profile
-
-
-            : null,
+        profilePhoto     : null,
     });
 
         const [photoPreview, setPhotoPreview] = useState(null);
@@ -141,8 +141,10 @@ export default function CreateProfile({ onClose }) {
             alert("Profile Created Successfully");
             onClose();
         } catch (error) {
-            console.error(error);
-            alert("Failed to create profile");
+            console.log("FULL ERROR:", error);
+            console.log("BACKEND ERROR:", error.response?.data);
+
+            alert(error.response?.data?.message || "Failed to create profile");
         }
     };
     return (

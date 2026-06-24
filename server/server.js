@@ -5,6 +5,9 @@ import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import path from "path";
+
+import interestRoutes from "./routes/interestRoutes.js";
 
 
 dotenv.config({ path: "./.env" });
@@ -20,6 +23,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/uploads", express.static("uploads"));
+app.use("/api/interests", interestRoutes);
 
 import mongoose from "mongoose";
 
