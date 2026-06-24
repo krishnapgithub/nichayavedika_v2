@@ -1,0 +1,41 @@
+.create-profile-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    z-index: 99999;
+}
+
+.create-profile-modal {
+    position: relative;
+    width: min(1300px, 96vw);
+    max-height: 92vh;
+    background: white;
+    border-radius: 28px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,.25);
+}
+
+.create-profile-close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 999999;
+    
+}
+
+    .create-profile-close:hover {
+        color: #ffe4ec;
+    }

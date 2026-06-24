@@ -1,12 +1,46 @@
 ﻿import { useState } from "react";
+import axios from "axios";
 import OtpModal from "./OtpModal";
+
 export default function RegisterModal({ isOpen, onClose }) {
-    if (!isOpen) return null;
-
     const [isOtpOpen, setIsOtpOpen] = useState(false);
-    const [mobile, setMobile] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const [formData, setFormData] = useState({
+        fullName: "",
+        mobile: "",
+        email: "",
+        registeringFor: "",
+        gender: "",
+        password: "",
+    });
 
     if (!isOpen) return null;
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleRegister = async () => {
+        try {
+            setLoading(true);
+
+            await axios.post("${API_BASE_URL}/auth/register", formData);
+
+            await axios.post("${API_BASE_URL}/auth/send-otp", {
+                mobile: formData.mobile,
+            });
+
+            setIsOtpOpen(true);
+        } catch (error) {
+            alert(error.response?.data?.message || "Registration failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div
@@ -33,53 +67,78 @@ export default function RegisterModal({ isOpen, onClose }) {
                 </p>
 
                 <div className="mt-8 grid md:grid-cols-2 gap-4">
-                    <input className="border rounded-xl px-4 py-3" placeholder="Full Name" />
-
                     <input
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
                         className="border rounded-xl px-4 py-3"
-                        placeholder="Mobile Number"
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
+                        placeholder="Full Name"
                     />
 
-                    <input className="border rounded-xl px-4 py-3" placeholder="Email Address" />
+                    <input
+                        name="mobile"
+                        value={formData.mobile}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Mobile Number"
+                    />
 
-                    <select className="border rounded-xl px-4 py-3">
-                        <option>Registering For</option>
-                        <option>Self</option>
-                        <option>Son</option>
-                        <option>Daughter</option>
-                        <option>Brother</option>
-                        <option>Sister</option>
+                    <input
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Email Address"
+                    />
+
+                    <select
+                        name="registeringFor"
+                        value={formData.registeringFor}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                    >
+                        <option value="">Registering For</option>
+                        <option value="Self">Self</option>
+                        <option value="Son">Son</option>
+                        <option value="Daughter">Daughter</option>
+                        <option value="Brother">Brother</option>
+                        <option value="Sister">Sister</option>
                     </select>
 
-                    <select className="border rounded-xl px-4 py-3">
-                        <option>Gender</option>
-                        <option>Bride</option>
-                        <option>Groom</option>
+                    <select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                    >
+                        <option value="">Gender</option>
+                        <option value="Bride">Bride</option>
+                        <option value="Groom">Groom</option>
                     </select>
 
-                    <input className="border rounded-xl px-4 py-3" placeholder="Password" type="password" />
+                    <input
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Password"
+                        type="password"
+                    />
                 </div>
 
                 <button
-                    onClick={() => setIsOtpOpen(true)}
-                    className="w-full mt-6 bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017]"
+                    onClick={handleRegister}
+                    disabled={loading}
+                    className="w-full mt-6 bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017] disabled:opacity-60"
                 >
-                    Send OTP
+                    {loading ? "Please wait..." : "Register & Send OTP"}
                 </button>
-
-                <p className="text-center text-sm text-gray-500 mt-6">
-                    Already have an account?{" "}
-                    <span className="text-[#800020] font-semibold cursor-pointer">
-                        Login
-                    </span>
-                </p>
             </div>
+
             <OtpModal
                 isOpen={isOtpOpen}
                 onClose={() => setIsOtpOpen(false)}
-                mobile={mobile}
+                mobile={formData.mobile}
             />
         </div>
     );

@@ -1,5 +1,32 @@
-﻿export default function OtpModal({ isOpen, onClose, mobile }) {
+﻿import { useState } from "react";
+import axios from "axios";
+
+export default function OtpModal({ isOpen, onClose, mobile }) {
+    const [otp, setOtp] = useState("");
+    const [loading, setLoading] = useState(false);
+
     if (!isOpen) return null;
+
+    const handleVerifyOtp = async () => {
+        try {
+            setLoading(true);
+
+            const response = await axios.post(
+                "${API_BASE_URL}/auth/verify-otp",
+                {
+                    mobile,
+                    otp,
+                }
+            );
+
+            alert(response.data.message);
+            onClose();
+        } catch (error) {
+            alert(error.response?.data?.message || "OTP verification failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div
@@ -30,11 +57,17 @@
                         type="text"
                         maxLength="6"
                         placeholder="Enter 6 digit OTP"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
                         className="w-full text-center tracking-[10px] text-2xl border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#800020]"
                     />
 
-                    <button className="w-full mt-5 bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017]">
-                        Verify OTP
+                    <button
+                        onClick={handleVerifyOtp}
+                        disabled={loading || otp.length !== 6}
+                        className="w-full mt-5 bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017] disabled:opacity-60"
+                    >
+                        {loading ? "Verifying..." : "Verify OTP"}
                     </button>
 
                     <p className="text-center text-sm text-gray-500 mt-5">

@@ -9,7 +9,7 @@ const profileSchema = new mongoose.Schema(
             unique: true,
         },
 
-        dateOfBirth: String,
+        dateOfBirth: Date,
         age: Number,
         height: String,
 

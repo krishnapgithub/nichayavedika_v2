@@ -1,9 +1,38 @@
-﻿export default function LoginModal({ isOpen, onClose }) {
+﻿import { useState } from "react";
+import axios from "axios";
+
+export default function LoginModal({ isOpen, onClose }) {
+    const [mobile, setMobile] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
     if (!isOpen) return null;
+
+    const handleLogin = async () => {
+        try {
+            setLoading(true);
+
+            const response = await axios.post(
+                "${API_BASE_URL}/auth/login",
+                { mobile, password }
+            );
+
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+
+            alert("Login Successful");
+            console.log("Logged In User:", response.data.user);
+
+            onClose();
+        } catch (error) {
+            alert(error.response?.data?.message || "Login failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div
-            className="fixed top-0 left-0 w-screen h-screen z-[99999] bg-black/60 flex items-start justify-center px-4 pt-24"
+            className="fixed top-0 left-0 w-screen h-screen z-[99999] bg-black/60 flex items-start justify-center px-4 pt-20"
             onClick={onClose}
         >
             <div
@@ -28,27 +57,28 @@
                 <div className="mt-8 space-y-4">
                     <input
                         type="text"
-                        placeholder="Email or Mobile Number"
-                        className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#800020]"
+                        placeholder="Mobile Number"
+                        value={mobile}
+                        onChange={(e) => setMobile(e.target.value)}
+                        className="border rounded-xl px-4 py-3 w-full"
                     />
 
                     <input
                         type="password"
                         placeholder="Password"
-                        className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#800020]"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="border rounded-xl px-4 py-3 w-full"
                     />
 
-                    <button className="w-full bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017]">
-                        Login
+                    <button
+                        onClick={handleLogin}
+                        disabled={loading}
+                        className="w-full bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017] disabled:opacity-60"
+                    >
+                        {loading ? "Logging In..." : "Login"}
                     </button>
                 </div>
-
-                <p className="text-center text-sm text-gray-500 mt-6">
-                    New to NichayaVedika?{" "}
-                    <span className="text-[#800020] font-semibold cursor-pointer">
-                        Register Free
-                    </span>
-                </p>
             </div>
         </div>
     );

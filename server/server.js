@@ -19,6 +19,10 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profiles", profileRoutes);
+app.use("/uploads", express.static("uploads"));
+
+import mongoose from "mongoose";
+
 
 
 app.get("/", (req, res) => {

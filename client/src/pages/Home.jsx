@@ -1,11 +1,41 @@
-﻿import { useState } from "react";
+﻿
+
+import { useEffect, useState } from "react";
+import axios from "axios";
+import ProfileCard from "../components/ProfileCard";
 
 import { Link } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import weddingHero from "../images/wedding-hero.png";
+
+
+
+
 function Home() {
 
     const [likedProfiles, setLikedProfiles] = useState([]);
+    const [profiles, setProfiles] = useState([]);
+
+
+   
+
+    useEffect(() => {
+        fetchProfiles();
+    }, []);
+
+
+    const fetchProfiles = async () => {
+        try {
+            const response = await axios.get(
+                "${API_BASE_URL}/profiles"
+            );
+
+            setProfiles(response.data.profiles);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
 
     const toggleLike = (id) => {
         if (likedProfiles.includes(id)) {
@@ -15,258 +45,257 @@ function Home() {
         }
     };
 
-    const profiles = [
+    /*const profiles = [
         { id: 1, name: "Ravi Kumar", age: 28, gender: "Groom", caste: "Brahmin", location: "Hyderabad", image: "https://randomuser.me/api/portraits/men/32.jpg" },
         { id: 2, name: "Priya Sharma", age: 25, gender: "Bride", caste: "Kshatriya", location: "Chennai", image: "https://randomuser.me/api/portraits/men/32.jpg"  },
         { id: 3, name: "Ravi Kumar", age: 28, gender: "Groom", caste: "Brahmin", location: "Hyderabad", image: "https://randomuser.me/api/portraits/men/32.jpg" },
         { id: 4, name: "Priya Sharma", age: 25, gender: "Bride", caste: "Kshatriya", location: "Chennai", image: "https://randomuser.me/api/portraits/men/32.jpg" },
-    ];
+    ];*/
+
+    const displayProfiles = (profiles || []).slice(0, 4) //profiles.slice(0, 4);
+
+    while (displayProfiles.length < 4) {
+        displayProfiles.push({
+            _id: `dummy-${displayProfiles.length}`,
+            isDummy: true,
+        });
+    }
 
     return (
         <>
             <Header />
 
-            <main className="pt-28">
 
-                {/* Hero */}                <section
-                    className="relative overflow-hidden text-white h-[50vh] flex items-center"
-                    style={{
-                        backgroundImage: `url(${weddingHero})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center right",
-                    }}
-                >
-                    {/* Dark maroon overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/90 to-[#800020]/10"></div>
+            <div className="max-w-7xl mx-auto px-6">
+                <main className="pt-28">
+                    {/* Hero */}
+                   
+                    <section
+                        className="mt-5 relative overflow-hidden text-white h-[60vh] flex items-center rounded-[36px] shadow-2xl border border-rose-100 pb-20"
+                        style={{
+                            backgroundImage: `url(${weddingHero})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center right",
+                        }}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/90 to-[#800020]/10"></div>
+                        <div className="absolute inset-0 bg-black/10"></div>
 
-                    {/* Extra soft dark layer for readability */}
-                    <div className="absolute inset-0 bg-black/10"></div>
+                        <div className="relative z-10 px-10 py-8 w-full">
+                            <div className="max-w-2xl">
+                                <h1 className="text-6xl font-bold leading-tight">
+                                    Find Your Perfect Life Partner
+                                </h1>
 
-                    <div className="relative z-10 max-w-7xl mx-auto px-6 py-6 w-full">
-                        <div className="max-w-2xl">
-                            <h1 className="text-6xl font-bold leading-tight">
-                                Find Your Perfect Life Partner
-                            </h1>
+                                <p className="mt-6 text-xl text-white/90">
+                                    Trusted Telugu Matrimony Platform
+                                </p>
 
-                            <p className="mt-6 text-xl text-white/90">
-                                Trusted Telugu Matrimony Platform
-                            </p>
+                                <div className="mt-8 flex gap-4">
+                                    <button
+                                        onClick={() =>
+                                            document
+                                                .getElementById("search-section")
+                                                ?.scrollIntoView({ behavior: "smooth" })
+                                        }
+                                        className="px-6 py-3 bg-amber-400 text-black rounded-xl font-semibold hover:bg-amber-300 transition"
+                                    >
+                                        Search Now
+                                    </button>
 
-                            <div className="mt-8 flex gap-4">
-                                <button
-                                    onClick={() =>
-                                        document
-                                            .getElementById("search-section")
-                                            ?.scrollIntoView({ behavior: "smooth" })
-                                    }
-                                    className="px-6 py-3 bg-amber-400 text-black rounded-xl font-semibold hover:bg-amber-300 transition"
-                                >
-                                    Search Now
+                                    <button
+                                        onClick={() => setIsRegisterOpen(true)}
+                                        className="px-6 py-3 border border-white rounded-xl hover:bg-white hover:text-[#800020] transition"
+                                    >
+                                        Register Free
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Search */}
+                
+                    {/* Floating Search Card */}
+                    <div className="relative z-20 max-w-5xl mx-auto -mt-12 px-6">
+                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+
+                            <div className="grid md:grid-cols-4 gap-4">
+
+                                <select className="border border-gray-200 p-3 rounded-xl">
+                                    <option>Bride</option>
+                                    <option>Groom</option>
+                                </select>
+
+                                <select className="border border-gray-200 p-3 rounded-xl">
+                                    <option>Age</option>
+                                </select>
+
+                                <select className="border border-gray-200 p-3 rounded-xl">
+                                    <option>Caste</option>
+                                </select>
+
+                                <button className="bg-[#800020] text-white rounded-xl font-semibold hover:bg-[#5c0017] transition">
+                                    Search Profiles
                                 </button>
 
-                                <button
-                                    onClick={() => setIsRegisterOpen(true)}
-                                    className="px-6 py-3 border border-white rounded-xl hover:bg-white hover:text-[#800020] transition"
-                                >
-                                    Register Free
-                                </button>
                             </div>
                         </div>
                     </div>
-                </section>
-
-                {/* Search */}
-                
-                <div id="search-section" className="max-w-6xl mx-auto mt-0 px-6">
-                    <div className="bg-white rounded-2xl shadow-xl p-6">
-                        <div className="grid md:grid-cols-4 gap-4">
-                            <select className="border p-3 rounded-lg">
-                                <option>Bride</option>
-                                <option>Groom</option>
-                            </select>
-
-                            <select className="border p-3 rounded-lg">
-                                <option>Age</option>
-                            </select>
-
-                            <select className="border p-3 rounded-lg">
-                                <option>Caste</option>
-                            </select>
-
-                            <button className="bg-red-600 text-white rounded-lg">
-                                Search
-                            </button>
-                        </div>
-                    </div>
-                </div>
                 
 
                 {/* Stats */}
-                <section className="pt-2 pb-10 bg-white">
-                    <div className="max-w-7xl mx-auto px-6">
-
-                        <h2 className="text-4xl font-bold text-center text-gray-900">
-                            Success Stories
-                        </h2>
-
-                        <p className="text-center text-gray-500 mt-3 mb-12">
-                            Celebrating happy marriages made possible through NichayaVedika
-                        </p>
-
-                        <div className="grid md:grid-cols-3 gap-8">
-
-                            <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-3xl p-8 shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl text-center mb-4">💑</div>
-
-                                <h3 className="text-xl font-bold text-center">
-                                    Ravi & Priya
-                                </h3>
-
-                                <p className="text-gray-600 text-center mt-4">
-                                    "We found each other through NichayaVedika.
-                                    The platform made our search simple and meaningful.
-                                    Today we are happily married."
-                                </p>
-
-                                <p className="text-center text-red-600 font-semibold mt-4">
-                                    Married in 2025
-                                </p>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-3xl p-8 shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl text-center mb-4">❤️</div>
-
-                                <h3 className="text-xl font-bold text-center">
-                                    Suresh & Anjali
-                                </h3>
-
-                                <p className="text-gray-600 text-center mt-4">
-                                    "The profile verification process gave us confidence.
-                                    We connected with our families and everything worked perfectly."
-                                </p>
-
-                                <p className="text-center text-red-600 font-semibold mt-4">
-                                    Married in 2024
-                                </p>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-3xl p-8 shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl text-center mb-4">🌸</div>
-
-                                <h3 className="text-xl font-bold text-center">
-                                    Kiran & Deepika
-                                </h3>
-
-                                <p className="text-gray-600 text-center mt-4">
-                                    "We were looking for someone who shared our values.
-                                    NichayaVedika helped us find the perfect match."
-                                </p>
-
-                                <p className="text-center text-red-600 font-semibold mt-4">
-                                    Married in 2025
-                                </p>
-                            </div>
-
+                    {/* Success Stories */}
+                    <section className="mt-6 mb-2 bg-white rounded-[32px] shadow-lg border border-rose-100 p-8">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold text-[#800020]">
+                                Success Stories
+                            </h2>
+                            <p className="text-gray-600 mt-2">
+                                Beautiful journeys that began at NichayaVedika
+                            </p>
                         </div>
 
-                    </div>
-                </section>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[
+                                {
+                                    names: "Arjun & Sravya",
+                                    place: "Hyderabad",
+                                    text: "We found our perfect match through NichayaVedika. A truly blessed journey."
+                                },
+                                {
+                                    names: "Rahul & Anusha",
+                                    place: "Vijayawada",
+                                    text: "Simple, trusted, and family-friendly platform for Telugu matrimony."
+                                },
+                                {
+                                    names: "Kiran & Deepika",
+                                    place: "Warangal",
+                                    text: "Our families connected easily and everything felt very genuine."
+                                }
+                            ].map((story, index) => (
+                                <div
+                                    key={index}
+                                    className="relative overflow-hidden group bg-gradient-to-br from-rose-50 via-white to-amber-50 rounded-[28px] p-6 border border-rose-100 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
+                                >
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#800020]/10 via-amber-200/20 to-pink-200/30"></div>
 
-                <section className="nv-section bg-gradient-to-b from-rose-50 to-white -mt -8">
-                    <div className="max-w-7xl mx-auto px-6">
+                                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 snow-layer"></div>
 
-                        <h2 className="text-4xl font-bold text-center text-gray-900">
-                            Membership Plans
-                        </h2>
+                                    <div className="relative z-10">
+                                        <div className="w-16 h-16 mx-auto rounded-full bg-[#800020] text-white flex items-center justify-center text-2xl shadow-lg">
+                                            ❤
+                                        </div>
 
-                        <p className="text-center text-gray-500 mt-3 mb-12">
-                            Choose the plan that helps you find your perfect life partner
-                        </p>
+                                        <h3 className="mt-5 text-xl font-bold text-[#800020] text-center">
+                                            {story.names}
+                                        </h3>
 
-                        <div className="grid md:grid-cols-3 gap-8">
+                                        <p className="text-sm text-amber-700 text-center mt-1">
+                                            {story.place}
+                                        </p>
 
-                            {/* Free */}
-                            <div className="bg-white rounded-3xl shadow-lg p-8 border">
-                                <h3 className="text-2xl font-bold text-center">
-                                    Free
-                                </h3>
-
-                                <div className="text-center mt-4">
-                                    <span className="text-5xl font-bold">₹0</span>
+                                        <p className="mt-4 text-gray-600 text-center leading-relaxed">
+                                            “{story.text}”
+                                        </p>
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                    </section>
 
-                                <ul className="mt-8 space-y-3 text-gray-600">
-                                    <li>✓ Create Profile</li>
-                                    <li>✓ Browse Profiles</li>
-                                    <li>✓ View Limited Details</li>
-                                    <li>✓ Up to 5 Profile Views</li>
-                                    <li>✗ Contact Details Hidden</li>
-                                </ul>
+                    <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mt-6 mb-2">
 
-                                <button className="w-full mt-8 py-3 rounded-xl border border-red-600 text-red-600 font-semibold">
-                                    Get Started
-                                </button>
-                            </div>
+                    {/* Free */}
+                    <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#800020]">
 
-                            {/* Premium */}
-                            <div className="bg-red-600 text-white rounded-3xl shadow-2xl p-8 scale-105">
-                                <div className="text-center mb-2">
-                                    <span className="bg-white text-red-600 px-3 py-1 rounded-full text-sm font-semibold">
-                                        Most Popular
-                                    </span>
-                                </div>
+                        <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
+                            Free
+                        </h3>
 
-                                <h3 className="text-2xl font-bold text-center">
-                                    Premium
-                                </h3>
-
-                                <div className="text-center mt-4">
-                                    <span className="text-5xl font-bold">₹2,000</span>
-                                    <span>/3 Months</span>
-                                    
-                                </div>
-
-                                <ul className="mt-8 space-y-3">
-                                    <li>✓ Unlimited Profile Views</li>
-                                    <li>✓ Send Interests</li>
-                                    <li>✓ View Contact Details</li>
-                                    <li>✓ Priority Listing</li>
-                                    <li>✓ WhatsApp Support</li>
-                                </ul>
-
-                                <button className="w-full mt-8 py-3 rounded-xl bg-white text-red-600 font-semibold">
-                                    Choose Premium
-                                </button>
-                            </div>
-
-                            {/* Elite */}
-                            <div className="bg-white rounded-3xl shadow-lg p-8 border">
-                                <h3 className="text-2xl font-bold text-center">
-                                    Elite
-                                </h3>
-
-                                <span className="text-5xl font-bold">₹5,000</span>
-                                <span>/6 Months</span>
-
-                                <ul className="mt-8 space-y-3 text-gray-600">
-                                    <li>✓ Everything in Premium</li>
-                                    <li>✓ Dedicated Relationship Manager</li>
-                                    <li>✓ Profile Boost</li>
-                                    <li>✓ Exclusive Matches</li>
-                                    <li>✓ Priority Support</li>
-                                </ul>
-
-                                <button className="w-full mt-8 py-3 rounded-xl border border-red-600 text-red-600 font-semibold">
-                                    Choose Elite
-                                </button>
-                            </div>
-
+                        <div className="text-center mt-3">
+                            <span className="text-4xl font-bold">₹0</span>
                         </div>
 
-                    </div>
-                </section>
+                        <ul className="mt-5 space-y-2 text-gray-600 text-sm">
+                            <li>✓ Create Profile</li>
+                            <li>✓ Browse Profiles</li>
+                            <li>✓ View Limited Details</li>
+                            <li>✓ Up to 5 Profile Views</li>
+                            <li>✗ Contact Details Hidden</li>
+                        </ul>
 
-                <section className="nv-section bg-white">
+                        <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                            Get Started
+                        </button>
+                    </div>
+
+                    {/* Premium */}
+                    <div className="group relative bg-gradient-to-br from-[#800020] to-[#5c0017] text-white rounded-3xl shadow-xl p-6 min-h-[430px] transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-[0_20px_40px_rgba(128,0,32,0.25)]">
+
+                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+
+                        <div className="text-center mb-2">
+                            <span className="bg-amber-400 text-[#800020] px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                                Most Popular
+                            </span>
+                        </div>
+
+                        <h3 className="text-xl font-bold text-center">
+                            Premium
+                        </h3>
+
+                        <div className="text-center mt-3">
+                            <span cla="text-4xl font-bold">₹2,000</span>
+                            <span className="block mt-1 text-rose-100 text-sm">
+                                /3 Months
+                            </span>
+                        </div>
+
+                        <ul className="mt-5 space-y-2 text-sm">
+                            <li>✓ Up to 20 Profile Views</li>
+                            <li>✓ Send Interests</li>
+                            <li>✓ View Contact Details</li>
+                            <li>✓ Priority Listing</li>
+                            <li>✓ WhatsApp Support</li>
+                        </ul>
+
+                        <button className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400">
+                            Choose Premium
+                        </button>
+                    </div>
+
+                    {/* Elite */}
+                    <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-amber-500">
+
+                        <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
+                            Elite
+                        </h3>
+
+                        <div className="text-center mt-3">
+                            <span className="text-4xl font-bold">₹5,000</span>
+                            <span className="block mt-1 text-gray-500 text-sm">
+                                /6 Months
+                            </span>
+                        </div>
+
+                        <ul className="mt-5 space-y-2 text-gray-600 text-sm">
+                            <li>✓ Everything in Premium</li>
+                            <li>✓ Dedicated Relationship Manager</li>
+                            <li>✓ Profile Boost</li>
+                            <li>✓ Exclusive Matches</li>
+                            <li>✓ Priority Support</li>
+                        </ul>
+
+                        <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                            Choose Elite
+                        </button>
+                    </div>
+
+                </div>
+
+                
+                    <section className="mt-6 mb-2  mb-2nv-section bg-white">
                     <div className="max-w-7xl mx-auto px-6">
 
                         <h2 className="text-4xl font-bold text-center text-gray-900">
@@ -329,7 +358,7 @@ function Home() {
                 </section>
 
                 {/* Profiles */}
-                <section className="nv-section bg-gradient-to-b from-white to-rose-50">
+                    <section className="nv-section bg-gradient-to-b from-white to-rose-50 mt-2">
                     <div className="max-w-7xl mx-auto px-6">
 
                         <h2 className="text-4xl font-bold text-center text-gray-900">
@@ -340,118 +369,64 @@ function Home() {
                             Discover verified brides and grooms from trusted families
                         </p>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-
-                            {profiles.map((p) => (
-                                <div
-                                    key={p.id}
-                                    className="group bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-gray-100"
-                                >
-                                    <div className="relative h-48 bg-gradient-to-br from-red-100 via-pink-100 to-yellow-100 flex items-center justify-center">
-                                        <div className="absolute top-4 left-4 bg-white text-green-600 text-xs font-semibold px-3 py-1 rounded-full shadow">
-                                            ✓ Verified
-                                        </div>
-
-                                        <div className="absolute top-4 right-4 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
-                                            {p.gender}
-                                        </div>
-
-                                        <div className="h-28 w-28 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-500 font-semibold border-4 border-white">
-                                            <img
-  src={p.image}
-  alt={p.name}
-  className="h-28 w-28 rounded-full object-cover border-4 border-white shadow-lg"
-/>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-5">
-                                        <h3 className="text-xl font-bold text-center text-gray-900">
-                                            {p.name}
-                                        </h3>
-
-                                        <p className="text-center text-gray-600 mt-1">
-                                            {p.age} yrs • {p.caste}
-                                        </p>
-
-                                        <p className="text-center text-gray-500 text-sm mt-1">
-                                            📍 {p.location}
-                                        </p>
-
-                                        <div className="mt-5 grid grid-cols-2 gap-3">
-                                            <Link
-                                                to={`/profile/${p.id}`}
-                                                className="text-center bg-red-600 text-white py-2 rounded-xl font-medium hover:bg-red-700 transition"
-                                            >
-                                                View
-                                            </Link>
-
-                                            <button
-                                                onClick={() => toggleLike(p.id)}
-                                                className={`py-2 rounded-xl font-medium border transition ${likedProfiles.includes(p.id)
-                                                        ? "bg-red-600 text-white border-red-600"
-                                                        : "bg-white text-red-600 border-red-600 hover:bg-red-50"
-                                                    }`}
-                                            >
-                                                {likedProfiles.includes(p.id) ? "❤️ Sent" : "♡ Interest"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {displayProfiles.slice(0, 4).map((profile) => (
+                                <ProfileCard
+                                    key={profile._id}
+                                    profile={profile}
+                                />
                             ))}
-
                         </div>
                     </div>
                 </section>
-                <footer className="bg-gray-900 text-white py-10">
-                    <div className="max-w-7xl mx-auto px-6">
+                    </main>
+            </div>
+            <footer className="bg-[#800020] text-white mt-2">
+                <div className="max-w-7xl mx-auto px-6 py-12">
 
-                        <div className="grid md:grid-cols-4 gap-8">
+                    <div className="grid md:grid-cols-4 gap-8">
 
-                            <div>
-                                <h2 className="text-2xl font-bold text-red-400">
-                                    నిశ్చయ వేదిక
-                                </h2>
-                                <p className="mt-4 text-gray-400">
-                                    Trusted Telugu Matrimony Platform for meaningful matches.
-                                </p>
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold mb-4">Quick Links</h3>
-                                <ul className="space-y-2 text-gray-400">
-                                    <li>Home</li>
-                                    <li>Membership</li>
-                                    <li>Success Stories</li>
-                                    <li>Contact Us</li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold mb-4">Legal</h3>
-                                <ul className="space-y-2 text-gray-400">
-                                    <li>Privacy Policy</li>
-                                    <li>Terms & Conditions</li>
-                                    <li>Refund Policy</li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold mb-4">Contact</h3>
-                                <p className="text-gray-400">Email: support@nichayavedika.com</p>
-                                <p className="text-gray-400 mt-2">Phone: +91 XXXXX XXXXX</p>
-                                <p className="text-gray-400 mt-2">India</p>
-                            </div>
-
+                        <div>
+                            <h3 className="text-2xl font-bold">నిశ్చయ వేదిక</h3>
+                            <p className="mt-3 text-white/80">
+                                Trusted Telugu Matrimony Platform
+                            </p>
                         </div>
 
-                        <div className="border-t border-gray-700 mt-10 pt-6 text-center text-gray-400">
-                            © 2026 NichayaVedika. All rights reserved.
+                        <div>
+                            <h4 className="font-semibold mb-3">Quick Links</h4>
+                            <ul className="space-y-2 text-white/80">
+                                <li>Home</li>
+                                <li>Membership</li>
+                                <li>Events</li>
+                                <li>Contact</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="font-semibold mb-3">Support</h4>
+                            <ul className="space-y-2 text-white/80">
+                                <li>FAQ</li>
+                                <li>Privacy Policy</li>
+                                <li>Terms & Conditions</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="font-semibold mb-3">Contact</h4>
+                            <p className="text-white/80">
+                                support@nichayavedika.com
+                            </p>
                         </div>
 
                     </div>
-                </footer>
-            </main>
+
+                    <div className="border-t border-white/20 mt-8 pt-6 text-center text-white/70">
+                        © 2026 NichayaVedika. All Rights Reserved.
+                    </div>
+
+                </div>
+            </footer>
         </>
     );
 }

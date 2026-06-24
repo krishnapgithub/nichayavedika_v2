@@ -50,6 +50,16 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
 
+        otp: {
+            type: String,
+            default: null,
+        },
+
+        otpExpiresAt: {
+            type: Date,
+            default: null,
+        },
+
         membershipPlan: {
             type: String,
             enum: ["free", "premium", "elite"],
@@ -59,6 +69,11 @@ const userSchema = new mongoose.Schema(
         membershipExpiresAt: {
             type: Date,
             default: null,
+        },
+
+        profileViewsRemaining: {
+            type: Number,
+            default: 5,
         },
 
         profileStatus: {
@@ -71,6 +86,7 @@ const userSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
 
