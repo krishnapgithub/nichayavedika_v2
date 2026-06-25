@@ -31,13 +31,7 @@ export default function LoginModal({ isOpen, onClose }) {
         }
     };
 
-    const handleLoginSuccess = (userData) => {
-        setUser(userData);
-        setIsRegisterOpen(false);
-        setIsLoginOpen(false);
-        setIsCreateProfileOpen(true);
-    };
-
+   
     return (
         <div
             className="fixed top-0 left-0 w-screen h-screen z-[99999] bg-black/60 flex items-start justify-center px-4 pt-20"

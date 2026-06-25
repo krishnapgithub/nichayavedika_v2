@@ -17,9 +17,10 @@ import {
     FaFacebook,
     FaInstagram,
     FaSignOutAlt,
-    FaUserPlus
+    FaUserPlus,
+    FaBars,
+    FaTimes
 } from "react-icons/fa";
-
 
 export default function Header() {
 
@@ -27,6 +28,8 @@ export default function Header() {
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
     const [user, setUser] = useState(null);
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const navigate = useNavigate();
 
@@ -71,8 +74,6 @@ export default function Header() {
 
 
 
-
-
         <div className="fixed top-0 left-0 w-full z-[9999]">
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
@@ -90,6 +91,8 @@ export default function Header() {
                                 Trusted Telugu Matrimony
                             </p>
                         </div>
+
+
 
                         <nav className="hidden lg:flex items-center text-sm font-medium">
 
@@ -169,6 +172,15 @@ export default function Header() {
 
                         </nav>
 
+                        <button
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="lg:hidden text-[#800020] text-2xl"
+                        >
+                            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                        </button>
+
+                                       
+
                         <div className="flex items-center gap-3">
                             {user ? (
                                 <>
@@ -211,6 +223,59 @@ export default function Header() {
                     </div>
                 </div>
 
+                {isMobileMenuOpen && (
+                    <div className="lg:hidden w-full bg-white border-t border-gray-200 py-4 shadow-lg">
+                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/" onClick={() => setIsMobileMenuOpen(false)}>
+                            Home
+                        </Link>
+
+                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/search" onClick={() => setIsMobileMenuOpen(false)}>
+                            Search
+                        </Link>
+
+                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/membership" onClick={() => setIsMobileMenuOpen(false)}>
+                            Membership
+                        </Link>
+
+                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/success-stories" onClick={() => setIsMobileMenuOpen(false)}>
+                            Success
+                        </Link>
+
+                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/events" onClick={() => setIsMobileMenuOpen(false)}>
+                            Events
+                        </Link>
+
+                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/contact" onClick={() => setIsMobileMenuOpen(false)}>
+                            Contact
+                        </Link>
+
+                        {isLoggedIn && (
+                            <>
+                                <Link className="block px-4 py-3 text-[#800020] font-medium" to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                                    Dashboard
+                                </Link>
+
+                                <button
+                                    onClick={() => {
+                                        setIsCreateProfileOpen(true);
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-3 text-[#800020] font-medium bg-transparent border-0"
+                                >
+                                    Profile
+                                </button>
+
+                                <Link className="block px-4 py-3 text-[#800020] font-medium" to="/sent-interests" onClick={() => setIsMobileMenuOpen(false)}>
+                                    Sent
+                                </Link>
+
+                                <Link className="block px-4 py-3 text-[#800020] font-medium" to="/received-interests" onClick={() => setIsMobileMenuOpen(false)}>
+                                    Received
+                                </Link>
+                            </>
+                        )}
+                    </div>
+                )}
                 <LoginModal
                     isOpen={isLoginOpen}
                     onClose={() => {
