@@ -1,37 +1,66 @@
 ﻿import { useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config/api";
+import toast from "react-hot-toast";
+import ForgotPasswordModal from "./ForgotPasswordModal";
+import { isValidEmail } from "../utils/validation";
 
 export default function LoginModal({ isOpen, onClose }) {
-    const [mobile, setMobile] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [isForgotOpen, setIsForgotOpen] = useState(false);
 
     if (!isOpen) return null;
 
     const handleLogin = async () => {
+        if(!isValidEmail(email)) {
+            //alert("Please enter a valid email address");
+            toast.error("Please enter a valid email address");
+            return;
+
+        }
         try {
+
+           
+
+            if (password.length < 6) {
+                //alert("Password must be at least 6 characters");
+                toast.error("Password must be at least 6 characters");
+                //toast.success("Login successful!");
+                return;
+            }
             setLoading(true);
 
             const response = await axios.post(
                 `${API_BASE_URL}/auth/login`,
-                { mobile, password }
+                {
+                    email,
+                    password,
+                }
             );
 
-            localStorage.setItem("user", JSON.stringify(response.data.user));
+            localStorage.setItem("token", response.data.token);
+            localStorage.setItem(
+                "user",
+                JSON.stringify(response.data.user)
+            );
 
             alert("Login Successful");
+
             console.log("Logged In User:", response.data.user);
 
             onClose();
+
         } catch (error) {
-            alert(error.response?.data?.message || "Login failed");
+            alert(
+                error.response?.data?.message || "Login failed"
+            );
         } finally {
             setLoading(false);
         }
     };
 
-   
     return (
         <div
             className="fixed top-0 left-0 w-screen h-screen z-[99999] bg-black/60 flex items-start justify-center px-4 pt-20"
@@ -48,20 +77,22 @@ export default function LoginModal({ isOpen, onClose }) {
                     ✕
                 </button>
 
-                <h2 className="text-3xl font-bold text-center text-[#800020]">
-                    Login
-                </h2>
+                <div className="bg-[#800020] text-white -mx-8 -mt-8 mb-8 px-8 py-6 rounded-t-3xl">
+                    <h2 className="text-3xl font-bold text-center">
+                        Login
+                    </h2>
 
-                <p className="text-center text-gray-500 mt-2">
-                    Welcome back to NichayaVedika
-                </p>
+                    <p className="text-center text-gray-200 mt-2">
+                        Welcome back to NichayaVedika
+                    </p>
+                </div>
 
                 <div className="mt-8 space-y-4">
                     <input
-                        type="text"
-                        placeholder="Mobile Number"
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
+                        type="email"
+                        placeholder="Email Address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="border rounded-xl px-4 py-3 w-full"
                     />
 
@@ -72,6 +103,17 @@ export default function LoginModal({ isOpen, onClose }) {
                         onChange={(e) => setPassword(e.target.value)}
                         className="border rounded-xl px-4 py-3 w-full"
                     />
+                    <div className="text-right">
+                        <div className="text-right">
+                            <button
+                                type="button"
+                                onClick={() => setIsForgotOpen(true)}
+                                className="text-sm text-[#800020] font-semibold hover:underline"
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+                    </div>
 
                     <button
                         onClick={handleLogin}
@@ -82,6 +124,10 @@ export default function LoginModal({ isOpen, onClose }) {
                     </button>
                 </div>
             </div>
+            <ForgotPasswordModal
+                isOpen={isForgotOpen}
+                onClose={() => setIsForgotOpen(false)}
+            />
         </div>
     );
 }

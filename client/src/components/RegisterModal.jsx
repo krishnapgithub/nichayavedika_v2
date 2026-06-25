@@ -2,6 +2,10 @@
 import axios from "axios";
 import OtpModal from "./OtpModal";
 import API_BASE_URL from "../config/api";
+import toast from "react-hot-toast";
+import { isValidEmail } from "../utils/validation";
+
+
 
 export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     const [isOtpOpen, setIsOtpOpen] = useState(false);
@@ -26,16 +30,57 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     };
 
     const handleRegister = async () => {
+
+        if (!formData.fullName.trim()) {
+            return toast.error("Full Name is required"); //alert("Full Name is required");
+        }
+
+        if (!/^\d{10}$/.test(formData.mobile)) {
+            return toast.error("Please enter a valid 10-digit mobile number");  //alert("Please enter a valid 10-digit mobile number");
+        }
+
+        {/*const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!emailRegex.test(formData.email)) {
+    return toast.error("Please enter a valid email address");
+}*/}
+
+        if (!isValidEmail(formData.email)) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
+        
+
+        if (!formData.registeringFor) {
+            return toast.error("Please select Registering For"); //alert("Please select Registering For");
+        }
+
+        if (!formData.gender) {
+            return toast.error("Please select Gender"); // alert("Please select Gender");
+        }
+
+        if (formData.password.length < 6) {
+            return toast.error("Password must be at least 6 characters");  //alert("Password must be at least 6 characters");
+        }
+
         try {
             setLoading(true);
 
-            await axios.post(`${API_BASE_URL}/auth/send-email-otp`, {
-                email: formData.email,
-            });
+            await axios.post(
+                `${API_BASE_URL}/auth/send-email-otp`,
+                {
+                    email: formData.email,
+                }
+            );
 
             setIsOtpOpen(true);
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to send OTP");
+            alert(
+                error.response?.data?.message ||
+                "Registration failed"
+            );
         } finally {
             setLoading(false);
         }
@@ -81,14 +126,15 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
                 >
                     ✕
                 </button>
+                <div className="bg-[#800020] text-white -mx-8 -mt-8 mb-8 px-8 py-6 rounded-t-3xl">
+                    <h2 className="text-3xl font-bold text-center">
+                        Register Free
+                    </h2>
 
-                <h2 className="text-3xl font-bold text-center text-[#800020]">
-                    Register Free
-                </h2>
-
-                <p className="text-center text-gray-500 mt-2">
-                    Create your NichayaVedika profile
-                </p>
+                    <p className="text-center text-gray-200 mt-2">
+                        Create your NichayaVedika profile
+                    </p>
+                </div>
 
                 <div className="mt-8 grid md:grid-cols-2 gap-4">
                     <input name="fullName" value={formData.fullName} onChange={handleChange} className="border rounded-xl px-4 py-3" placeholder="Full Name" />

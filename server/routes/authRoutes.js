@@ -1,4 +1,8 @@
 import express from "express";
+import {
+    forgotPassword,
+    resetPassword,
+} from "../controllers/authController.js";
 
 import {
     registerUser,
@@ -28,5 +32,8 @@ router.post("/verify-email-otp", verifyEmailOtp);
 // Mobile OTP
 router.post("/send-mobile-otp", sendMobileOtp);
 router.post("/verify-mobile-otp", verifyMobileOtp);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 export default router;
