@@ -1,8 +1,4 @@
 export const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
-
-export const API_BASE =
-    API_BASE_URL.replace("/api", "");
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default API_BASE_URL;
