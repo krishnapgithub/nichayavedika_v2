@@ -1,59 +1,60 @@
-
-import User from "../models/User.js";
+import jwt from "jsonwebtoken";
 import Otp from "../models/Otp.js";
 import bcrypt from "bcryptjs";
+import User from "../models/User.js";
 
-
-
+const generateToken = (userId) => {
+    return jwt.sign(
+        { id: userId },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+};
 
 export const registerUser = async (req, res) => {
     try {
         const { fullName, mobile, email, password, gender, registeringFor } = req.body;
 
-        if (!fullName || !mobile || !password || !gender || !registeringFor) {
+        if (!fullName || !mobile || !email || !password || !gender || !registeringFor) {
             return res.status(400).json({
                 success: false,
                 message: "Please fill all required fields",
             });
         }
 
-        const existingMobile = await User.findOne({ mobile });
+        const cleanEmail = email.toLowerCase().trim();
+        const cleanMobile = mobile.trim();
 
-        if (existingMobile) {
+        const existingUser = await User.findOne({
+            $or: [{ email: cleanEmail }, { mobile: cleanMobile }],
+        });
+
+        if (existingUser) {
             return res.status(409).json({
                 success: false,
-                message: "Mobile number already registered",
+                message: "Email or mobile already registered",
             });
-        }
-
-        if (email) {
-            const existingEmail = await User.findOne({ email });
-
-            if (existingEmail) {
-                return res.status(409).json({
-                    success: false,
-                    message: "Email already registered",
-                });
-            }
         }
 
         const user = await User.create({
             fullName,
-            mobile,
-            email,
+            mobile: cleanMobile,
+            email: cleanEmail,
             password,
             gender,
             registeringFor,
             role: "user",
             membershipPlan: "free",
+            isEmailVerified: true,
+            isMobileVerified: false,
         });
 
-        console.log("NEW USER CREATED:", user);
-        console.log("COLLECTION:", user.collection.name);
+        const token = generateToken(user._id);
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "User registered successfully",
+            token,
             user: {
                 id: user._id,
                 fullName: user.fullName,
@@ -63,119 +64,39 @@ export const registerUser = async (req, res) => {
                 registeringFor: user.registeringFor,
                 role: user.role,
                 membershipPlan: user.membershipPlan,
+                isEmailVerified: user.isEmailVerified,
                 isMobileVerified: user.isMobileVerified,
             },
         });
     } catch (error) {
-        res.status(500).json({
+        console.error("REGISTER ERROR:", error);
+
+        return res.status(500).json({
             success: false,
-            message: error.message,
-        });
-    }
-};
-export const sendOtp = async (req, res) => {
-    try {
-        const { mobile } = req.body;
-
-        if (!mobile) {
-            return res.status(400).json({
-                success: false,
-                message: "Mobile number is required",
-            });
-        }
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        await Otp.create({
-            mobile,
-            otp,
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        });
-
-        console.log("DEV OTP:", otp);
-
-        res.json({
-            success: true,
-            message: "OTP sent successfully",
-            devOtp: otp,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
-export const verifyOtp = async (req, res) => {
-    try {
-
-        const { mobile, otp } = req.body;
-
-               
-
-        const otpRecord = await Otp.findOne({
-            mobile,
-            otp,
-            isUsed: false,
-            expiresAt: { $gt: new Date() },
-        }).sort({ createdAt: -1 });
-
-        if (!otpRecord) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid or expired OTP",
-            });
-        }
-
-        
-
-        const otpCount = await Otp.countDocuments();
-        console.log("OTP COUNT:", otpCount);
-
-
-        otpRecord.isUsed = true;
-        await otpRecord.save();
-
-        console.log("VERIFY OTP REQUEST:", {
-            mobile,
-            otp,
-        });
-
-        await User.findOneAndUpdate(
-            { mobile },
-            { isMobileVerified: true }
-        );
-
-        res.json({
-            success: true,
-            message: "OTP verified successfully",
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
+            message: "Internal server error",
         });
     }
 };
 
 export const loginUser = async (req, res) => {
     try {
-        const { mobile, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!mobile || !password) {
+        if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Mobile and password are required",
+                message: "Email and password are required",
             });
         }
 
-        const user = await User.findOne({ mobile });
+        const cleanEmail = email.toLowerCase().trim();
+
+        const user = await User.findOne({ email: cleanEmail });
 
         if (!user) {
-            return res.status(404).json({
+            return res.status(401).json({
                 success: false,
-                message: "User not found",
+                message: "Invalid email or password",
             });
         }
 
@@ -184,20 +105,23 @@ export const loginUser = async (req, res) => {
         if (!isPasswordMatch) {
             return res.status(401).json({
                 success: false,
-                message: "Invalid mobile or password",
+                message: "Invalid email or password",
             });
         }
 
-        if (!user.isMobileVerified) {
+        if (!user.isEmailVerified) {
             return res.status(403).json({
                 success: false,
-                message: "Please verify OTP before login",
+                message: "Please verify email before login",
             });
         }
 
-        res.json({
+        const token = generateToken(user._id);
+
+        return res.json({
             success: true,
             message: "Login successful",
+            token,
             user: {
                 id: user._id,
                 fullName: user.fullName,
@@ -207,13 +131,16 @@ export const loginUser = async (req, res) => {
                 registeringFor: user.registeringFor,
                 role: user.role,
                 membershipPlan: user.membershipPlan,
+                isEmailVerified: user.isEmailVerified,
                 isMobileVerified: user.isMobileVerified,
             },
         });
     } catch (error) {
-        res.status(500).json({
+        console.error("LOGIN ERROR:", error);
+
+        return res.status(500).json({
             success: false,
-            message: error.message,
+            message: "Internal server error",
         });
     }
 };

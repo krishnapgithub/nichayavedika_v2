@@ -57,6 +57,16 @@ export default function Header() {
         navigate("/");
     };
 
+
+    const handleLoginSuccess = (userData) => {
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
+
+        setIsLoginOpen(false);
+        setIsRegisterOpen(false);
+        setIsCreateProfileOpen(true);
+    };
+
     return (
 
 
@@ -216,6 +226,7 @@ export default function Header() {
                 <RegisterModal
                     isOpen={isRegisterOpen}
                     onClose={() => setIsRegisterOpen(false)}
+                    onLoginSuccess={handleLoginSuccess}
                 />
             </header>
             {isCreateProfileOpen && (

@@ -18,8 +18,15 @@ const userSchema = new mongoose.Schema(
 
         email: {
             type: String,
+            required: true,
+            unique: true,
             trim: true,
             lowercase: true,
+        },
+
+        isEmailVerified: {
+            type: Boolean,
+            default: false,
         },
 
         password: {
@@ -50,22 +57,13 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
 
-        otp: {
-            type: String,
-            default: null,
-        },
-
-        otpExpiresAt: {
-            type: Date,
-            default: null,
-        },
-
+        
         membershipPlan: {
             type: String,
             enum: ["free", "premium", "elite"],
             default: "free",
         },
-
+        
         membershipExpiresAt: {
             type: Date,
             default: null,
@@ -87,11 +85,15 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-userSchema.pre("save", async function () {
-    if (!this.isModified("password")) return;
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) {
+        return next();
+    }
 
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+
+    //next();
 });
 
 const User = mongoose.model("User", userSchema);

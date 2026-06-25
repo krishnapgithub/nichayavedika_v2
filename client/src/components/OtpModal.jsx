@@ -1,7 +1,13 @@
 ﻿import { useState } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
-export default function OtpModal({ isOpen, onClose, mobile }) {
+export default function OtpModal({
+    isOpen,
+    onClose,
+    email,
+    onOtpVerified,
+}) {
     const [otp, setOtp] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -12,17 +18,24 @@ export default function OtpModal({ isOpen, onClose, mobile }) {
             setLoading(true);
 
             const response = await axios.post(
-                "${API_BASE_URL}/auth/verify-otp",
+                `${API_BASE_URL}/auth/verify-email-otp`,
                 {
-                    mobile,
+                    email,
                     otp,
                 }
             );
 
             alert(response.data.message);
-            onClose();
+
+            if (onOtpVerified) {
+                await onOtpVerified();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "OTP verification failed");
+            alert(
+                error.response?.data?.message ||
+                "OTP verification failed"
+            );
         } finally {
             setLoading(false);
         }
@@ -45,17 +58,17 @@ export default function OtpModal({ isOpen, onClose, mobile }) {
                 </button>
 
                 <h2 className="text-3xl font-bold text-center text-[#800020]">
-                    Verify OTP
+                    Verify Email OTP
                 </h2>
 
                 <p className="text-center text-gray-500 mt-2">
-                    OTP sent to {mobile || "your mobile number"}
+                    OTP sent to {email || "your email address"}
                 </p>
 
                 <div className="mt-8">
                     <input
                         type="text"
-                        maxLength="6"
+                        maxLength={6}
                         placeholder="Enter 6 digit OTP"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}

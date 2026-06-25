@@ -1,42 +1,19 @@
 import mongoose from "mongoose";
 
-
-export const sendOtp = async (req, res) => {
-    try {
-        const { mobile } = req.body;
-
-        console.log("SEND OTP MOBILE:", mobile);
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const otpDoc = await Otp.create({
-            mobile,
-            otp,
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        });
-
-        console.log("OTP SAVED:", otpDoc);
-
-        res.json({
-            success: true,
-            message: "OTP sent successfully",
-            devOtp: otp,
-        });
-    } catch (error) {
-        console.error("SEND OTP ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
 const otpSchema = new mongoose.Schema(
     {
-        mobile: {
+        type: {
             type: String,
+            enum: ["mobile", "email"],
             required: true,
+        },
+
+        mobile: String,
+
+        email: {
+            type: String,
+            lowercase: true,
+            trim: true,
         },
 
         otp: {
@@ -54,11 +31,7 @@ const otpSchema = new mongoose.Schema(
             default: false,
         },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
-const Otp = mongoose.model("Otp", otpSchema);
-
-export default Otp;
+export default mongoose.model("Otp", otpSchema);
