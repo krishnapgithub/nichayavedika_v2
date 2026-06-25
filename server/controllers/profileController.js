@@ -212,7 +212,8 @@ export const checkProfileViewAccess = async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const user = await User.findById(userId);
+        //const user = await User.findById(userId);
+        const user = await Profile.findOne({ user: userId });
 
         if (!user) {
             return res.status(404).json({
@@ -229,6 +230,14 @@ export const checkProfileViewAccess = async (req, res) => {
             });
         }
 
+        if (user.membershipPlan === "premium" || user.membershipPlan === "elite") {
+            return res.json({
+                success: true,
+                allowed: true,
+                message: `${user.membershipPlan} member`,
+            });
+        }
+
         if (user.profileViewsRemaining <= 0) {
             return res.json({
                 success: false,
@@ -237,8 +246,46 @@ export const checkProfileViewAccess = async (req, res) => {
             });
         }
 
-        user.profileViewsRemaining -= 1;
+        const { profileId } = req.body;
+
+        // Elite users
+        if (user.membershipPlan === "elite") {
+            return res.json({
+                success: true,
+                allowed: true,
+                message: "Elite member",
+            });
+        }
+
+        // Already unlocked?
+        if (user.unlockedProfiles.includes(profileId)) {
+            return res.json({
+                success: true,
+                allowed: true,
+                message: "Already unlocked",
+            });
+        }
+
+        // No unlocks left?
+        if (user.profileUnlocksRemaining <= 0) {
+            return res.json({
+                success: false,
+                allowed: false,
+                message: "Unlock limit reached. Upgrade your membership.",
+            });
+        }
+
+        // Unlock new profile
+        user.unlockedProfiles.push(profileId);
+        user.profileUnlockLimit --;
+
         await user.save();
+
+        return res.json({
+            success: true,
+            allowed: true,
+            remainingUnlocks: user.profileUnlocksRemaining,
+        });
 
         res.json({
             success: true,

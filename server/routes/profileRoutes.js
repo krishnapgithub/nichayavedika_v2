@@ -11,6 +11,8 @@ import {
     getProfileById,
 } from "../controllers/profileController.js";
 
+
+
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -50,17 +52,19 @@ router.put(
     updateProfile
 );
 
+// Order should be like this
+
 router.get("/user/:userId", getProfileByUser);
 
-// Search profiles
 router.get("/search", searchProfiles);
 
-// 5 profile view restriction
 router.put("/users/:userId/profile-view", checkProfileViewAccess);
 
 router.get("/", getProfiles);
 
 router.get("/:id", getProfileById);
+
+
 
 // comment this for now
 // router.get("/:id", getProfileById);

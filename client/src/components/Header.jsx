@@ -4,15 +4,32 @@ import RegisterModal from "./RegisterModal";
 import "../styles/home.css";
 import { Link } from "react-router-dom";
 import CreateProfileModal from "./CreateProfileModal";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
+import {
+    FaUserCircle,
+    FaSearch,
+    FaHeart,
+    FaPhoneAlt,
+    FaEnvelope,
+    FaWhatsapp,
+    FaFacebook,
+    FaInstagram,
+    FaSignOutAlt,
+    FaUserPlus
+} from "react-icons/fa";
 
 
 export default function Header() {
+
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-    const [user, setUser] = useState(null);
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
-    
+    const [user, setUser] = useState(null);
+
+    const navigate = useNavigate();
+
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
 
@@ -21,13 +38,30 @@ export default function Header() {
         }
     }, []);
 
+    const isLoggedIn = !!user;
+
     const handleLogout = () => {
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+
         setUser(null);
-        alert("Logged out successfully");
+
+        setIsLoginOpen(false);
+        setIsRegisterOpen(false);
+        setIsCreateProfileOpen(false);
+
+        console.log("🙏 Sita Rama Blessings!");
+
+        toast.success("Logged out successfully!");
+
+        navigate("/");
     };
 
     return (
+
+
+
+
 
         <div className="fixed top-0 left-0 w-full z-[9999]">
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
@@ -48,31 +82,15 @@ export default function Header() {
                         </div>
 
                         <nav className="hidden lg:flex items-center text-sm font-medium">
-                            <Link className="nav-link" to="/">Home</Link>
 
-                            <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
-
-                            {/* {user && (
-                                <>
-                                    <Link className="nav-link" to="/create-profile">
-                                        Create Profile
-                                    </Link>
-
-                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
-                                </>
-                            )}*/}
-
-                            <button 
-                                onClick={() => setIsCreateProfileOpen(true)}
-                                className="nav-link bg-transparent border-0 cursor-pointer"
-                            >
-                                Create Profile
-                            </button>
+                            <Link className="nav-link" to="/">
+                                Home
+                            </Link>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
                             <Link className="nav-link" to="/search">
-                                Search Profiles
+                                Search 
                             </Link>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
@@ -84,45 +102,99 @@ export default function Header() {
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
                             <Link className="nav-link" to="/success-stories">
-                                Success Stories
+                                Success 
                             </Link>
+
+                            <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
+
+                            <Link className="nav-link" to="/events">
+                                Events
+                            </Link>
+
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
                             <Link className="nav-link" to="/contact">
                                 Contact
                             </Link>
+
+                            {/* ---------------- LOGGED IN MENU ---------------- */}
+
+                            {isLoggedIn && (
+                                <>
+                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
+
+                                    <Link className="nav-link" to="/dashboard">
+                                        Dashboard
+                                    </Link>
+
+                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
+
+                                    <button
+                                        onClick={() => setIsCreateProfileOpen(true)}
+                                        className="nav-link bg-transparent border-0 cursor-pointer"
+                                    >
+                                        Profile
+                                    </button>
+
+                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
+
+                                    <Link className="nav-link" to="/sent-interests">
+                                        Sent
+                                    </Link>
+
+                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
+
+                                    <Link className="nav-link" to="/received-interests">
+                                        Received
+                                    </Link>
+
+                                  
+                                </>
+                            )}
+
+                            {/* ---------------- LOGGED OUT MENU ---------------- */}
+
+                            
+
                         </nav>
 
                         <div className="flex items-center gap-3">
                             {user ? (
                                 <>
-                                    <span className="text-sm text-gray-600">
-                                        Hi, {user.fullName}
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1 text-sm text-gray-600 font-medium">
+                                            <FaUserCircle className="text-[#800020] text-lg" />
+                                            Hi, {user.fullName}
+                                        </span>
 
-                                    <button
-                                        onClick={handleLogout}
-                                        className="px-5 py-2 rounded-xl bg-[#800020] text-white hover:bg-[#5c0017] transition shadow-lg"
-                                    >
-                                        Logout
-                                    </button>
+                                        <span className="text-amber-500 font-semibold">|</span>
+
+                                        <button
+                                            onClick={handleLogout}
+                                            className="nav-link bg-transparent border-0 cursor-pointer"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
                                 </>
                             ) : (
                                 <>
-                                    <button
-                                        onClick={() => setIsLoginOpen(true)}
-                                        className="px-5 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 transition"
-                                    >
-                                        Login
-                                    </button>
+                                        <button
+                                            onClick={() => setIsLoginOpen(true)}
+                                            className="nav-link bg-transparent border-0 cursor-pointer"
+                                        >
+                                            Login
+                                        </button>
 
-                                    <button
-                                        onClick={() => setIsRegisterOpen(true)}
-                                        className="px-5 py-2 rounded-xl bg-[#800020] text-white hover:bg-[#5c0017] transition shadow-lg"
-                                    >
-                                        Register Free
-                                    </button>
+                                        <span className="mx-1 text-amber-500 font-semibold">|</span>
+
+                                        <button
+                                            onClick={() => setIsRegisterOpen(true)}
+                                            className="nav-link bg-transparent border-0 cursor-pointer"
+                                        >
+                                            Register
+                                        </button>
                                 </>
                             )}
                         </div>

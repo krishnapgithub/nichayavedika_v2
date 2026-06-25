@@ -11,6 +11,8 @@ export default function ProfilePage() {
 
     const [interestSent, setInterestSent] = useState(false);
 
+
+
     const sendInterest = async () => {
         if (!profile?._id) {
             alert("Profile not loaded yet");

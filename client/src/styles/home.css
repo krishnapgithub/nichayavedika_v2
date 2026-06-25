@@ -95,3 +95,41 @@ textarea.profile-input {
     min-height: 90px;
     resize: vertical;
 }
+
+.header-auth-btn {
+    border: none;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.login-btn {
+    background: transparent;
+    color: #800020;
+    border: 1px solid #800020;
+}
+
+    .login-btn:hover {
+        background: #800020;
+        color: white;
+    }
+
+.register-btn {
+    background: #800020;
+    color: white;
+    border: 1px solid #800020;
+}
+
+    .register-btn:hover {
+        background: #5c0017;
+        border-color: #5c0017;
+    }
+
+.header-separator {
+    color: #c9a227;
+    margin: 0 8px;
+    font-weight: 600;
+}

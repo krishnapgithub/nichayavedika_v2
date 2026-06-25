@@ -9,6 +9,45 @@ const profileSchema = new mongoose.Schema(
             unique: true,
         },
 
+        membershipPlan: {
+            type: String,
+            enum: ["free", "premium", "elite"],
+            default: "free",
+        },
+
+        profileUnlockLimit: {
+            type: Number,
+            default: 5,
+        },
+
+        unlockedProfiles: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Profile",
+        }],
+
+        /*membershipExpiry: {
+            type: Date,
+        },*/
+
+        membershipStartDate: Date,
+        membershipExpiryDate: Date,
+
+
+        interestsRemaining: {
+            type: Number,
+            default: 3,
+        },
+
+        profileViewsRemaining: {
+            type: Number,
+            default: 5,
+        },
+
+        profileUnlocksRemaining: {
+            type: Number,
+            default: 5,
+        },
+
         fullName: String,
         gender: {
             type: String,

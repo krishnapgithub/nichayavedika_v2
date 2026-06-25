@@ -2,6 +2,29 @@
 import axios from "axios";
 import "../styles/searchProfiles.css";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header.jsx";
+import logo from "../assets/hero.png";
+
+const handleSendInterest = async (profileId) => {
+    try {
+        const savedUser = JSON.parse(localStorage.getItem("user"));
+
+        if (!savedUser) {
+            alert("Please login to send interest");
+            return;
+        }
+
+        const response = await axios.post("http://localhost:5000/api/interests/send", {
+            senderId: savedUser._id,
+            receiverProfileId: profileId,
+        });
+
+        alert(response.data.message || "Interest sent successfully");
+    } catch (error) {
+        console.error("Interest failed:", error);
+        alert(error.response?.data?.message || "Failed to send interest");
+    }
+};
 export default function SearchProfiles() {
     const [filters, setFilters] = useState({
         gender: "",
@@ -30,6 +53,8 @@ export default function SearchProfiles() {
                 "http://localhost:5000/api/profiles/search",
                 {
                     params: filters,
+                    page: 1,
+                    limit: 20,
                 }
             );
 
@@ -46,6 +71,10 @@ export default function SearchProfiles() {
     }, []);
 
     return (
+
+         <>
+            <Header />
+   
         <div className="search-page">
             <div className="search-container">
 
@@ -114,14 +143,17 @@ export default function SearchProfiles() {
                     {!loading && profiles.map((profile) => (
                         <div className="search-profile-card" key={profile._id}>
                             <div className="profile-photo-placeholder">
-                                {profile.profilePhoto ? (
-                                    <img
-                                        src={`http://localhost:5000/${profile.profilePhoto}`}
-                                        alt="Profile"
-                                    />
-                                ) : (
-                                    "👤"
-                                )}
+                                <img
+                                    src={
+                                        profile.profilePhoto
+                                            ? `http://localhost:5000/${profile.profilePhoto}`
+                                            : logo
+                                    }
+                                    alt="Profile"
+                                    onError={(e) => {
+                                        e.currentTarget.src = logo;
+                                    }}
+                                />
                             </div>
 
                             <div className="profile-card-info">
@@ -145,13 +177,19 @@ export default function SearchProfiles() {
                                 >
                                     View Profile
                                 </button>
-                                <button className="interest-btn">❤️ Interest</button>
+                                <button
+                                    className="interest-btn"
+                                    onClick={() => handleSendInterest(profile._id)}
+                                >
+                                    ❤️ Interest
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
 
             </div>
-        </div>
+            </div>
+        </>
     );
 }
