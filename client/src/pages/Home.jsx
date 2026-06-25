@@ -426,7 +426,7 @@ function Home() {
                     <div className="border-t border-white/20 mt-8 pt-6 text-center text-white/70">
                         © 2026 NichayaVedika. All Rights Reserved.
                     </div>
-                    
+
                 </div>
             </footer>
 
