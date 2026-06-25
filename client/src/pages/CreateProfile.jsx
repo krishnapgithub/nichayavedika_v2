@@ -2,6 +2,7 @@
 import axios from "axios";
 
 import { API_BASE_URL } from "../config/api";
+import { authHeader } from "../utils/authHeader";
 
 
 
@@ -128,15 +129,14 @@ export default function CreateProfile({ onClose }) {
                 payload.append(key, formData[key]);
             });
 
+            
+
             await axios.post(
                 `${API_BASE_URL}/profiles/create`,
-                payload,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
+                formData,
+                authHeader()
             );
+
 
             alert("Profile Created Successfully");
             onClose();

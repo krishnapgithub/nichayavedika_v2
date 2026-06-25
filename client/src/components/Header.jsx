@@ -80,7 +80,7 @@ export default function Header() {
             </div>
 
             <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6">
+                <div className="max-w-7xl mx-auto px-6 relative -top-2">
                     <div className="flex items-center justify-between h-20">
                         <div>
                             <h1 className="text-3xl font-bold text-[#800020]">
@@ -185,7 +185,7 @@ export default function Header() {
                             {user ? (
                                 <>
                                     <div className="flex items-center gap-1">
-                                        <span className="flex items-center gap-1 text-sm text-gray-600 font-medium">
+                                        <span className="flex items-center gap-1 text-sm text-gray-600 font-medium whitespace-nowrap">
                                             <FaUserCircle className="text-[#800020] text-lg" />
                                             Hi, {user.fullName}
                                         </span>
@@ -296,6 +296,38 @@ export default function Header() {
             </header>
             {isCreateProfileOpen && (
                 <CreateProfileModal onClose={() => setIsCreateProfileOpen(false)} />
+            )}
+
+
+            {user?.role === "admin" && (
+                <Link
+                    to="/admin"
+                    className="
+            fixed
+            top-36
+            right-5
+            z-[9998]
+            bg-white
+            text-[#800020]
+            border
+            border-[#800020]/20
+            px-4
+            py-2
+            rounded-full
+            shadow-lg
+            hover:bg-[#fff7f0]
+            hover:border-[#800020]
+            transition
+            flex
+            items-center
+            gap-2
+            text-sm
+            font-semibold
+            whitespace-nowrap
+        "
+                >
+                    🛡️ Admin
+                </Link>
             )}
 
         </div>

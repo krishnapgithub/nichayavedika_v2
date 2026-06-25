@@ -93,7 +93,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
                     ✕
                 </button>
 
-                <div className="bg-[#800020] text-white -mx-8 -mt-8 mb-8 px-8 py-6 rounded-t-3xl">
+                <div className="bg-[#800020] text-white -mx-8 -mt-8 mb-8 px-8 py-6 rounded-t-[40px] relative z-10">
                     <h2 className="text-2xl font-bold text-center">
                         Forgot Password
                     </h2>

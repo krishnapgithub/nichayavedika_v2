@@ -1,5 +1,7 @@
 import express from "express";
 import multer from "multer";
+import { protect } from "../middleware/authMiddleware.js";
+import { adminOnly } from "../middleware/adminMiddleware.js";
 
 import {
     createProfile,
@@ -9,6 +11,8 @@ import {
     checkProfileViewAccess,
     searchProfiles,
     getProfileById,
+    getPendingProfiles,
+    updateProfileStatus,
 } from "../controllers/profileController.js";
 
 
@@ -23,6 +27,26 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + "-" + file.originalname);
     },
 });
+
+{/*export const getPendingProfiles = async (req, res) => {
+    try {
+        const profiles = await Profile.find({
+            status: "pending",
+        }).populate("user", "fullName email mobile");
+
+        return res.json({
+            success: true,
+            profiles,
+        });
+    } catch (error) {
+        console.error("GET PENDING PROFILES ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};*/}
 
 const upload = multer({
     storage,
@@ -41,28 +65,33 @@ const upload = multer({
 });
 
 router.post(
-    "/create",
+    "/create", protect,
     upload.single("profilePhoto"),
     createProfile
 );
 
 router.put(
-    "/user/:userId",
+    "/user/:userId", protect,
     upload.single("profilePhoto"),
     updateProfile
 );
 
 // Order should be like this
 
-router.get("/user/:userId", getProfileByUser);
+router.get("/user/:userId", protect, getProfileByUser);
 
-router.get("/search", searchProfiles);
+router.get("/search", protect, searchProfiles);
 
-router.put("/users/:userId/profile-view", checkProfileViewAccess);
+router.put("/users/:userId/profile-view", protect, checkProfileViewAccess);
 
-router.get("/", getProfiles);
+router.get("/", protect, getProfiles);
 
-router.get("/:id", getProfileById);
+router.put("/admin/:profileId/status", protect, adminOnly, updateProfileStatus);
+
+router.get("/:id", protect, getProfileById);
+
+router.get("/admin/pending", protect, adminOnly, getPendingProfiles);
+
 
 
 

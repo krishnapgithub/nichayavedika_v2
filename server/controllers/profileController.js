@@ -1,6 +1,50 @@
 import Profile from "../models/Profile.js";
 import User from "../models/User.js";
 
+export const getPendingProfiles = async (req, res) => {
+    try {
+        const profiles = await Profile.find({ status: "pending" })
+            .populate("user", "fullName email mobile");
+
+        return res.json({
+            success: true,
+            profiles,
+        });
+    } catch (error) {
+        console.error("GET PENDING PROFILES ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+export const getMyProfile = async (req, res) => {
+    try {
+        const profile = await Profile.findOne({
+            user: req.user._id,
+        });
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found",
+            });
+        }
+
+        return res.json({
+            success: true,
+            profile,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
 export const searchProfiles = async (req, res) => {
     try {
         const {
@@ -340,3 +384,44 @@ export const updateProfile = async (req, res) => {
         });
     }
 };
+
+export const updateProfileStatus = async (req, res) => {
+    try {
+        const { profileId } = req.params;
+        const { status } = req.body;
+
+        if (!["approved", "rejected", "pending"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid profile status",
+            });
+        }
+
+        const profile = await Profile.findByIdAndUpdate(
+            profileId,
+            { status },
+            { new: true }
+        );
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found",
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: `Profile ${status} successfully`,
+            profile,
+        });
+    } catch (error) {
+        console.error("UPDATE PROFILE STATUS ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+

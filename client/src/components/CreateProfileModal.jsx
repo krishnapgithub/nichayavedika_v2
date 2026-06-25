@@ -1,6 +1,7 @@
 ﻿import { useEffect } from "react";
 import CreateProfile from "../pages/CreateProfile.jsx";
 import "../styles/createProfileModal.css";
+import { authHeader } from "../utils/authHeader";
 
 export default function CreateProfileModal({ onClose }) {
     useEffect(() => {

@@ -70,11 +70,11 @@ function Home() {
 
 
             <div className="max-w-7xl mx-auto px-6">
-                <main className="pt-28">
+                <main className="pt-25">
                     {/* Hero */}
                    
                     <section
-                        className="mt-5 relative overflow-hidden text-white h-[60vh] flex items-center rounded-[36px] shadow-2xl border border-rose-100 pb-20"
+                        className="-mt-6 relative overflow-hidden text-white h-[60vh] flex items-center rounded-[40px] shadow-2xl border border-rose-100 pb-20 z-10"
                         style={{
                             backgroundImage: `url(${weddingHero})`,
                             backgroundSize: "cover",
@@ -84,14 +84,17 @@ function Home() {
                         <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/90 to-[#800020]/10"></div>
                         <div className="absolute inset-0 bg-black/10"></div>
 
-                        <div className="relative z-10 px-10 py-8 w-full">
+                        <div className="relative z-10 px-10 pt-20 pb-8 w-full">
                             <div className="max-w-2xl">
+
                                 <h1 className="text-6xl font-bold leading-tight">
-                                    Find Your Perfect Life Partner
+                                    Blessed Matches,
+                                    <br />
+                                    Beautiful Beginnings
                                 </h1>
 
                                 <p className="mt-6 text-xl text-white/90">
-                                    Trusted Telugu Matrimony Platform
+                                    A trusted platform for Telugu families seeking lifelong companionship.
                                 </p>
 
                                 <div className="mt-8 flex gap-4">
