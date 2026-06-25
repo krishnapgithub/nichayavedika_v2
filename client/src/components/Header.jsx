@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import CreateProfileModal from "./CreateProfileModal";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { APP_VERSION, BUILD_DATE } from "../config/version";
 
 import {
     FaUserCircle,
@@ -77,6 +78,9 @@ export default function Header() {
         <div className="fixed top-0 left-0 w-full z-[9999]">
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
+                <span className="ml-4 text-white-100   ">
+                    {APP_VERSION} • Build Date: {BUILD_DATE}
+                </span>
             </div>
 
             <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
