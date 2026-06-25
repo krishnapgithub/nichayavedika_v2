@@ -1,208 +1,380 @@
-﻿import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect,useState } from "react";
 import axios from "axios";
-import Header from "../components/Header.jsx";
 
-
-export default function ProfilePage() {
-    const { id } = useParams();
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    const [interestSent, setInterestSent] = useState(false);
+import { API_BASE_URL } from "../config/api";
 
 
 
-    const sendInterest = async () => {
-        if (!profile?._id) {
-            alert("Profile not loaded yet");
+export default function CreateProfile({ onClose }) {
+
+    
+    const [formData, setFormData] = useState({
+        fullName: "",
+        gender: "",
+        dateOfBirth: "",
+        age: "",
+        height: "",
+        maritalStatus: "Never Married",
+
+        motherTongue: "Telugu",
+        religion: "Hindu",
+        caste: "",
+        subCaste: "",
+        gothram: "",
+
+        education: "",
+        occupation: "",
+        annualIncome: "",
+
+        city: "",
+        state: "",
+        country: "India",
+
+        familyDetails: "",
+        contactPreference: "Phone",
+
+        aboutMe: "",
+
+        preferredAgeFrom: "",
+        preferredAgeTo: "",
+        preferredCaste: "",
+        preferredLocation: "",
+        profile
+
+
+            : null,
+    });
+
+        const [photoPreview, setPhotoPreview] = useState(null);
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            alert("Only JPG, JPEG and PNG files are allowed.");
             return;
         }
 
-        try {
-            const response = await axios.post("http://localhost:5000/api/interests/send", {
-                fromUser: "6a39857828603c403e7c71bf",
-                toProfile: profile._id,
-            });
+        const maxSize = 2 * 1024 * 1024; // 2MB
 
-            console.log("INTEREST SUCCESS:", response.data);
-
-            setInterestSent(true);
-            alert("Interest Sent Successfully ❤️");
-        } catch (error) {
-            console.log("INTEREST ERROR:", error);
-            console.log("SERVER RESPONSE:", error.response?.data);
-
-            alert(error.response?.data?.message || "Failed to send interest");
+        if (file.size > maxSize) {
+            alert("Photo size should be less than 2 MB.");
+            return;
         }
+
+        setFormData({
+            ...formData,
+            profilePhoto: file,
+        });
+
+        setPhotoPreview(URL.createObjectURL(file));
     };
 
     
 
-    useEffect(() => {
-        fetchProfile();
-    }, [id]);
+    const calculateAge = (dob) => {
+        if (!dob) return "";
 
-    const fetchProfile = async () => {
-        try {
-            const response = await axios.get(
-                `http://localhost:5000/api/profiles/${id}`
-            );
+        const birthDate = new Date(dob);
+        const today = new Date();
 
-            setProfile(response.data.profile);
-        } catch (error) {
-            console.error("Profile fetch failed:", error);
-        } finally {
-            setLoading(false);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+
+        if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+        ) {
+            age--;
         }
+
+        return age;
     };
 
-    if (loading) {
-        return (
-            <>
-                <Header />
-                <div className="pt-32 text-center text-[#800020] font-semibold">
-                    Loading profile...
-                </div>
-            </>
-        );
-    }
+    const handleChange = (e) => {
+        const { name, value } = e.target;
 
-    if (!profile) {
-        return (
-            <>
-                <Header />
-                <div className="pt-32 text-center text-red-600 font-semibold">
-                    Profile not found
-                </div>
-            </>
-        );
-    }
+        if (name === "dateOfBirth") {
+            setFormData({
+                ...formData,
+                dateOfBirth: value,
+                age: calculateAge(value),
+            });
+            return;
+        }
 
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const payload = new FormData();
+
+            Object.keys(formData).forEach((key) => {
+                payload.append(key, formData[key]);
+            });
+
+            await axios.post(
+                `${API_BASE_URL}/profiles/create`,
+                payload,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            alert("Profile Created Successfully");
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to create profile");
+        }
+    };
     return (
-        <>
-            <Header />
+        
 
-            <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
-                <div className="max-w-5xl mx-auto">
+        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
+            <p className="md:col-span-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                Fields marked with <strong>*</strong> are required to create your profile.
+            </p>
+                    <h3 className="md:col-span-2 font-bold text-[#800020]">
+                        Basic Information
+                    </h3>
 
-                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-                        <div className="bg-[#800020] h-32"></div>
+            <input
+                name="fullName"
+                placeholder="Full Name *"
+                className="border p-3 rounded-lg"
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+            />
 
-                        <div className="px-6 pb-8 text-center -mt-20">
-                            <div className="h-40 w-40 rounded-full mx-auto border-4 border-white bg-gray-100 overflow-hidden shadow-lg">
-                                {profile.profilePhoto ? (
-                                    <img
-                                        src={`http://localhost:5000/uploads/${profile.profilePhoto}`}
-                                        alt="Profile"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                        Photo
-                                    </div>
-                                )}
-                            </div>
+            <select
+                name="gender"
+                className="border p-3 rounded-lg"
+                value={formData.gender}
+                onChange={handleChange}
+                required
+            >
+                <option value="">Select Gender *</option>
+                <option value="Bride">Bride</option>
+                <option value="Groom">Groom</option>
+            </select>
 
-                            <h1 className="text-3xl font-bold mt-4 text-[#800020]">
-                                {profile.fullName}
-                            </h1>
 
-                            <p className="text-gray-600 mt-2">
-                                {profile.age} yrs • {profile.height} • {profile.maritalStatus}
-                            </p>
+            <input
+                type="date"
+                name="dateOfBirth"
+                className="border p-3 rounded-lg"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                required
+            />
 
-                            <p className="text-gray-600">
-                                {profile.education} • {profile.occupation}
-                            </p>
+            <input
+                name="age"
+                placeholder="Age"
+                className="border p-3 rounded-lg bg-gray-100"
+                value={formData.age}
+                readOnly
+            />
 
-                            <p className="text-gray-600">
-                                {profile.city}, {profile.state}
-                            </p>
+            <input
+                name="height"
+                placeholder="Height * (e.g. 5ft 8in)"
+                className="border p-3 rounded-lg"
+                value={formData.height}
+                onChange={handleChange}
+                required
+            />
 
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    console.log("BUTTON CLICKED");
-                                    sendInterest();
-                                }}
-                                disabled={interestSent}
-                                className={`mt-6 px-10 py-3 rounded-xl font-semibold text-white ${interestSent ? "bg-green-600" : "bg-[#800020]"
-                                    }`}
-                            >
-                                {interestSent ? "✓ Interest Sent" : "❤️ Send Interest"}
-                            </button>
+            <select
+                name="maritalStatus"
+                className="border p-3 rounded-lg"
+                value={formData.maritalStatus}
+                onChange={handleChange}
+            >
+                <option value="Never Married">Never Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widowed">Widowed</option>
+            </select>
+
+            <input
+                name="motherTongue"
+                placeholder="Mother Tongue"
+                className="border p-3 rounded-lg"
+                value={formData.motherTongue}
+                onChange={handleChange}
+            />
+                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                        Community Information
+                    </h3>
+
+                    <input name="religion" placeholder="Religion" className="border p-3 rounded-lg" value={formData.religion} onChange={handleChange} />
+            <input
+                name="caste"
+                placeholder="Caste *"
+                className="border p-3 rounded-lg"
+                value={formData.caste}
+                onChange={handleChange}
+                required
+            />
+
+            <input name="subCaste" placeholder="Sub Caste" className="border p-3 rounded-lg" value={formData.subCaste} onChange={handleChange} />
+                    <input name="gothram" placeholder="Gothram" className="border p-3 rounded-lg" value={formData.gothram} onChange={handleChange} />
+
+                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                        Education & Career
+                    </h3>
+
+            <input
+                name="education"
+                placeholder="Education *"
+                className="border p-3 rounded-lg"
+                value={formData.education}
+                onChange={handleChange}
+                required
+            />
+
+            <input
+                name="occupation"
+                placeholder="Occupation *"
+                className="border p-3 rounded-lg"
+                value={formData.occupation}
+                onChange={handleChange}
+                required
+            />
+                    <input name="annualIncome" placeholder="Annual Income" className="border p-3 rounded-lg" value={formData.annualIncome} onChange={handleChange} />
+
+                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                        Location
+                    </h3>
+
+            <input
+                name="city"
+                placeholder="City *"
+                className="border p-3 rounded-lg"
+                value={formData.city}
+                onChange={handleChange}
+                required
+            />
+
+            <input
+                name="state"
+                placeholder="State *"
+                className="border p-3 rounded-lg"
+                value={formData.state}
+                onChange={handleChange}
+                required
+            />
+                    <input name="country" placeholder="Country" className="border p-3 rounded-lg" value={formData.country} onChange={handleChange} />
+
+                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                        About Me
+                    </h3>
+
+                    <textarea name="aboutMe" placeholder="About Me" rows="4" className="border p-3 rounded-lg md:col-span-2" value={formData.aboutMe} onChange={handleChange} />
+
+                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                        Partner Preferences
+                    </h3>
+
+                    <input name="preferredAgeFrom" placeholder="Preferred Age From" className="border p-3 rounded-lg" value={formData.preferredAgeFrom} onChange={handleChange} />
+                    <input name="preferredAgeTo" placeholder="Preferred Age To" className="border p-3 rounded-lg" value={formData.preferredAgeTo} onChange={handleChange} />
+                    <input name="preferredCaste" placeholder="Preferred Caste" className="border p-3 rounded-lg" value={formData.preferredCaste} onChange={handleChange} />
+                    <input name="preferredLocation" placeholder="Preferred Location" className="border p-3 rounded-lg" value={formData.preferredLocation} onChange={handleChange} />
+
+                    
+
+                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                        Family Details
+                    </h3>
+
+                    <textarea
+                        name="familyDetails"
+                        placeholder="Family Details"
+                        rows="3"
+                        className="border p-3 rounded-lg md:col-span-2"
+                        value={formData.familyDetails}
+                        onChange={handleChange}
+                    />
+
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Contact Preference
+            </h3>
+
+            <p className="md:col-span-2 text-sm text-gray-500 -mt-2">
+                How would you prefer prospective matches to contact you?
+            </p>
+
+                    <select
+                        name="contactPreference"
+                        className="border p-3 rounded-lg"
+                        value={formData.contactPreference}
+                        onChange={handleChange}
+                    >
+                        <option value="Phone">Phone</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="Email">Email</option>
+                        <option value="Any">Any</option>
+                    </select>
+
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Profile Photo
+            </h3>
+
+            <p className="md:col-span-2 text-sm text-gray-500 -mt-2">
+                Upload a clear profile photo. <span className="text-red-600">*</span> Required
+            </p>
+            <p className="text-xs text-gray-500">
+                Accepted formats: JPG, JPEG, PNG • Maximum size: 2 MB
+            </p>
+                    <div className="md:col-span-2 flex flex-col items-center gap-3">
+
+                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#800020] bg-gray-100">
+                            {photoPreview ? (
+                                <img
+                                    src={photoPreview}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    Photo
+                                </div>
+                            )}
                         </div>
-                    </div>
 
-                    <div className="grid md:grid-cols-2 gap-6 mt-8">
-
-                        <Section title="Basic Details">
-                            <Info label="Gender" value={profile.gender} />
-                            <Info label="Date of Birth" value={profile.dateOfBirth?.slice(0, 10)} />
-                            <Info label="Mother Tongue" value={profile.motherTongue} />
-                            <Info label="Religion" value={profile.religion} />
-                            <Info label="Caste" value={profile.caste} />
-                            <Info label="Sub Caste" value={profile.subCaste} />
-                            <Info label="Gothram" value={profile.gothram} />
-                        </Section>
-
-                        <Section title="Education & Career">
-                            <Info label="Education" value={profile.education} />
-                            <Info label="Occupation" value={profile.occupation} />
-                            <Info label="Annual Income" value={profile.annualIncome} />
-                        </Section>
-
-                        <Section title="Location">
-                            <Info label="City" value={profile.city} />
-                            <Info label="State" value={profile.state} />
-                            <Info label="Country" value={profile.country} />
-                        </Section>
-
-                        <Section title="Partner Preferences">
-                            <Info label="Preferred Age" value={`${profile.preferredAgeFrom || "-"} to ${profile.preferredAgeTo || "-"}`} />
-                            <Info label="Preferred Caste" value={profile.preferredCaste} />
-                            <Info label="Preferred Location" value={profile.preferredLocation} />
-                        </Section>
-
-                        <Section title="About Me" full>
-                            <p className="text-gray-600">
-                                {profile.aboutMe || "Not added"}
-                            </p>
-                        </Section>
-
-                        <Section title="Family Details" full>
-                            <p className="text-gray-600">
-                                {profile.familyDetails || "Not added"}
-                            </p>
-                        </Section>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    required={!photoPreview}
+                    className="text-sm"
+                />
 
                     </div>
-                </div>
-            </div>
-        </>
-    );
-}
 
-
-function Section({ title, children, full }) {
-    return (
-        <div className={`bg-white rounded-2xl shadow-md p-6 ${full ? "md:col-span-2" : ""}`}>
-            <h2 className="text-xl font-bold text-[#800020] mb-4">
-                {title}
-            </h2>
-            {children}
-        </div>
-    );
-}
-
-function Info({ label, value }) {
-    return (
-        <div className="flex justify-between border-b py-2 gap-4">
-            <span className="text-gray-500">{label}</span>
-            <span className="font-medium text-gray-800 text-right">
-                {value || "Not added"}
-            </span>
-        </div>
+                    <button type="submit" className="md:col-span-2 bg-[#800020] text-white py-3 rounded-xl font-semibold mt-4">
+                        Save Profile
+                    </button>
+                </form>
+            
     );
 }

@@ -3,8 +3,10 @@
     "",
     "\\client",
     "\\client\\src",
+    "\\client\\src\\components",
+    "\\client\\src\\pages",
     "\\server"
   ],
-  "SelectedNode": "\\client\\src\\styles",
+  "SelectedNode": "\\client\\src\\pages",
   "PreviewInSolutionExplorer": false
 }

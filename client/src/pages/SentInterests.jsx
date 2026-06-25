@@ -61,11 +61,11 @@ export default function SentInterests() {
                                         </h2>
 
                                         <p className="text-gray-600">
-                                            {profile?.age} yrs • {profile?.height}
+                                            {profile?.age} yrs   {profile?.height}
                                         </p>
 
                                         <p className="text-gray-600">
-                                            {profile?.education} • {profile?.occupation}
+                                            {profile?.education}   {profile?.occupation}
                                         </p>
 
                                         <p className="text-gray-600">
