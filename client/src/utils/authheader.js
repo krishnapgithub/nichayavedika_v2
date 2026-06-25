@@ -1,10 +1,11 @@
-
 export const authHeader = () => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    return {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    };
+  if (!token) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
 };
