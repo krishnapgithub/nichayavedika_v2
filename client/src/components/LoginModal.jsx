@@ -48,7 +48,7 @@ export default function LoginModal({ isOpen, onClose }) {
                 JSON.stringify(response.data.user)
             );
 
-            alert("Login Successful");
+            //alert("Login Successful");
 
             console.log("Logged In User:", response.data.user);
 
