@@ -84,13 +84,13 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
 
-        
+
         membershipPlan: {
             type: String,
             enum: ["free", "premium", "elite"],
             default: "free",
         },
-        
+
         membershipExpiresAt: {
             type: Date,
             default: null,
