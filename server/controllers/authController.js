@@ -1,4 +1,10 @@
-    import jwt from "jsonwebtoken";
+
+// ==========================================
+// Application Constants
+// ==========================================
+import { USER_STATUS } from "../config/appConstants.js";
+
+import jwt from "jsonwebtoken";
    import Otp from "../models/Otp.js";
     import bcrypt from "bcryptjs";
     import User from "../models/User.js";
@@ -16,7 +22,9 @@ import { sendOtpEmail } from "../services/emailService.js";
 
 
 
-    export const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
+
+    console.log("REGISTER BODY:", req.body);
         try {
             const { fullName, mobile, email, password, gender, registeringFor } = req.body;
 
@@ -37,7 +45,7 @@ import { sendOtpEmail } from "../services/emailService.js";
             if (existingUser) {
                 return res.status(409).json({
                     success: false,
-                    message: "Email or mobile already registered",
+                    message: "Registration failed after OTP verification",
                 });
             }
 
@@ -83,73 +91,87 @@ import { sendOtpEmail } from "../services/emailService.js";
         }
     };
 
-    export const loginUser = async (req, res) => {
-        try {
-            const { email, password } = req.body;
+export const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-            if (!email || !password) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Email and password are required",
-                });
-            }
-
-            const cleanEmail = email.toLowerCase().trim();
-
-            const user = await User.findOne({ email: cleanEmail });
-
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    message: "Invalid email or password",
-                });
-            }
-
-            const isPasswordMatch = await bcrypt.compare(password, user.password);
-
-            if (!isPasswordMatch) {
-                return res.status(401).json({
-                    success: false,
-                    message: "Invalid email or password",
-                });
-            }
-
-            if (!user.isEmailVerified) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Please verify email before login",
-                });
-            }
-
-            const token = generateToken(user._id);
-
-            return res.json({
-                success: true,
-                message: "Login successful",
-                token,
-                user: {
-                    id: user._id,
-                    fullName: user.fullName,
-                    mobile: user.mobile,
-                    email: user.email,
-                    gender: user.gender,
-                    registeringFor: user.registeringFor,
-                    role: user.role,
-                    membershipPlan: user.membershipPlan,
-                    isEmailVerified: user.isEmailVerified,
-                    isMobileVerified: user.isMobileVerified,
-                },
-            });
-        } catch (error) {
-            console.error("LOGIN ERROR:", error);
-
-            return res.status(500).json({
+        if (!email || !password) {
+            return res.status(400).json({
                 success: false,
-                message: "Internal server error",
+                message: "Email and password are required",
             });
         }
-};
 
+        const cleanEmail = email.toLowerCase().trim();
+
+        const user = await User.findOne({ email: cleanEmail });
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password",
+            });
+        }
+
+        const isPasswordMatch = await bcrypt.compare(
+            password,
+            user.password
+        );
+
+        if (!isPasswordMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password",
+            });
+        }
+
+        if (!user.isEmailVerified) {
+            return res.status(403).json({
+                success: false,
+                message: "Please verify email before login",
+            });
+        }
+
+        // ==========================================
+        // Admin Approval Check
+        // ==========================================
+        if (user.status !== USER_STATUS.APPROVED) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Your registration is pending admin approval. Please wait for confirmation.",
+            });
+        }
+
+        const token = generateToken(user._id);
+
+        return res.json({
+            success: true,
+            message: "Login successful",
+            token,
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                mobile: user.mobile,
+                email: user.email,
+                gender: user.gender,
+                registeringFor: user.registeringFor,
+                role: user.role,
+                membershipPlan: user.membershipPlan,
+                isEmailVerified: user.isEmailVerified,
+                isMobileVerified: user.isMobileVerified,
+                status: user.status, // Added
+            },
+        });
+    } catch (error) {
+        console.error("LOGIN ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
 
 export const forgotPassword = async (req, res) => {
     try {

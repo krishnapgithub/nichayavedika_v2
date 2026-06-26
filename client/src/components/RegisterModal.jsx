@@ -1,7 +1,8 @@
 ﻿import { useState } from "react";
 import axios from "axios";
 import OtpModal from "./OtpModal";
-import API_BASE_URL from "../config/api";
+
+import { API_BASE_URL, API_ENDPOINTS } from "../config/api";
 import toast from "react-hot-toast";
 import { isValidEmail } from "../utils/validation";
 
@@ -65,12 +66,16 @@ if (!emailRegex.test(formData.email)) {
         }
 
         try {
+
+            // ==========================================
+            // Send Email OTP
+            // ==========================================
             setLoading(true);
 
             await axios.post(
-                `${API_BASE_URL}/auth/send-email-otp`,
+                `${API_BASE_URL}${API_ENDPOINTS.SEND_EMAIL_OTP}`,
                 {
-                    email: formData.email,
+                    email: formData.email.trim().toLowerCase(),
                 }
             );
 
@@ -90,20 +95,36 @@ if (!emailRegex.test(formData.email)) {
         try {
             setLoading(true);
 
+            const registerPayload = {
+                fullName: formData.fullName.trim(),
+                mobile: formData.mobile.trim(),
+                email: formData.email.trim().toLowerCase(),
+                password: formData.password,
+                gender: formData.gender,
+                registeringFor: formData.registeringFor,
+            };
+
+            console.log("REGISTER PAYLOAD:", registerPayload);
+
             const response = await axios.post(
-                `${API_BASE_URL}/auth/register`,
-                formData
+                `${API_BASE_URL}${API_ENDPOINTS.REGISTER}`,
+                registerPayload
             );
 
             localStorage.setItem("token", response.data.token);
             localStorage.setItem("user", JSON.stringify(response.data.user));
 
-            if (onLoginSuccess) {
-                onLoginSuccess(response.data.user);
-            }
+            // ==========================================
+            // Registration Success - Pending Admin Approval
+            // ==========================================
+            toast.success(
+                "Registration completed. Your profile is awaiting admin approval."
+            );
 
             setIsOtpOpen(false);
             onClose();
+
+
         } catch (error) {
             alert(error.response?.data?.message || "Registration failed");
         } finally {

@@ -1,3 +1,5 @@
+
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -8,7 +10,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import path from "path";
 
 import interestRoutes from "./routes/interestRoutes.js";
-
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config({ path: "./.env" });
 
@@ -24,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/interests", interestRoutes);
+app.use("/api/admin", adminRoutes);
 
 import mongoose from "mongoose";
 

@@ -1,8 +1,29 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import {
+    USER_STATUS,
+    USER_ROLES,
+    MEMBERSHIP_PLANS,
+    APP_SETTINGS,
+} from "../config/appConstants.js";
+
+{/*
+import {
+    USER_STATUS,
+    USER_ROLES,
+    MEMBERSHIP_PLANS,
+    FREE_PROFILE_VIEWS,
+} from "../config/appConstants.js";*/}
 
 const userSchema = new mongoose.Schema(
     {
+
+        status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending",
+        },
+
         fullName: {
             type: String,
             required: true,
@@ -95,6 +116,8 @@ userSchema.pre("save", async function (next) {
 
     //next();
 });
+
+
 
 const User = mongoose.model("User", userSchema);
 

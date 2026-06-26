@@ -1,6 +1,8 @@
 ﻿import { useState } from "react";
 import axios from "axios";
-import API_BASE_URL from "../config/api";
+
+
+import { API_BASE_URL } from "../config/api";
 
 export default function OtpModal({
     isOpen,
@@ -18,14 +20,14 @@ export default function OtpModal({
             setLoading(true);
 
             const response = await axios.post(
-                `${API_BASE_URL}/auth/verify-email-otp`,
+                `${API_BASE_URL}/api/auth/verify-email-otp`,
                 {
                     email,
                     otp,
                 }
             );
 
-            alert(response.data.message);
+            //alert(response.data.message);
 
             if (onOtpVerified) {
                 await onOtpVerified();
