@@ -7,7 +7,7 @@ import { USER_STATUS } from "../config/appConstants.js";
 import jwt from "jsonwebtoken";
    import Otp from "../models/Otp.js";
     import bcrypt from "bcryptjs";
-    import User from "../models/user.js";
+    import User from "../models/User.js";
 import { sendOtpEmail } from "../services/emailService.js";
 
 
