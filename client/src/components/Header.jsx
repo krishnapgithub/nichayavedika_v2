@@ -131,41 +131,7 @@ export default function Header() {
                                 Contact
                             </Link>
 
-                            {/* ---------------- LOGGED IN MENU ---------------- */}
-
-                            {isLoggedIn && (
-                                <>
-                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
-
-                                    <Link className="nav-link" to="/dashboard">
-                                        Dashboard
-                                    </Link>
-
-                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
-
-                                    <button
-                                        onClick={() => setIsCreateProfileOpen(true)}
-                                        className="nav-link bg-transparent border-0 cursor-pointer"
-                                    >
-                                        Profile
-                                    </button>
-
-                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
-
-                                    <Link className="nav-link" to="/sent-interests">
-                                        Sent
-                                    </Link>
-
-                                    <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
-
-                                    <Link className="nav-link" to="/received-interests">
-                                        Received
-                                    </Link>
-
-                                  
-                                </>
-                            )}
-
+                            
                             {/* ---------------- LOGGED OUT MENU ---------------- */}
 
                             
@@ -179,53 +145,40 @@ export default function Header() {
                             {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
                         </button>
 
-                                       
-
-                        <div className="flex items-center gap-3">
+                        <div className="hidden lg:flex items-center gap-2">
                             {user ? (
                                 <>
-                                    <div className="border-t border-gray-100 mt-2 pt-2">
-                                        <div className="px-4 py-3 flex items-center gap-2 text-gray-600 font-medium">
-                                            <FaUserCircle className="text-[#800020]" />
-                                            Hi, {user.fullName}
-                                        </div>
+                                    <span className="flex items-center gap-2 text-gray-600 font-medium">
+                                        <FaUserCircle className="text-[#800020]" />
+                                        Hi, {user.fullName}
+                                    </span>
 
-                                        <button
-                                            onClick={() => {
-                                                handleLogout();
-                                                setIsMobileMenuOpen(false);
-                                            }}
-                                            className="block w-full text-left px-4 py-3 text-[#800020] font-medium bg-transparent border-0"
-                                        >
-                                            Logout
-                                        </button>
-                                    </div>
+                                    <span className="mx-2 text-amber-500 font-semibold">|</span>
+
+                                    <button
+                                        onClick={handleLogout}
+                                        className="nav-link bg-transparent border-0 cursor-pointer"
+                                    >
+                                        Logout
+                                    </button>
                                 </>
                             ) : (
                                 <>
-                                        <div className="border-t border-gray-100 mt-2 pt-2 flex items-center px-4 gap-3">
-        <button
-            onClick={() => {
-                setIsLoginOpen(true);
-                setIsMobileMenuOpen(false);
-            }}
-            className="text-[#800020] font-medium bg-transparent border-0"
-        >
-            Login
-        </button>
+                                    <button
+                                        onClick={() => setIsLoginOpen(true)}
+                                        className="nav-link bg-transparent border-0 cursor-pointer"
+                                    >
+                                        Login
+                                    </button>
 
-        <span className="text-amber-500 font-semibold">|</span>
+                                    <span className="mx-2 text-amber-500 font-semibold">|</span>
 
-        <button
-            onClick={() => {
-                setIsRegisterOpen(true);
-                setIsMobileMenuOpen(false);
-            }}
-            className="text-[#800020] font-medium bg-transparent border-0"
-        >
-            Register
-        </button>
-    </div>
+                                    <button
+                                        onClick={() => setIsRegisterOpen(true)}
+                                        className="nav-link bg-transparent border-0 cursor-pointer"
+                                    >
+                                        Register
+                                    </button>
                                 </>
                             )}
                         </div>
@@ -233,58 +186,89 @@ export default function Header() {
                 </div>
 
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden w-full bg-white border-t border-gray-200 py-4 shadow-lg">
-                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/" onClick={() => setIsMobileMenuOpen(false)}>
-                            Home
-                        </Link>
+                    <div className="lg:hidden w-full bg-white border-t border-gray-200 shadow-lg max-h-[80vh] overflow-y-auto">
+                        <Link className="mobile-menu-link" to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+                        <Link className="mobile-menu-link" to="/search" onClick={() => setIsMobileMenuOpen(false)}>Search</Link>
+                        <Link className="mobile-menu-link" to="/membership" onClick={() => setIsMobileMenuOpen(false)}>Membership</Link>
+                        <Link className="mobile-menu-link" to="/success-stories" onClick={() => setIsMobileMenuOpen(false)}>Success</Link>
+                        <Link className="mobile-menu-link" to="/events" onClick={() => setIsMobileMenuOpen(false)}>Events</Link>
+                        <Link className="mobile-menu-link" to="/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
 
-                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/search" onClick={() => setIsMobileMenuOpen(false)}>
-                            Search
-                        </Link>
+                        <div className="border-t border-gray-200 mt-2 pt-2">
+                            {user ? (
+                                <>
+                                    <div className="mobile-menu-user">
+                                        <FaUserCircle className="text-[#800020]" />
+                                        Hi, {user.fullName}
+                                    </div>
 
-                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/membership" onClick={() => setIsMobileMenuOpen(false)}>
-                            Membership
-                        </Link>
+                                    {user?.role === "admin" && (
+                                        <Link className="mobile-menu-link" to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                                            🛡️ Admin
+                                        </Link>
+                                    )}
 
-                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/success-stories" onClick={() => setIsMobileMenuOpen(false)}>
-                            Success
-                        </Link>
+                                    <Link className="mobile-menu-link" to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                                        👤 Dashboard
+                                    </Link>
 
-                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/events" onClick={() => setIsMobileMenuOpen(false)}>
-                            Events
-                        </Link>
+                                    <button
+                                        onClick={() => {
+                                            setIsCreateProfileOpen(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="mobile-menu-button"
+                                    >
+                                        💍 Profile
+                                    </button>
 
-                        <Link className="block px-4 py-3 text-[#800020] font-medium" to="/contact" onClick={() => setIsMobileMenuOpen(false)}>
-                            Contact
-                        </Link>
+                                    <Link className="mobile-menu-link" to="/sent-interests" onClick={() => setIsMobileMenuOpen(false)}>
+                                        📤 Sent
+                                    </Link>
 
-                        {isLoggedIn && (
-                            <>
-                                <Link className="block px-4 py-3 text-[#800020] font-medium" to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                                    Dashboard
-                                </Link>
+                                    <Link className="mobile-menu-link" to="/received-interests" onClick={() => setIsMobileMenuOpen(false)}>
+                                        📥 Received
+                                    </Link>
 
-                                <button
-                                    onClick={() => {
-                                        setIsCreateProfileOpen(true);
-                                        setIsMobileMenuOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-3 text-[#800020] font-medium bg-transparent border-0"
-                                >
-                                    Profile
-                                </button>
+                                    <button
+                                        onClick={() => {
+                                            handleLogout();
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="mobile-menu-button"
+                                    >
+                                        🚪 Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="flex items-center px-4 py-3 gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setIsLoginOpen(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="nav-link bg-transparent border-0 cursor-pointer"
+                                    >
+                                        Login
+                                    </button>
 
-                                <Link className="block px-4 py-3 text-[#800020] font-medium" to="/sent-interests" onClick={() => setIsMobileMenuOpen(false)}>
-                                    Sent
-                                </Link>
+                                    <span className="mx-2 text-amber-500 font-semibold">|</span>
 
-                                <Link className="block px-4 py-3 text-[#800020] font-medium" to="/received-interests" onClick={() => setIsMobileMenuOpen(false)}>
-                                    Received
-                                </Link>
-                            </>
-                        )}
+                                    <button
+                                        onClick={() => {
+                                            setIsRegisterOpen(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="nav-link bg-transparent border-0 cursor-pointer"
+                                    >
+                                        Register
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
+
                 <LoginModal
                     isOpen={isLoginOpen}
                     onClose={() => {
@@ -303,43 +287,34 @@ export default function Header() {
                     onLoginSuccess={handleLoginSuccess}
                 />
             </header>
+
             {isCreateProfileOpen && (
                 <CreateProfileModal onClose={() => setIsCreateProfileOpen(false)} />
             )}
 
+            {isLoggedIn && (
+                <div className="hidden lg:flex fixed top-40 right-5 z-[9998] flex-col gap-3 side-user-menu">
+                    {user?.role === "admin" && (
+                        <Link className="side-menu-link" to="/admin">
+                            🛡️ Admin
+                        </Link>
+                    )}
 
-            {user?.role === "admin" && (
-                <Link
-                    to="/admin"
-                    className="
-            fixed
-            fixed
-            top-36
-            right-5
-            z-[9998]
-            bg-white
-            text-[#800020]
-            border
-            border-[#800020]/20
-            px-4
-            py-2
-            rounded-full
-            shadow-lg
-            hover:bg-[#fff7f0]
-            hover:border-[#800020]
-            transition
-            flex
-            items-center
-            gap-2
-            text-sm
-            font-semibold
-            whitespace-nowrap
-        "
-                >
-                    🛡️ Admin
-                </Link>
+                    <Link className="side-menu-link" to="/dashboard">👤 Dashboard</Link>
+
+                    <button
+                        onClick={() => setIsCreateProfileOpen(true)}
+                        className="side-menu-link"
+                    >
+                        💍 Profile
+                    </button>
+
+                    <Link className="side-menu-link" to="/sent-interests">📤 Sent</Link>
+                    <Link className="side-menu-link" to="/received-interests">📥 Received</Link>
+                </div>
             )}
-
         </div>
+            
+        
     );
 }
