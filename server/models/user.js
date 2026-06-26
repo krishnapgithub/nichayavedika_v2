@@ -18,6 +18,12 @@ import {
 const userSchema = new mongoose.Schema(
     {
 
+        role: {
+            type: String,
+            enum: ["user", "admin", "super_admin", "oper_admin", "executive"],
+            default: "user",
+        },
+
         status: {
             type: String,
             enum: ["pending", "approved", "rejected"],
@@ -69,7 +75,7 @@ const userSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            enum: ["user", "admin", "oper_admin", "executive"],
+            enum: Object.values(USER_ROLES),
             default: "user",
         },
 

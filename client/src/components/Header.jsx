@@ -304,6 +304,7 @@ export default function Header() {
                     to="/admin"
                     className="
             fixed
+            fixed
             top-36
             right-5
             z-[9998]

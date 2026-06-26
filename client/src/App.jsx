@@ -11,7 +11,7 @@ import Membership from "./pages/Membership.jsx";
 import Events from "./pages/Events.jsx";
 import Contact from "./pages/Contact.jsx";
 import SuccessStories from "./pages/SuccessStories.jsx";
-
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 function ProtectedRoute({ children }) {
     const isLoggedIn = !!localStorage.getItem("user");
 
@@ -48,6 +48,8 @@ function App() {
             />
 
             <Routes>
+
+              
                 <Route path="/" element={<Home />} />
                 <Route path="/profile/:id" element={<ProfilePage />} />
                 <Route
@@ -94,6 +96,12 @@ function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/success-stories" element={<SuccessStories />} />
+                <Route
+                    path="/admin"
+                    element={<AdminDashboard />}
+                />
+
+                
 
             </Routes>
         </>

@@ -56,7 +56,9 @@ export const USER_STATUS = {
 // ==========================================
 // User Roles
 // ==========================================
+
 export const USER_ROLES = {
+    SUPER_ADMIN: "super_admin",
     USER: "user",
     ADMIN: "admin",
     OPER_ADMIN: "oper_admin",

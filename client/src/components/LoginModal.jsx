@@ -33,7 +33,7 @@ export default function LoginModal({ isOpen, onClose }) {
             setLoading(true);
 
             const response = await axios.post(
-                `${API_BASE_URL}/auth/login`,
+                `${API_BASE_URL}/api/auth/login`,
                 {
                     email,
                     password,
