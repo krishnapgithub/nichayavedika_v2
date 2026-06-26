@@ -43,17 +43,18 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     const handleResetPassword = async () => {
 
         if (!isValidEmail(email)) {
-            alert("Please enter a valid email address");
+           // toast.success("Please enter a valid email address");
+            toast.success("Please enter a valid email address");
             return;
         }
 
         if (otp.length !== 6) {
-            alert("Please enter a valid 6-digit OTP");
+            toast.success("Please enter a valid 6-digit OTP");
             return;
         }
 
         if (password.length < 6) {
-            alert("Password must be at least 6 characters");
+            toast.success("Password must be at least 6 characters");
             return;
         }
 
@@ -68,10 +69,10 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
                 password,
             });
 
-            alert("Password updated successfully. Please login.");
+            toast.success("Password updated successfully. Please login.");
             onClose();
         } catch (error) {
-            alert(error.response?.data?.message || "Password reset failed");
+            toast.success(error.response?.data?.message || "Password reset failed");
         } finally {
             setLoading(false);
         }

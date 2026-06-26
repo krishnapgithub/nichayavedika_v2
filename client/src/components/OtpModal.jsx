@@ -27,14 +27,14 @@ export default function OtpModal({
                 }
             );
 
-            //alert(response.data.message);
+            //toast.success(response.data.message);
 
             if (onOtpVerified) {
                 await onOtpVerified();
             }
 
         } catch (error) {
-            alert(
+            toast.success(
                 error.response?.data?.message ||
                 "OTP verification failed"
             );

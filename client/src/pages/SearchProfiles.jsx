@@ -10,7 +10,7 @@ const handleSendInterest = async (profileId) => {
         const savedUser = JSON.parse(localStorage.getItem("user"));
 
         if (!savedUser) {
-            alert("Please login to send interest");
+            toast.success("Please login to send interest");
             return;
         }
 
@@ -19,10 +19,10 @@ const handleSendInterest = async (profileId) => {
             receiverProfileId: profileId,
         });
 
-        alert(response.data.message || "Interest sent successfully");
+        toast.success(response.data.message || "Interest sent successfully");
     } catch (error) {
         console.error("Interest failed:", error);
-        alert(error.response?.data?.message || "Failed to send interest");
+        toast.success(error.response?.data?.message || "Failed to send interest");
     }
 };
 export default function SearchProfiles() {

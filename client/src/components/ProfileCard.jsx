@@ -11,7 +11,7 @@ const handleViewProfile = async (profileId) => {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
-        alert("Please login to view profile");
+        toast.success("Please login to view profile");
         return;
     }
 
@@ -20,7 +20,7 @@ const handleViewProfile = async (profileId) => {
     );
 
     if (!response.data.allowed) {
-        alert(response.data.message);
+        toast.success(response.data.message);
         return;
     }
 
@@ -35,7 +35,7 @@ export default function ProfileCard({ profile }) {
         const user = JSON.parse(localStorage.getItem("user"));
 
         if (!user) {
-            alert("Please login to view profile");
+            toast.success("Please login to view profile");
             return;
         }
 
@@ -44,11 +44,11 @@ export default function ProfileCard({ profile }) {
         );
 
         if (!response.data.allowed) {
-            alert(response.data.message);
+            toast.success(response.data.message);
             return;
         }
 
-        alert(response.data.message);
+        toast.success(response.data.message);
         navigate(`/profile/${profile._id}`);
     };
 

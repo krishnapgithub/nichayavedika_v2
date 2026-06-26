@@ -19,7 +19,7 @@ export default function LoginModal({ isOpen, onClose }) {
       try {
 
           if (!isValidEmail(email) || email.length < 0) {
-              //alert("Please enter a valid email address");
+              //toast.success("Please enter a valid email address");
               toast.error("Please enter a valid email address");
               return;
 
@@ -27,7 +27,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
 
             if (password.length < 6) {
-                //alert("Password must be at least 6 characters");
+                //toast.success("Password must be at least 6 characters");
                 toast.error("Password must be at least 6 characters");
                 //toast.success("Login successful!");
                 return;
@@ -48,16 +48,29 @@ export default function LoginModal({ isOpen, onClose }) {
                 JSON.stringify(response.data.user)
             );
 
-            //alert("Login Successful");
+            //toast.success("Login Successful");
 
             console.log("Logged In User:", response.data.user);
 
             onClose();
 
         } catch (error) {
-            alert(
-                error.response?.data?.message || "Login failed"
-            );
+            //toast.success(                error.response?.data?.message || "Login failed"            );
+          const message =
+              error.response?.data?.message || "Login failed";
+
+          if (message.includes("pending admin approval")) {
+              toast(
+                  "⏳ Your registration is pending admin approval. Please wait for confirmation.",
+                  {
+                      duration: 5000,
+                      icon: "📝",
+                  }
+              );
+          } else {
+              toast.error(message);
+          }
+
         } finally {
             setLoading(false);
         }

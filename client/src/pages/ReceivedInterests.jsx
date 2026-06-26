@@ -35,7 +35,7 @@ export default function ReceivedInterests() {
 
 
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to update interest");
+            toast.success(error.response?.data?.message || "Failed to update interest");
         }
     };
 

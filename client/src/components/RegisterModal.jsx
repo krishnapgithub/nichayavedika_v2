@@ -214,7 +214,7 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
 
 
         } catch (error) {
-            alert(error.response?.data?.message || "Registration failed");
+            toast.success(error.response?.data?.message || "Registration failed");
         } finally {
             setLoading(false);
         }

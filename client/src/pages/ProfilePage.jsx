@@ -59,14 +59,14 @@ export default function CreateProfile({ onClose }) {
         ];
 
         if (!allowedTypes.includes(file.type)) {
-            alert("Only JPG, JPEG and PNG files are allowed.");
+            toast.success("Only JPG, JPEG and PNG files are allowed.");
             return;
         }
 
         const maxSize = 2 * 1024 * 1024; // 2MB
 
         if (file.size > maxSize) {
-            alert("Photo size should be less than 2 MB.");
+            toast.success("Photo size should be less than 2 MB.");
             return;
         }
 
@@ -138,11 +138,11 @@ export default function CreateProfile({ onClose }) {
                 }
             );
 
-            alert("Profile Created Successfully");
+            toast.success("Profile Created Successfully");
             onClose();
         } catch (error) {
             console.error(error);
-            alert("Failed to create profile");
+            toast.success("Failed to create profile");
         }
     };
     return (

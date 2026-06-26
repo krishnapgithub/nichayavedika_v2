@@ -42,7 +42,7 @@ function App() {
                 onLogout={() => {
                     localStorage.removeItem("user");
                     localStorage.removeItem("token");
-                    alert("Your session expired. Please login again.");
+                    //toast.success("Your session expired. Please login again.");
                     window.location.href = "/";
                 }}
             />
