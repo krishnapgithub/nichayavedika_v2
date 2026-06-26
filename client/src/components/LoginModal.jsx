@@ -14,15 +14,17 @@ export default function LoginModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     const handleLogin = async () => {
-        if(!isValidEmail(email)) {
-            //alert("Please enter a valid email address");
-            toast.error("Please enter a valid email address");
-            return;
 
-        }
-        try {
 
-           
+      try {
+
+          if (!isValidEmail(email) || email.length < 0) {
+              //alert("Please enter a valid email address");
+              toast.error("Please enter a valid email address");
+              return;
+
+          }
+
 
             if (password.length < 6) {
                 //alert("Password must be at least 6 characters");

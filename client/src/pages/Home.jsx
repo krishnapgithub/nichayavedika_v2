@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import weddingHero from "../images/wedding-hero.png";
 import { useNavigate } from "react-router-dom";
-
+import RegisterModal from "../components/RegisterModal";
 
 
 function Home() {
@@ -17,6 +17,8 @@ function Home() {
     const [profiles, setProfiles] = useState([]);
 
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+    
    
 
     useEffect(() => {
@@ -100,17 +102,18 @@ function Home() {
                                 <div className="mt-8 flex gap-4">
                                     <button
                                         onClick={() => navigate("/search")}
-                                        className="px-6 py-3 bg-amber-400 text-black rounded-xl font-semibold hover:bg-amber-300 transition"
+                                        className="primary-btn premium-hover"
                                     >
                                         Search Now
                                     </button>
 
                                     <button
-                                        onClick={() => navigate("/search")}
-                                        className="px-6 py-3 border border-white rounded-xl hover:bg-white hover:text-[#800020] transition"
+                                        onClick={() => setIsRegisterOpen(true)}
+                                        className="primary-btn premium-hover"
                                     >
-                                        Register
+                                        Register free
                                     </button>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -139,7 +142,7 @@ function Home() {
 
                                 <button
                                     onClick={() => navigate("/search")}
-                                    className="w-full py-3 px-6 bg-[#800020] text-white rounded-xl font-semibold hover:bg-[#5c0017] transition duration-300"
+                                    className="primary-btn premium-hover"
                                 >
                                     Search Profiles
                                 </button>
@@ -432,7 +435,10 @@ function Home() {
 
                 </div>
             </footer>
-
+            <RegisterModal
+                isOpen={isRegisterOpen}
+                onClose={() => setIsRegisterOpen(false)}
+            />
             
         </>
     );

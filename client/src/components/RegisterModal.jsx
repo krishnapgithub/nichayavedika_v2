@@ -7,6 +7,58 @@ import toast from "react-hot-toast";
 import { isValidEmail } from "../utils/validation";
 
 
+const validateRegisterForm = () => {
+    const nameRegex = /^[A-Za-z\s.'-]+$/;
+    const mobileRegex = /^[0-9]{10}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,20}$/;
+
+    if (!formData.fullName.trim()) {
+        toast.error("Full Name is required");
+        return false;
+    }
+
+    if (formData.fullName.length > 220) {
+        toast.error("Full Name cannot exceed 220 characters");
+        return false;
+    }
+
+    if (!nameRegex.test(formData.fullName.trim())) {
+        toast.error("Full Name can contain only letters and spaces");
+        return false;
+    }
+
+    if (!mobileRegex.test(formData.mobile)) {
+        toast.error("Please enter a valid 10-digit mobile number");
+        return false;
+    }
+
+    if (!isValidEmail(formData.email)) {
+        toast.error("Please enter a valid email address");
+        return false;
+    }
+
+    if (!formData.registeringFor) {
+        toast.error("Please select Registering For");
+        return false;
+    }
+
+    if (!formData.gender) {
+        toast.error("Please select Gender");
+        return false;
+    }
+
+    if (!passwordRegex.test(formData.password)) {
+        toast.error("Password must be at least 6 characters and include one number");
+        return false;
+    }
+
+    if (formData.email.length > 100) {
+        toast.error("Email cannot exceed 100 characters");
+        return false;
+    }
+
+    return true;
+};
 
 export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     const [isOtpOpen, setIsOtpOpen] = useState(false);
@@ -14,62 +66,100 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
 
     const [formData, setFormData] = useState({
         fullName: "",
-        mobile: "",
         email: "",
-        registeringFor: "",
-        gender: "",
+        mobile: "",
         password: "",
+        gender: "",
+        registeringFor: "",
     });
 
-    if (!isOpen) return null;
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-    };
-
-    const handleRegister = async () => {
+    const validateRegisterForm = () => {
 
         if (!formData.fullName.trim()) {
-            return toast.error("Full Name is required"); //alert("Full Name is required");
+            toast.error("Full Name is required");
+            return false;
         }
+
+        if (formData.fullName.length > 220) {
+            toast.error("Full Name cannot exceed 200 characters");
+            return false;
+        }
+
+        if (formData.email.length > 100) {
+            toast.error("Email cannot exceed 100 characters");
+            return false;
+        }
+       
 
         if (!/^\d{10}$/.test(formData.mobile)) {
-            return toast.error("Please enter a valid 10-digit mobile number");  //alert("Please enter a valid 10-digit mobile number");
+            toast.error("Please enter a valid 10-digit mobile number");
+            return false;
         }
 
-        {/*const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-if (!emailRegex.test(formData.email)) {
-    return toast.error("Please enter a valid email address");
-}*/}
-
-        if (!isValidEmail(formData.email)) {
-            toast.error("Please enter a valid email address");
-            return;
+        if (formData.password.length < 6) {
+            toast.error("Password must be at least 6 characters");
+            return false;
         }
 
         
 
-        if (!formData.registeringFor) {
-            return toast.error("Please select Registering For"); //alert("Please select Registering For");
+        if (!isValidEmail(formData.email)) {
+            toast.error("Please enter a valid email address");
+            return false;
         }
 
-        if (!formData.gender) {
-            return toast.error("Please select Gender"); // alert("Please select Gender");
+        return true;
+    };
+
+    
+    if (!isOpen) return null;
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        if (name === "fullName") {
+            setFormData({
+                ...formData,
+                fullName: value.slice(0, 200),
+            });
+            return;
         }
 
-        if (formData.password.length < 6) {
-            return toast.error("Password must be at least 6 characters");  //alert("Password must be at least 6 characters");
+        if (name === "mobile") {
+            setFormData({
+                ...formData,
+                mobile: value.replace(/\D/g, "").slice(0, 10),
+            });
+            return;
         }
+
+        if (name === "email") {
+            setFormData({
+                ...formData,
+                email: value.slice(0, 100),
+            });
+            return;
+        }
+
+        if (name === "password") {
+            setFormData({
+                ...formData,
+                password: value.slice(0, 20),
+            });
+            return;
+        }
+
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    };
+
+    const handleRegister = async () => {
+        if (!validateRegisterForm()) return;
 
         try {
-
-            // ==========================================
-            // Send Email OTP
-            // ==========================================
             setLoading(true);
 
             await axios.post(
@@ -80,9 +170,8 @@ if (!emailRegex.test(formData.email)) {
             );
 
             setIsOtpOpen(true);
-
         } catch (error) {
-            alert(
+            toast.error(
                 error.response?.data?.message ||
                 "Registration failed"
             );
@@ -90,7 +179,6 @@ if (!emailRegex.test(formData.email)) {
             setLoading(false);
         }
     };
-
     const handleOtpVerified = async () => {
         try {
             setLoading(true);
@@ -158,10 +246,45 @@ if (!emailRegex.test(formData.email)) {
                 </div>
 
                 <div className="mt-8 grid md:grid-cols-2 gap-4">
-                    <input name="fullName" value={formData.fullName} onChange={handleChange} className="border rounded-xl px-4 py-3" placeholder="Full Name" />
-                    <input name="mobile" value={formData.mobile} onChange={handleChange} className="border rounded-xl px-4 py-3" placeholder="Mobile Number" />
-                    <input name="email" value={formData.email} onChange={handleChange} className="border rounded-xl px-4 py-3" placeholder="Email Address" />
+                    <input
+                        name="fullName"
+                        maxLength={200}
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Full Name"
+                    />
 
+                    <input
+                        name="mobile"
+                        maxLength={10}
+                        inputMode="numeric"
+                        value={formData.mobile}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Mobile Number"
+                    />
+
+                    <input
+                        name="email"
+                        type="email"
+                        maxLength={100}
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Email Address"
+                    />
+
+                    <input
+                        name="password"
+                        type="password"
+                        minLength={6}
+                        maxLength={20}
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="border rounded-xl px-4 py-3"
+                        placeholder="Password"
+                    />
                     <select name="registeringFor" value={formData.registeringFor} onChange={handleChange} className="border rounded-xl px-4 py-3">
                         <option value="">Registering For</option>
                         <option value="Self">Self</option>
@@ -177,7 +300,7 @@ if (!emailRegex.test(formData.email)) {
                         <option value="Groom">Groom</option>
                     </select>
 
-                    <input name="password" value={formData.password} onChange={handleChange} className="border rounded-xl px-4 py-3" placeholder="Password" type="password" />
+                    
                 </div>
 
                 <button

@@ -60,14 +60,14 @@ export default function CreateProfile({ onClose }) {
         ];
 
         if (!allowedTypes.includes(file.type)) {
-            alert("Only JPG, JPEG and PNG files are allowed.");
+            //alert("Only JPG, JPEG and PNG files are allowed.");
             return;
         }
 
         const maxSize = 2 * 1024 * 1024; // 2MB
 
         if (file.size > maxSize) {
-            alert("Photo size should be less than 2 MB.");
+            //alert("Photo size should be less than 2 MB.");
             return;
         }
 
@@ -122,6 +122,8 @@ export default function CreateProfile({ onClose }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+
+
         try {
             const payload = new FormData();
 
@@ -138,13 +140,13 @@ export default function CreateProfile({ onClose }) {
             );
 
 
-            alert("Profile Created Successfully");
+            //alert("Profile Created Successfully");
             onClose();
         } catch (error) {
             console.log("FULL ERROR:", error);
             console.log("BACKEND ERROR:", error.response?.data);
 
-            alert(error.response?.data?.message || "Failed to create profile");
+            //alert(error.response?.data?.message || "Failed to create profile");
         }
     };
     return (
