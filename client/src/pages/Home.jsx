@@ -87,7 +87,7 @@ function Home() {
                         <div className="relative z-10 px-10 pt-20 pb-8 w-full">
                             <div className="max-w-2xl">
 
-                                <h1 className="text-6xl font-bold leading-tight">
+                                <h1 className="text-3xl md:text-5xl font-bold leading-tight px-4">
                                     Blessed Matches,
                                     <br />
                                     Beautiful Beginnings
@@ -137,7 +137,10 @@ function Home() {
                                     <option>Caste</option>
                                 </select>
 
-                                <button onClick={() => navigate("/search")} className="bg-[#800020] text-white rounded-xl font-semibold hover:bg-[#5c0017] transition">
+                                <button
+                                    onClick={() => navigate("/search")}
+                                    className="w-full py-3 px-6 bg-[#800020] text-white rounded-xl font-semibold hover:bg-[#5c0017] transition duration-300"
+                                >
                                     Search Profiles
                                 </button>
 

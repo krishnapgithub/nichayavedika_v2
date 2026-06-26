@@ -184,17 +184,18 @@ export default function Header() {
                         <div className="flex items-center gap-3">
                             {user ? (
                                 <>
-                                    <div className="flex items-center gap-1">
-                                        <span className="flex items-center gap-1 text-sm text-gray-600 font-medium whitespace-nowrap">
-                                            <FaUserCircle className="text-[#800020] text-lg" />
+                                    <div className="border-t border-gray-100 mt-2 pt-2">
+                                        <div className="px-4 py-3 flex items-center gap-2 text-gray-600 font-medium">
+                                            <FaUserCircle className="text-[#800020]" />
                                             Hi, {user.fullName}
-                                        </span>
-
-                                        <span className="text-amber-500 font-semibold">|</span>
+                                        </div>
 
                                         <button
-                                            onClick={handleLogout}
-                                            className="nav-link bg-transparent border-0 cursor-pointer"
+                                            onClick={() => {
+                                                handleLogout();
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className="block w-full text-left px-4 py-3 text-[#800020] font-medium bg-transparent border-0"
                                         >
                                             Logout
                                         </button>
@@ -202,21 +203,29 @@ export default function Header() {
                                 </>
                             ) : (
                                 <>
-                                        <button
-                                            onClick={() => setIsLoginOpen(true)}
-                                            className="nav-link bg-transparent border-0 cursor-pointer"
-                                        >
-                                            Login
-                                        </button>
+                                        <div className="border-t border-gray-100 mt-2 pt-2 flex items-center px-4 gap-3">
+        <button
+            onClick={() => {
+                setIsLoginOpen(true);
+                setIsMobileMenuOpen(false);
+            }}
+            className="text-[#800020] font-medium bg-transparent border-0"
+        >
+            Login
+        </button>
 
-                                        <span className="mx-1 text-amber-500 font-semibold">|</span>
+        <span className="text-amber-500 font-semibold">|</span>
 
-                                        <button
-                                            onClick={() => setIsRegisterOpen(true)}
-                                            className="nav-link bg-transparent border-0 cursor-pointer"
-                                        >
-                                            Register
-                                        </button>
+        <button
+            onClick={() => {
+                setIsRegisterOpen(true);
+                setIsMobileMenuOpen(false);
+            }}
+            className="text-[#800020] font-medium bg-transparent border-0"
+        >
+            Register
+        </button>
+    </div>
                                 </>
                             )}
                         </div>

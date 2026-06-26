@@ -26,6 +26,9 @@
     padding: 12px 20px;
     border: none;
     cursor: pointer;
+    /* Add these */
+    min-width: 180px;
+    flex-shrink: 0;
 }
 
     .primary-btn:hover {
@@ -39,7 +42,8 @@
 .nav-link {
     position: relative;
     color: #374151;
-    transition: color 0.3s ease;
+    transition: color 0.2s ease;
+    font-weight: 500;
 }
 
     .nav-link:hover {
@@ -50,21 +54,30 @@
         content: "";
         position: absolute;
         left: 0;
-        bottom: -4px;
+        bottom: -6px;
         width: 0;
         height: 2px;
-        background: #800020;
-        transition: width 0.3s ease;
+        background-color: #d97706;
+        transition: width 0.2s ease;
     }
 
     .nav-link:hover::after {
         width: 100%;
     }
 
-/*.nav-link {
-    color: green !important;
-}*/
+.mobile-nav-link {
+    color: #374151;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+    padding: 10px 0;
+    display: block;
+    width: 100%;
+}
 
+    .mobile-nav-link:hover {
+        color: #800020;
+    }
 .page-container {
     width: 80%;
     max-width: 1400px;
@@ -133,3 +146,5 @@ textarea.profile-input {
     margin: 0 8px;
     font-weight: 600;
 }
+
+    
