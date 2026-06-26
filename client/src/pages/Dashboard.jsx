@@ -4,6 +4,8 @@ import axios from "axios";
 import Header from "../components/Header.jsx";
 
 export default function Dashboard() {
+
+    const API_URL = import.meta.env.VITE_API_URL;
     const userId = "6a39857828603c403e7c71bf";
 
     const [stats, setStats] = useState({
@@ -21,11 +23,11 @@ export default function Dashboard() {
     const fetchDashboardStats = async () => {
         try {
             const sentResponse = await axios.get(
-                `http://localhost:5000/api/interests/sent/${userId}`
+                `${import.meta.env.VITE_API_URL}/api/interests/sent/${userId}`
             );
 
             const receivedResponse = await axios.get(
-                `http://localhost:5000/api/interests/received/${userId}`
+                `${import.meta.env.VITE_API_URL}/api/interests/received/${userId}`
             );
 
             const sent = sentResponse.data.interests || [];

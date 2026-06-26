@@ -14,7 +14,7 @@ const handleSendInterest = async (profileId) => {
             return;
         }
 
-        const response = await axios.post("http://localhost:5000/api/interests/send", {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/interests/send`, {
             senderId: savedUser._id,
             receiverProfileId: profileId,
         });
@@ -50,7 +50,7 @@ export default function SearchProfiles() {
             setLoading(true);
 
             const response = await axios.get(
-                "http://localhost:5000/api/profiles/search",
+                `${import.meta.env.VITE_API_URL}/api/profiles/search`,
                 {
                     params: filters,
                     page: 1,
@@ -146,7 +146,7 @@ export default function SearchProfiles() {
                                 <img
                                     src={
                                         profile.profilePhoto
-                                            ? `http://localhost:5000/${profile.profilePhoto}`
+                                            ? `${import.meta.env.VITE_API_URL} /api/profiles/${profile.profilePhoto}`
                                             : logo
                                     }
                                     alt="Profile"

@@ -12,7 +12,8 @@ export default function SentInterests() {
 
     const fetchSentInterests = async () => {
         const response = await axios.get(
-            `http://localhost:5000/api/interests/sent/${userId}`
+            `${import.meta.env.VITE_API_URL}/api/interests/sent/${userId}`
+            
         );
 
         setInterests(response.data.interests || []);
@@ -46,7 +47,7 @@ export default function SentInterests() {
                                     <div className="w-28 h-28 rounded-xl bg-gray-100 overflow-hidden flex items-center justify-center">
                                         {profile?.profilePhoto ? (
                                             <img
-                                                src={`http://localhost:5000/uploads/${profile.profilePhoto}`}
+                                                src= ''
                                                 alt="Profile"
                                                 className="w-full h-full object-cover"
                                             />

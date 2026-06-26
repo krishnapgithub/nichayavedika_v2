@@ -12,9 +12,11 @@ export default function ReceivedInterests() {
         fetchReceivedInterests();
     }, []);
 
+    //`${import.meta.env.VITE_API_URL}/api/interests/received/sent/${userId}`
     const fetchReceivedInterests = async () => {
         const response = await axios.get(
-            `http://localhost:5000/api/interests/received/${userId}`
+            //`${import.meta.env.VITE_API_URL}/api/interests/received/${userId}`
+                `${import.meta.env.VITE_API_URL}/api/interests/received/sent/${userId}`
         );
 
         setInterests(response.data.interests || []);
@@ -23,7 +25,8 @@ export default function ReceivedInterests() {
     const updateStatus = async (interestId, status) => {
         try {
             await axios.put(
-                `http://localhost:5000/api/interests/${interestId}/status`,
+                
+                `${import.meta.env.VITE_API_URL}/api/interests/${interestId}/status`,
                 { status }
             );
 
@@ -64,7 +67,7 @@ export default function ReceivedInterests() {
                                     <div className="w-28 h-28 rounded-xl bg-gray-100 overflow-hidden flex items-center justify-center">
                                         {profile?.profilePhoto ? (
                                             <img
-                                                src={`http://localhost:5000/uploads/${profile.profilePhoto}`}
+                                                src='' // to changed
                                                 alt="Profile"
                                                 className="w-full h-full object-cover"
                                             />
