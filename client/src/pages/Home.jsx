@@ -2,17 +2,21 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import ProfileCard from "../components/ProfileCard";
+
 import { FaSearch } from "react-icons/fa";
 
 import { Link } from "react-router-dom";
 import Header from "../components/Header.jsx";
 
 import weddingHero from "../images/wedding-hero.png";
+import nvLogo from "../images/nvlogo-v1.png";
 
 import { useNavigate } from "react-router-dom";
 import RegisterModal from "../components/RegisterModal";
-import nvLogo from "../images/nvlogo-v1.png";
+import ProfileCard from "../components/ProfileCard";
+
+
+
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -25,6 +29,7 @@ function Home() {
     const [profiles, setProfiles] = useState([]);
 
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchProfiles();
@@ -33,15 +38,31 @@ function Home() {
 
     const fetchProfiles = async () => {
         try {
-            const response = await axios.get(
-                `${API_BASE_URL}/api/profiles`
+            setLoading(true);
+
+            const token = localStorage.getItem("token");
+
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL}/api/profiles/search`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
             );
 
-            setProfiles(response.data.profiles);
+            setProfiles(res.data.profiles || []);
+
         } catch (error) {
-            console.log(error);
+            toast.error("Failed to load profiles");
+        } finally {
+            setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchProfiles();
+    }, []);
 
 
     const toggleLike = (id) => {
@@ -174,70 +195,29 @@ function Home() {
                         </div>
                     </div>
 
+                    
+                    {/* Profiles */}
+                    {/* Profiles */}
+                    <section className="nv-section bg-gradient-to-b from-white to-rose-50 -mt-8 pt-2">
+                        <div className="max-w-7xl mx-auto px-6">
 
-                    {/* Stats */}
-                    {/* Success Stories */}
-                    <section className="mt-6 mb-2 bg-white rounded-[32px] shadow-lg border border-rose-100 p-8">
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-[#800020]">
-                                Success Stories
+                            <h2 className="text-4xl font-bold text-center text-gray-900 mb-2">
+                                Featured Profiles
                             </h2>
-                            <p className="text-gray-600 mt-2">
-                                Beautiful journeys that began at NichayaVedika
+
+                            <p className="text-center text-gray-500 mt-2 mb-8">
+                                Discover verified brides and grooms from trusted families
                             </p>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {[
-                                {
-                                    names: "Arjun & Sravya",
-                                    place: "Hyderabad",
-                                    text: "We found our perfect match through NichayaVedika. A truly blessed journey."
-                                },
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                {displayProfiles.slice(0, 8).map((profile) => (
+                                    <ProfileCard
+                                        key={profile._id}
+                                        profile={profile}
+                                    />
+                                ))}
+                            </div>
 
-                                {
-                                    names: "Arjun & Sravya",
-                                    place: "Hyderabad",
-                                    text: "We found our perfect match through NichayaVedika. A truly blessed journey."
-                                },
-                                {
-                                    names: "Rahul & Anusha",
-                                    place: "Vijayawada",
-                                    text: "Simple, trusted, and family-friendly platform for Telugu matrimony."
-                                },
-                                {
-                                    names: "Kiran & Deepika",
-                                    place: "Warangal",
-                                    text: "Our families connected easily and everything felt very genuine."
-                                }
-                            ].map((story, index) => (
-                                <div
-                                    key={index}
-                                    className="relative overflow-hidden group bg-gradient-to-br from-rose-50 via-white to-amber-50 rounded-[28px] p-6 border border-rose-100 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
-                                >
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#800020]/10 via-amber-200/20 to-pink-200/30"></div>
-
-                                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 snow-layer"></div>
-
-                                    <div className="relative z-10">
-                                        <div className="w-16 h-16 mx-auto rounded-full bg-[#800020] text-white flex items-center justify-center text-2xl shadow-lg">
-                                            ❤
-                                        </div>
-
-                                        <h3 className="mt-5 text-xl font-bold text-[#800020] text-center">
-                                            {story.names}
-                                        </h3>
-
-                                        <p className="text-sm text-amber-700 text-center mt-1">
-                                            {story.place}
-                                        </p>
-
-                                        <p className="mt-4 text-gray-600 text-center leading-relaxed">
-                                            “{story.text}”
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </section>
 
@@ -331,6 +311,74 @@ function Home() {
 
                     </div>
 
+                    {/* Stats */}
+                    {/* Success Stories */}
+                    <section className="mt-6 mb-2 bg-white rounded-[32px] shadow-lg border border-rose-100 p-8">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold text-[#800020]">
+                                Success Stories
+                            </h2>
+                            <p className="text-gray-600 mt-2">
+                                Beautiful journeys that began at NichayaVedika
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {[
+                                {
+                                    names: "Arjun & Sravya",
+                                    place: "Hyderabad",
+                                    text: "We found our perfect match through NichayaVedika. A truly blessed journey."
+                                },
+
+                                {
+                                    names: "Arjun & Sravya",
+                                    place: "Hyderabad",
+                                    text: "We found our perfect match through NichayaVedika. A truly blessed journey."
+                                },
+                                {
+                                    names: "Rahul & Anusha",
+                                    place: "Vijayawada",
+                                    text: "Simple, trusted, and family-friendly platform for Telugu matrimony."
+                                },
+                                {
+                                    names: "Kiran & Deepika",
+                                    place: "Warangal",
+                                    text: "Our families connected easily and everything felt very genuine."
+                                }
+                            ].map((story, index) => (
+                                <div
+                                    key={index}
+                                    className="relative overflow-hidden group bg-gradient-to-br from-rose-50 via-white to-amber-50 rounded-[28px] p-6 border border-rose-100 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
+                                >
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-[#800020]/10 via-amber-200/20 to-pink-200/30"></div>
+
+                                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 snow-layer"></div>
+
+                                    <div className="relative z-10">
+                                        <div className="w-16 h-16 mx-auto rounded-full bg-[#800020] text-white flex items-center justify-center text-2xl shadow-lg">
+                                            ❤
+                                        </div>
+
+                                        <h3 className="mt-5 text-xl font-bold text-[#800020] text-center">
+                                            {story.names}
+                                        </h3>
+
+                                        <p className="text-sm text-amber-700 text-center mt-1">
+                                            {story.place}
+                                        </p>
+
+                                        <p className="mt-4 text-gray-600 text-center leading-relaxed">
+                                            “{story.text}”
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    
+
 
                     <section className="mt-6 mb-2  mb-2nv-section bg-white">
                         <div className="max-w-7xl mx-auto px-6">
@@ -394,28 +442,7 @@ function Home() {
                         </div>
                     </section>
 
-                    {/* Profiles */}
-                    <section className="nv-section bg-gradient-to-b from-white to-rose-50 mt-2">
-                        <div className="max-w-7xl mx-auto px-6">
-
-                            <h2 className="text-4xl font-bold text-center text-gray-900">
-                                Featured Profiles
-                            </h2>
-
-                            <p className="text-center text-gray-500 mt-3 mb-12">
-                                Discover verified brides and grooms from trusted families
-                            </p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {displayProfiles.slice(0, 4).map((profile) => (
-                                    <ProfileCard
-                                        key={profile._id}
-                                        profile={profile}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </section>
+                    
                 </main>
             </div>
             <footer className="bg-[#800020] text-white mt-2">

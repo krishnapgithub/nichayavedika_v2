@@ -1,189 +1,75 @@
 .search-page {
-    padding-top: 120px;
     min-height: 100vh;
-    background: #fff8f2;
+    padding: 130px 8%;
+    background: #fff7f2;
 }
 
-.search-container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 30px 20px;
+.search-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #800020;
 }
 
-.search-header {
-    text-align: center;
-    margin-bottom: 28px;
-}
-
-    .search-header h1 {
-        color: #800020;
-        font-size: 36px;
-        font-weight: 700;
-    }
-
-    .search-header p {
-        color: #666;
-    }
-
-.search-filters {
-    background: #ffffff;
-    padding: 22px;
-    border-radius: 18px;
-    box-shadow: 0 8px 24px rgba(128, 0, 32, 0.12);
+.search-filter-card {
+    margin-top: 24px;
+    background: white;
+    padding: 24px;
+    border-radius: 24px;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 14px;
-    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-    .search-filters input,
-    .search-filters select {
-        padding: 12px 14px;
-        border: 1px solid #e5c8c8;
-        border-radius: 10px;
-        font-size: 14px;
-        outline: none;
+    .search-filter-card input,
+    .search-filter-card select {
+        height: 46px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 0 14px;
     }
 
-        .search-filters input:focus,
-        .search-filters select:focus {
-            border-color: #800020;
-        }
-
-    .search-filters button {
+    .search-filter-card button {
         background: #800020;
         color: white;
-        border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         font-weight: 600;
-        cursor: pointer;
     }
 
-.results-title {
-    margin-bottom: 20px;
-}
-
-    .results-title h2 {
-        color: #800020;
-    }
-
-    .results-title p {
-        color: #666;
-    }
-
-.profile-results-grid {
+.profile-grid {
+    margin-top: 30px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 22px;
 }
 
 .search-profile-card {
     background: white;
-    border-radius: 18px;
-    padding: 18px;
-    text-align: center;
-    box-shadow: 0 6px 20px rgba(128, 0, 32, 0.1);
-    transition: 0.25s ease;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
-    .search-profile-card:hover {
-        transform: translateY(-6px);
-    }
-
-.profile-photo-placeholder {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 14px;
-    border-radius: 16px;
-    background: #fff1d6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 42px;
+.profile-photo-box {
+    height: 210px;
+    background: #f8e8ec;
 }
 
-    .profile-photo-placeholder img {
+    .profile-photo-box img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 14px;
     }
 
-.profile-card-info h3 {
-    color: #800020;
-    margin-bottom: 8px;
+.profile-card-body {
+    padding: 18px;
 }
 
-.profile-card-info p {
-    color: #555;
-    font-size: 14px;
-    margin: 4px 0;
-}
-
-.profile-card-info span {
-    display: inline-block;
-    margin-top: 8px;
-    color: #d97706;
-    font-weight: 600;
-}
-
-.profile-card-actions {
-    display: flex;
-    gap: 8px;
+.view-profile-btn {
     margin-top: 14px;
-}
-
-    .profile-card-actions button {
-        flex: 1;
-        padding: 9px;
-        border-radius: 9px;
-        border: none;
-        color: white;
-        cursor: pointer;
-        font-size: 13px;
-    }
-
-.view-btn {
+    width: 100%;
     background: #800020;
-}
-
-.interest-btn {
-    background: #d97706;
-}
-
-.loading-text {
-    text-align: center;
-    color: #800020;
-    font-weight: 600;
-    margin: 30px 0;
-}
-
-.no-results {
-    background: white;
-    padding: 35px;
-    border-radius: 18px;
-    text-align: center;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-    .no-results h3 {
-        color: #800020;
-        margin-bottom: 8px;
-    }
-
-@media (max-width: 900px) {
-    .search-filters {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .profile-results-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 600px) {
-    .search-filters,
-    .profile-results-grid {
-        grid-template-columns: 1fr;
-    }
+    color: white;
+    padding: 11px;
+    border-radius: 12px;
 }
