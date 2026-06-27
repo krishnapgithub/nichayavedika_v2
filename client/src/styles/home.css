@@ -297,3 +297,16 @@ button.nav-link {
         transform: translateY(-4px);
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
     }
+
+
+.mobile-nav-link {
+    display: block;
+    color: #374151;
+    font-weight: 500;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+    .mobile-nav-link:hover {
+        color: #800020;
+    }

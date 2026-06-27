@@ -165,113 +165,85 @@ export default function Header() {
                 </div>
 
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden w-full bg-white border-t border-gray-200 shadow-lg max-h-[80vh] overflow-y-auto">
-                        <Link className="mobile-menu-link" to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-                        <Link className="mobile-menu-link" to="/search" onClick={() => setIsMobileMenuOpen(false)}>Search</Link>
-                        <Link className="mobile-menu-link" to="/membership" onClick={() => setIsMobileMenuOpen(false)}>Membership</Link>
-                        <Link className="mobile-menu-link" to="/success-stories" onClick={() => setIsMobileMenuOpen(false)}>Success</Link>
-                        <Link className="mobile-menu-link" to="/events" onClick={() => setIsMobileMenuOpen(false)}>Events</Link>
-                        <Link className="mobile-menu-link" to="/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+                    <div className="md:hidden bg-white border-t shadow-lg px-6 py-4 space-y-4">
 
-                        <div className="border-t border-gray-200 mt-2 pt-2">
-                            {user ? (
-                                <>
-                                    <div className="mobile-menu-user">
-                                        <FaUserCircle className="text-[#800020]" />
-                                        Hi, {user.fullName}
-                                    </div>
+                        <Link to="/" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                            Home
+                        </Link>
 
+                        <Link to="/membership" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                            Membership
+                        </Link>
 
+                        <Link to="/contact" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                            Contact
+                        </Link>
 
-                                    <Link
-                                        className="mobile-menu-link"
-                                        to="/dashboard"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        👤 Dashboard
-                                    </Link>
+                        <Link to="/events" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                            Events
+                        </Link>
 
-                                    <button
-                                        onClick={() => {
-                                            setIsCreateProfileOpen(true);
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className="mobile-menu-button"
-                                    >
-                                        💍 Profile
-                                    </button>
+                        <Link to="/success-stories" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                            Success Stories
+                        </Link>
 
-                                    <Link
-                                        className="mobile-menu-link"
-                                        to="/sent-interests"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        📤 Sent
-                                    </Link>
+                        {user && (user.role === "admin" || user.role === "superadmin" || user.role === "superAdmin") && (
+                            <Link to="/admin" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                                Admin Dashboard
+                            </Link>
+                        )}
 
-                                    <Link
-                                        className="mobile-menu-link"
-                                        to="/received-interests"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        📥 Received
-                                    </Link>
+                        {user && (user.role === "admin" || user.role === "superadmin") && (
+                            <Link
+                                to="/admin"
+                                className="mobile-nav-link"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Admin Dashboard
+                            </Link>
+                        )}
 
-                                    {["admin", "super_admin"].includes(user?.role) && (
-                                        <Link
-                                            className="mobile-menu-link"
-                                            to="/admin/profiles"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            🛡️ Admin
-                                        </Link>
-                                    )}
-                                    {user?.role === "super_admin" && (
-                                        <Link
-                                            className="mobile-menu-link"
-                                            to="/admin/users"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            👑 Super Admin
-                                        </Link>
-                                    )}
-
-                                    <button
-                                        onClick={() => {
-                                            handleLogout();
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className="mobile-menu-button"
-                                    >
-                                        🚪 Logout
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="flex items-center px-4 py-3 gap-3">
-                                    <button
-                                        onClick={() => {
-                                            setIsLoginOpen(true);
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className="nav-link bg-transparent border-0 cursor-pointer"
-                                    >
-                                        Login
-                                    </button>
-
-                                    <span className="mx-2 text-amber-500 font-semibold">|</span>
-
-                                    <button
-                                        onClick={() => {
-                                            setIsRegisterOpen(true);
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className="nav-link bg-transparent border-0 cursor-pointer"
-                                    >
-                                        Register
-                                    </button>
+                        {user && (
+                            <>
+                                <div className="text-sm text-gray-600">
+                                    Hi, {user.fullName}
                                 </div>
-                            )}
-                        </div>
+
+                                <button
+                                    onClick={() => {
+                                        handleLogout();
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="mobile-nav-link text-left w-full"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        )}
+
+                        {!user && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setIsLoginOpen(true);
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="mobile-nav-link text-left w-full"
+                                >
+                                    Login
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setIsRegisterOpen(true);
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="mobile-nav-link text-left w-full"
+                                >
+                                    Register
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
 
