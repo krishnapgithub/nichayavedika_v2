@@ -68,7 +68,13 @@ export default function Header() {
                             <img
                                 src={nvLogo}
                                 alt="నిశ్చయ వేదిక"
-                                className="h-16 w-16 object-contain"
+                                className=" h-16
+        w-16
+        rounded-full
+        object-cover
+        shadow-lg
+        bg-white
+        p-1"
                             />
 
                             {/* Title & Subtitle */}
