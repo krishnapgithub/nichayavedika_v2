@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Header from "../components/Header.jsx";
 import toast from "react-hot-toast";
+import { Navigate } from "react-router-dom";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -20,6 +21,8 @@ export default function AdminUsers() {
 
 
 
+
+
     const authConfig = {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -31,18 +34,27 @@ export default function AdminUsers() {
     }, []);
 
     const fetchUsers = async () => {
-        try {
-            //const res = await axios.get(`${API_BASE_URL}/api/admin/users`, authConfig);
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
-            const res = await axios.get(
-                `${API_BASE_URL}/api/admin/users`,
-                authConfig
-            );
-
-            setUsers(res.data.users || []);
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Unable to load users");
+        if (
+            !loggedInUser ||
+            !["admin", "superadmin", "superAdmin"].includes(loggedInUser.role)
+        ) {
+            return;
         }
+
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(
+            `${API_BASE_URL}/api/admin/users`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        setUsers(res.data.users);
     };
 
 

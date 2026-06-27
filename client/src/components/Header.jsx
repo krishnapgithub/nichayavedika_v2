@@ -32,13 +32,16 @@ export default function Header() {
     const isLoggedIn = !!user;
 
     const handleLogout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        localStorage.clear();
+
         setUser(null);
+
         setIsLoginOpen(false);
         setIsRegisterOpen(false);
         setIsCreateProfileOpen(false);
+
         toast.success("Logged out successfully!");
+
         navigate("/");
     };
 
@@ -303,6 +306,11 @@ export default function Header() {
                     )}
                 </div>
             )}
+            <LoginModal
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+                setUser={setUser}
+            />
         </div>
     );
 }

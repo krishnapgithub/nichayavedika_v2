@@ -14,73 +14,96 @@ export default function Membership() {
                         <p>Choose the right plan to find your perfect match</p>
                     </div>
 
-                    <div className="membership-grid">
-                        <div className="membership-card">
-                            <h2>Free</h2>
-                            <h3>₹0</h3>
-                            <p className="plan-subtitle">Basic access</p>
+                    <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mt-6 mb-2">
 
-                            <ul>
-                                <li>✓ Browse approved profiles</li>
-                                <li>✓ View limited information</li>
-                                <li>✓ Maximum 5 profile views</li>
-                                <li>✗ Cannot send interests</li>
-                                <li>✗ Contact details hidden</li>
+                        {/* Free */}
+                        <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#800020]">
+
+                            <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
+                                Free
+                            </h3>
+
+                            <div className="text-center mt-3">
+                                <span className="text-4xl font-bold">₹0</span>
+                            </div>
+
+                            <ul className="mt-5 space-y-2 text-gray-600 text-sm">
+                                <li>✓ Create Profile</li>
+                                <li>✓ Browse Profiles</li>
+                                <li>✓ View Limited Details</li>
+                                <li>✓ Up to 5 Profile Views</li>
+                                <li>✗ Contact Details Hidden</li>
                             </ul>
 
-                            <button disabled>Current Plan</button>
-                        </div>
-
-                        <div className="membership-card premium">
-                            <div className="popular-badge">Most Popular</div>
-
-                            <h2>Premium</h2>
-                            <h3>₹1,999</h3>
-                            <p className="plan-subtitle">3 months validity</p>
-
-                            <ul>
-                                <li>✓ All Free features</li>
-                                <li>✓ Unlimited profile views</li>
-                                <li>✓ Send unlimited interests</li>
-                                <li>✓ View profile photos</li>
-                                <li>✓ Receive instant notifications</li>
-                                <li>✓ 3 months membership validity</li>
-                            </ul>
-
-                            <button
-                                onClick={() =>
-                                    alert("Payment gateway integration coming soon!")
-                                }
-                            >
-                                Become Premium
+                            <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                                Get Started
                             </button>
                         </div>
 
-                        <div className="membership-card">
-                            <h2>Assisted</h2>
-                            <h3>₹4,999</h3>
-                            <p className="plan-subtitle">Personal support</p>
+                        {/* Premium */}
+                        <div className="group relative bg-gradient-to-br from-[#800020] to-[#5c0017] text-white rounded-3xl shadow-xl p-6 min-h-[430px] transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-[0_20px_40px_rgba(128,0,32,0.25)]">
 
-                            <ul>
-                                <li>✓ All Premium features</li>
-                                <li>✓ Dedicated relationship support</li>
-                                <li>✓ Profile shortlisting help</li>
-                                <li>✓ WhatsApp assistance</li>
-                                <li>✓ Priority customer support</li>
+                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+
+                            <div className="text-center mb-2">
+                                <span className="bg-amber-400 text-[#800020] px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                                    Most Popular
+                                </span>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-center">
+                                Premium
+                            </h3>
+
+                            <div className="text-center mt-3">
+                                <span className="text-4xl font-bold">₹1,999</span>
+                                <span className="block mt-1 text-white/95 text-sm font-medium tracking-[0.5px]">
+                                    / 3 Months
+                                </span>
+                            </div>
+
+                            <ul className="mt-5 space-y-2 text-sm">
+                                <li>✓ Up to 20 Profile Views</li>
+                                <li>✓ Send Interests</li>
+                                <li>✓ View Contact Details</li>
+                                <li>✓ Priority Listing</li>
+                                <li>✓ WhatsApp Support</li>
                             </ul>
 
-                            <button
-                                onClick={() =>
-                                    window.open(
-                                        "https://wa.me/919000791359",
-                                        "_blank"
-                                    )
-                                }
-                            >
-                                Contact Us
+                            <button className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400">
+                                Choose Premium
                             </button>
                         </div>
+
+                        {/* Elite */}
+                        <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-amber-500">
+
+                            <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
+                                Elite
+                            </h3>
+
+                            <div className="text-center mt-3">
+                                <span className="text-4xl font-bold">₹4,999</span>
+                                <span className="block mt-1 text-gray-500 text-sm">
+                                    /6 Months
+                                </span>
+                            </div>
+
+                            <ul className="mt-5 space-y-2 text-gray-600 text-sm">
+                                <li>✓ Everything in Premium</li>
+                                <li>✓ Dedicated Relationship Manager</li>
+                                <li>✓ Profile Boost</li>
+                                <li>✓ Exclusive Matches</li>
+                                <li>✓ Priority Support</li>
+                            </ul>
+
+                            <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                                Choose Elite
+                            </button>
+                        </div>
+
                     </div>
+
                 </div>
             </div>
         </>

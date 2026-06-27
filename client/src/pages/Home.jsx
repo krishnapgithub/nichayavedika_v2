@@ -12,6 +12,7 @@ import weddingHero from "../images/wedding-hero.png";
 
 import { useNavigate } from "react-router-dom";
 import RegisterModal from "../components/RegisterModal";
+import nvLogo from "../images/nvlogo-v1.png";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -89,6 +90,23 @@ function Home() {
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/90 to-[#800020]/10"></div>
                         <div className="absolute inset-0 bg-black/10"></div>
+
+                        {/* Watermark Logo */}
+                        <img
+                            src={nvLogo}
+                            alt="Nichaya Vedika"
+                            className="
+        absolute
+        bottom-[-20px]
+        right-[-20px]
+        w-[260px]
+        md:w-[320px]
+        opacity-10
+        pointer-events-none
+        select-none
+        z-[1]
+    "
+                        />
 
                         <div className="relative z-10 px-10 pt-20 pb-8 w-full">
                             <div className="max-w-2xl">
@@ -439,6 +457,7 @@ function Home() {
                         </div>
 
                     </div>
+
 
                     <div className="border-t border-white/20 mt-8 pt-6 text-center text-white/70">
                         © 2026 NichayaVedika. All Rights Reserved.

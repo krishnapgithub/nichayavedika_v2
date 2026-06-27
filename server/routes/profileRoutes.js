@@ -98,7 +98,7 @@ router.get(
 // Premium/Admin = unlimited
 // Free = max 5 profiles
 // ==========================================
-router.put(
+router.post(
     "/profile-view",
     protect,
     checkProfileViewAccess

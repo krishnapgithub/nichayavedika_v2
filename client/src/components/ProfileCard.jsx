@@ -61,7 +61,7 @@ export default function ProfileCard({ profile }) {
                 return;
             }
 
-            const response = await axios.put(
+            const response = await axios.post(
                 `${API_BASE_URL}/api/profiles/profile-view`,
                 {},
                 {

@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { isValidEmail } from "../utils/validation";
 
-export default function LoginModal({ isOpen, onClose }) {
+export default function LoginModal({ isOpen, onClose, setUser }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -14,69 +14,69 @@ export default function LoginModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     const handleLogin = async () => {
-
-
-      try {
-
-          if (!isValidEmail(email) || email.length < 0) {
-              //toast.success("Please enter a valid email address");
-              toast.error("Please enter a valid email address");
-              return;
-
-          }
-
-
-            if (password.length < 6) {
-                //toast.success("Password must be at least 6 characters");
-                toast.error("Password must be at least 6 characters");
-                //toast.success("Login successful!");
+        try {
+            if (!isValidEmail(email)) {
+                toast.error("Please enter a valid email address");
                 return;
             }
+
+            if (password.length < 6) {
+                toast.error("Password must be at least 6 characters");
+                return;
+            }
+
             setLoading(true);
 
-            const response = await axios.post(
-                `${API_BASE_URL}/api/auth/login`,
-                {
-                    email,
-                    password,
-                }
-            );
+            const res = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+                email,
+                password,
+            });
 
-            localStorage.setItem("token", response.data.token);
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.data.user)
-            );
+            if (!res.data.success) {
+                toast.error(res.data.message || "Login failed");
+                return;
+            }
 
-            //toast.success("Login Successful");
+            localStorage.setItem("token", res.data.token);
+            localStorage.setItem("user", JSON.stringify(res.data.user));
 
-            console.log("Logged In User:", response.data.user);
+            if (typeof setUser === "function") {
+                setUser(res.data.user);
+            }
+
+            toast.success("Login successful!");
+
+            console.log("Logged In User:", res.data.user);
 
             onClose();
 
         } catch (error) {
-            //toast.success(                error.response?.data?.message || "Login failed"            );
-          const message =
-              error.response?.data?.message || "Login failed";
+            const message =
+                error.response?.data?.message || "Login failed";
 
-          if (message.includes("pending admin approval")) {
-              toast(
-                  "⏳ Your registration is pending admin approval. Please wait for confirmation.",
-                  {
-                      duration: 5000,
-                      icon: "📝",
-                  }
-              );
-          } else {
-              toast.error(message);
-          }
+            console.log("LOGIN ERROR:", error.response?.data || error.message);
+
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            localStorage.removeItem("role");
+            localStorage.removeItem("membershipPlan");
+
+            if (message.includes("pending admin approval")) {
+                toast(
+                    "⏳ Your registration is pending admin approval. Please wait for confirmation.",
+                    {
+                        duration: 5000,
+                        icon: "📝",
+                    }
+                );
+            } else {
+                toast.error(message);
+            }
 
         } finally {
             setLoading(false);
         }
-    };
-
-    return (
+    };    return (
         <div
             className="fixed top-0 left-0 w-screen h-screen z-[99999] bg-black/60 flex items-start justify-center px-4 pt-20"
             onClick={onClose}
