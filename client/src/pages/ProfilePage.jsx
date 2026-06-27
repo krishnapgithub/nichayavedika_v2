@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import "../styles/profilePage.css";
+import "../styles/ProfilePage.css";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
