@@ -1,21 +1,27 @@
 import Profile from "../models/Profile.js";
 import User from "../models/User.js";
 
+
+
+import { getSafeProfile } from "../utils/profilePrivacy.js";
+
+const API_URL = process.env.API_URL || "http://localhost:5000";
+
 export const getPendingProfiles = async (req, res) => {
     try {
-        const profiles = await Profile.find({ status: "pending" })
-            .populate("user", "fullName email mobile");
+        const profiles = await Profile.find({ status: "pending" }).sort({
+            createdAt: -1,
+        });
 
-        return res.json({
+        res.json({
             success: true,
             profiles,
         });
     } catch (error) {
-        console.error("GET PENDING PROFILES ERROR:", error);
-
-        return res.status(500).json({
+        console.error("Get pending profiles error:", error);
+        res.status(500).json({
             success: false,
-            message: "Internal server error",
+            message: "Failed to fetch pending profiles",
         });
     }
 };
@@ -62,7 +68,7 @@ export const searchProfiles = async (req, res) => {
         } = req.query;
 
         //const filter = {
-          //  status: "approved",
+        //  status: "approved",
         //};
 
         const filter = {};
@@ -109,6 +115,7 @@ export const searchProfiles = async (req, res) => {
 
 export const getProfileById = async (req, res) => {
     try {
+        // Get profile first
         const profile = await Profile.findById(req.params.id);
 
         if (!profile) {
@@ -118,15 +125,114 @@ export const getProfileById = async (req, res) => {
             });
         }
 
-        res.json({
+        const currentUser = req.user;
+
+        // Admin / Premium see full details
+        if (
+            currentUser?.role === "admin" ||
+            currentUser?.role === "super_admin" ||
+            currentUser?.membershipPlan !== "free"
+        ) {
+            return res.json({
+                success: true,
+                profile,
+            });
+        }
+
+        // Free user sees limited details
+        return res.json({
             success: true,
-            profile,
+            profile: {
+                _id: profile._id,
+                fullName: profile.fullName
+                    ? profile.fullName.charAt(0).toUpperCase() + "*****"
+                    : "Profile Name Hidden",
+                age: profile.age,
+                gender: profile.gender,
+                height: profile.height,
+                education: profile.education,
+                occupation: profile.occupation,
+                city: profile.city,
+                state: profile.state,
+                caste: profile.caste,
+                profilePhoto: profile.profilePhoto,
+            },
         });
+
     } catch (error) {
-        console.error("Get profile by id error:", error);
+        console.error("Get Profile By ID Error:", error);
+
         res.status(500).json({
             success: false,
-            message: "Failed to fetch profile",
+            message: "Server error",
+            error: error.message,
+        });
+    }
+}; 
+
+// ==========================================
+// Check whether user can view a full profile
+// Free users -> 5 views only
+// Premium/Admin -> unlimited
+// ==========================================
+export const checkProfileViewAccess = async (req, res) => {
+    try {
+
+        // Get logged-in user
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Admins have unlimited access
+        if (user.role === "admin") {
+            return res.json({
+                success: true,
+                canView: true,
+            });
+        }
+
+        // Premium members have unlimited access
+        if (user.membershipPlan === "premium") {
+            return res.json({
+                success: true,
+                canView: true,
+            });
+        }
+
+        // Free members can view only 5 profiles
+        if (user.profileViewsUsed >= 5) {
+
+            return res.status(403).json({
+                success: false,
+                canView: false,
+                message:
+                    "Free members can view only 5 profiles. Please upgrade to Premium.",
+            });
+        }
+
+        // Increase profile view count
+        user.profileViewsUsed += 1;
+
+        await user.save();
+
+        res.json({
+            success: true,
+            canView: true,
+            remainingViews: 5 - user.profileViewsUsed,
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Server error",
         });
     }
 };
@@ -160,6 +266,7 @@ export const createProfile = async (req, res) => {
         });
     }
 };
+
 export const getProfileByUser = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -190,28 +297,29 @@ export const getProfileByUser = async (req, res) => {
 
 export const getProfiles = async (req, res) => {
     try {
-        const profiles = await Profile.find().populate(
-            "user",
-            "fullName mobile email gender"
-        );
+        const profiles = await Profile.find({ status: "approved" }).sort({
+            createdAt: -1,
+        });
+
+        Profile.find({ status: "approved" })
+            .select(
+                "fullName age gender education occupation city state caste profilePhoto"
+            );
 
         res.json({
             success: true,
-            count: profiles.length,
             profiles,
         });
     } catch (error) {
+        console.error("Get profiles error:", error);
         res.status(500).json({
             success: false,
-            message: error.message,
+            message: "Failed to fetch profiles",
         });
     }
 };
 
-
-
-export const 
-ProfilePhoto = async (req, res) => {
+export const ProfilePhoto = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -220,7 +328,7 @@ ProfilePhoto = async (req, res) => {
             });
         }
 
-        const photoUrl = `${ API_URL }/uploads/${req.file.filename}`;
+        const photoUrl = `${API_URL}/uploads/${req.file.filename}`;
 
         const profile = await Profile.findOneAndUpdate(
             { user: req.params.userId },
@@ -246,104 +354,6 @@ ProfilePhoto = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: error.message,
-        });
-    }
-};
-
-
-export const checkProfileViewAccess = async (req, res) => {
-    try {
-        const { userId } = req.params;
-
-        //const user = await User.findById(userId);
-        const user = await Profile.findOne({ user: userId });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        if (user.membershipPlan !== "free") {
-            return res.json({
-                success: true,
-                allowed: true,
-                message: "Premium user allowed",
-            });
-        }
-
-        if (user.membershipPlan === "premium" || user.membershipPlan === "elite") {
-            return res.json({
-                success: true,
-                allowed: true,
-                message: `${user.membershipPlan} member`,
-            });
-        }
-
-        if (user.profileViewsRemaining <= 0) {
-            return res.json({
-                success: false,
-                allowed: false,
-                message: "Free profile view limit reached. Please upgrade membership.",
-            });
-        }
-
-        const { profileId } = req.body;
-
-        // Elite users
-        if (user.membershipPlan === "elite") {
-            return res.json({
-                success: true,
-                allowed: true,
-                message: "Elite member",
-            });
-        }
-
-        // Already unlocked?
-        if (user.unlockedProfiles.includes(profileId)) {
-            return res.json({
-                success: true,
-                allowed: true,
-                message: "Already unlocked",
-            });
-        }
-
-        // No unlocks left?
-        if (user.profileUnlocksRemaining <= 0) {
-            return res.json({
-                success: false,
-                allowed: false,
-                message: "Unlock limit reached. Upgrade your membership.",
-            });
-        }
-
-        // Unlock new profile
-        user.unlockedProfiles.push(profileId);
-        user.profileUnlockLimit --;
-
-        await user.save();
-
-        return res.json({
-            success: true,
-            allowed: true,
-            remainingUnlocks: user.profileUnlocksRemaining,
-        });
-
-        res.json({
-            success: true,
-            allowed: true,
-            remainingViews: user.profileViewsRemaining,
-            message: `${user.profileViewsRemaining} profile views remaining`,
-        });
-
-    } catch (error) {
-        console.error("Profile view access error:", error);
-
-        res.status(500).json({
-            success: false,
-            allowed: false,
             message: error.message,
         });
     }
@@ -424,4 +434,3 @@ export const updateProfileStatus = async (req, res) => {
         });
     }
 };
-

@@ -1,22 +1,38 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Header from "../components/Header.jsx";
+import toast from "react-hot-toast";
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
 
 export default function SentInterests() {
     const [interests, setInterests] = useState([]);
-    const userId = "6a39857828603c403e7c71bf";
 
     useEffect(() => {
         fetchSentInterests();
     }, []);
 
     const fetchSentInterests = async () => {
-        const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/interests/sent/${userId}`
-            
-        );
+        try {
+            const savedUser = JSON.parse(localStorage.getItem("user"));
 
-        setInterests(response.data.interests || []);
+            if (!savedUser?._id) {
+                toast.error("Please login to view sent interests");
+                return;
+            }
+
+            const response = await axios.get(
+                `${API_BASE_URL}/api/interests/sent/${savedUser._id}`
+            );
+
+            setInterests(response.data.interests || []);
+        } catch (error) {
+            console.error(error);
+            toast.error("Unable to load sent interests");
+        }
     };
 
     return (
@@ -47,7 +63,7 @@ export default function SentInterests() {
                                     <div className="w-28 h-28 rounded-xl bg-gray-100 overflow-hidden flex items-center justify-center">
                                         {profile?.profilePhoto ? (
                                             <img
-                                                src= ''
+                                                src={profile.profilePhoto}
                                                 alt="Profile"
                                                 className="w-full h-full object-cover"
                                             />
@@ -58,15 +74,15 @@ export default function SentInterests() {
 
                                     <div className="flex-1">
                                         <h2 className="text-xl font-bold text-[#800020]">
-                                            {profile?.fullName}
+                                            {profile?.fullName || "Profile"}
                                         </h2>
 
                                         <p className="text-gray-600">
-                                            {profile?.age} yrs   {profile?.height}
+                                            {profile?.age} yrs • {profile?.height}
                                         </p>
 
                                         <p className="text-gray-600">
-                                            {profile?.education}   {profile?.occupation}
+                                            {profile?.education} • {profile?.occupation}
                                         </p>
 
                                         <p className="text-gray-600">

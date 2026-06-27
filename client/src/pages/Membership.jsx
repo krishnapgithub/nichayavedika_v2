@@ -21,13 +21,14 @@ export default function Membership() {
                             <p className="plan-subtitle">Basic access</p>
 
                             <ul>
-                                <li>✓ Browse profiles</li>
-                                <li>✓ View limited details</li>
-                                <li>✓ 5 profile views</li>
-                                <li>✓ Basic search</li>
+                                <li>✓ Browse approved profiles</li>
+                                <li>✓ View limited information</li>
+                                <li>✓ Maximum 5 profile views</li>
+                                <li>✗ Cannot send interests</li>
+                                <li>✗ Contact details hidden</li>
                             </ul>
 
-                            <button>Current Plan</button>
+                            <button disabled>Current Plan</button>
                         </div>
 
                         <div className="membership-card premium">
@@ -38,14 +39,21 @@ export default function Membership() {
                             <p className="plan-subtitle">3 months validity</p>
 
                             <ul>
+                                <li>✓ All Free features</li>
                                 <li>✓ Unlimited profile views</li>
-                                <li>✓ View contact details</li>
                                 <li>✓ Send unlimited interests</li>
-                                <li>✓ Advanced search</li>
-                                <li>✓ Priority profile listing</li>
+                                <li>✓ View profile photos</li>
+                                <li>✓ Receive instant notifications</li>
+                                <li>✓ 3 months membership validity</li>
                             </ul>
 
-                            <button>Become Premium</button>
+                            <button
+                                onClick={() =>
+                                    alert("Payment gateway integration coming soon!")
+                                }
+                            >
+                                Become Premium
+                            </button>
                         </div>
 
                         <div className="membership-card">
@@ -61,7 +69,16 @@ export default function Membership() {
                                 <li>✓ Priority customer support</li>
                             </ul>
 
-                            <button>Contact Us</button>
+                            <button
+                                onClick={() =>
+                                    window.open(
+                                        "https://wa.me/919000791359",
+                                        "_blank"
+                                    )
+                                }
+                            >
+                                Contact Us
+                            </button>
                         </div>
                     </div>
                 </div>

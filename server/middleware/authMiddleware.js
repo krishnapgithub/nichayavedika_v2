@@ -1,4 +1,3 @@
-
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
@@ -13,28 +12,55 @@ export const protect = async (req, res, next) => {
             token = req.headers.authorization.split(" ")[1];
         }
 
-        console.log("TOKEN:", token);
-        console.log("JWT_SECRET:", process.env.JWT_SECRET);
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "No token provided. Please login again.",
+            });
+        }
 
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
-        );
-
-        console.log("DECODED:", decoded);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = await User.findById(decoded.id).select("-password");
 
-        console.log("USER:", req.user?.email);
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "User not found. Please login again.",
+            });
+        }
 
         next();
-
     } catch (error) {
         console.error("AUTH ERROR:", error);
 
         return res.status(401).json({
             success: false,
-            message: "Session expired. Please login again."
+            message: "Session expired. Please login again.",
         });
     }
+};
+
+
+
+export const superAdminOnly = (req, res, next) => {
+    if (req.user?.role !== "super_admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Super Admin access only",
+        });
+    }
+
+    next();
+};
+
+export const adminOnly = (req, res, next) => {
+    if (!["admin", "super_admin"].includes(req.user?.role)) {
+        return res.status(403).json({
+            success: false,
+            message: "Admin access only",
+        });
+    }
+
+    next();
 };

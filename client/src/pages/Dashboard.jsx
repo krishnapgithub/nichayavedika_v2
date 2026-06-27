@@ -6,7 +6,9 @@ import Header from "../components/Header.jsx";
 export default function Dashboard() {
 
     const API_URL = import.meta.env.VITE_API_URL;
-    const userId = "6a39857828603c403e7c71bf";
+
+    const userId = savedUser?._id || savedUser?.id;
+    //const userId = "6a39857828603c403e7c71bf";
 
     const [stats, setStats] = useState({
         sent: 0,

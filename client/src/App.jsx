@@ -12,6 +12,10 @@ import Events from "./pages/Events.jsx";
 import Contact from "./pages/Contact.jsx";
 import SuccessStories from "./pages/SuccessStories.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminProfiles from "./pages/AdminProfiles.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx";
+
+
 function ProtectedRoute({ children }) {
     const isLoggedIn = !!localStorage.getItem("user");
 
@@ -30,10 +34,10 @@ function App() {
     const isLoggedIn = !!localStorage.getItem("user");
     console.log("SessionTimeout Loaded", isLoggedIn);
     console.log("Rama & Sita loading..");
-    
-//    const navigate = useNavigate();
 
-    
+    //    const navigate = useNavigate();
+
+
 
     return (
         <>
@@ -49,7 +53,7 @@ function App() {
 
             <Routes>
 
-              
+
                 <Route path="/" element={<Home />} />
                 <Route path="/profile/:id" element={<ProfilePage />} />
                 <Route
@@ -61,9 +65,8 @@ function App() {
                     }
                 />
                 <Route path="/search" element={<SearchProfiles />} />
-                
-                
-                
+                <Route path="/profile/:id" element={<ProfilePage />} />
+
 
                 <Route
                     path="/dashboard"
@@ -91,7 +94,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
-                
+
                 <Route path="/membership" element={<Membership />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/contact" element={<Contact />} />
@@ -101,7 +104,8 @@ function App() {
                     element={<AdminDashboard />}
                 />
 
-                
+                <Route path="/admin/profiles" element={<AdminProfiles />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
 
             </Routes>
         </>

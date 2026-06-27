@@ -87,6 +87,10 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
 
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
 
         membershipPlan: {
             type: String,
@@ -103,6 +107,12 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 5,
         },
+
+        profileViewsUsed: {
+            type: Number,
+            default: 0
+        },
+
 
         profileStatus: {
             type: String,

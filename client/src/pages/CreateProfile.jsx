@@ -1,4 +1,4 @@
-﻿import { useEffect,useState } from "react";
+﻿import { useEffect, useState } from "react";
 import axios from "axios";
 
 import { API_BASE_URL } from "../config/api";
@@ -8,7 +8,7 @@ import { authHeader } from "../utils/authHeader";
 
 export default function CreateProfile({ onClose }) {
 
-    
+
     const [formData, setFormData] = useState({
 
         user: "6a39857828603c403e7c71bf",
@@ -43,10 +43,10 @@ export default function CreateProfile({ onClose }) {
         preferredAgeTo: "",
         preferredCaste: "",
         preferredLocation: "",
-        profilePhoto     : null,
+        profilePhoto: null,
     });
 
-        const [photoPreview, setPhotoPreview] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
 
     const handlePhotoChange = (e) => {
         const file = e.target.files[0];
@@ -79,7 +79,7 @@ export default function CreateProfile({ onClose }) {
         setPhotoPreview(URL.createObjectURL(file));
     };
 
-    
+
 
     const calculateAge = (dob) => {
         if (!dob) return "";
@@ -89,7 +89,7 @@ export default function CreateProfile({ onClose }) {
 
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
-        
+
 
         if (
             monthDiff < 0 ||
@@ -131,7 +131,7 @@ export default function CreateProfile({ onClose }) {
                 payload.append(key, formData[key]);
             });
 
-            
+
 
             await axios.post(
                 `${API_BASE_URL}/profiles/create`,
@@ -150,15 +150,15 @@ export default function CreateProfile({ onClose }) {
         }
     };
     return (
-        
+
 
         <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
             <p className="md:col-span-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                 Fields marked with <strong>*</strong> are required to create your profile.
             </p>
-                    <h3 className="md:col-span-2 font-bold text-[#800020]">
-                        Basic Information
-                    </h3>
+            <h3 className="md:col-span-2 font-bold text-[#800020]">
+                Basic Information
+            </h3>
 
             <input
                 name="fullName"
@@ -226,11 +226,11 @@ export default function CreateProfile({ onClose }) {
                 value={formData.motherTongue}
                 onChange={handleChange}
             />
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Community Information
-                    </h3>
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Community Information
+            </h3>
 
-                    <input name="religion" placeholder="Religion" className="border p-3 rounded-lg" value={formData.religion} onChange={handleChange} />
+            <input name="religion" placeholder="Religion" className="border p-3 rounded-lg" value={formData.religion} onChange={handleChange} />
             <input
                 name="caste"
                 placeholder="Caste *"
@@ -241,11 +241,11 @@ export default function CreateProfile({ onClose }) {
             />
 
             <input name="subCaste" placeholder="Sub Caste" className="border p-3 rounded-lg" value={formData.subCaste} onChange={handleChange} />
-                    <input name="gothram" placeholder="Gothram" className="border p-3 rounded-lg" value={formData.gothram} onChange={handleChange} />
+            <input name="gothram" placeholder="Gothram" className="border p-3 rounded-lg" value={formData.gothram} onChange={handleChange} />
 
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Education & Career
-                    </h3>
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Education & Career
+            </h3>
 
             <input
                 name="education"
@@ -264,11 +264,11 @@ export default function CreateProfile({ onClose }) {
                 onChange={handleChange}
                 required
             />
-                    <input name="annualIncome" placeholder="Annual Income" className="border p-3 rounded-lg" value={formData.annualIncome} onChange={handleChange} />
+            <input name="annualIncome" placeholder="Annual Income" className="border p-3 rounded-lg" value={formData.annualIncome} onChange={handleChange} />
 
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Location
-                    </h3>
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Location
+            </h3>
 
             <input
                 name="city"
@@ -287,37 +287,37 @@ export default function CreateProfile({ onClose }) {
                 onChange={handleChange}
                 required
             />
-                    <input name="country" placeholder="Country" className="border p-3 rounded-lg" value={formData.country} onChange={handleChange} />
+            <input name="country" placeholder="Country" className="border p-3 rounded-lg" value={formData.country} onChange={handleChange} />
 
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        About Me
-                    </h3>
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                About Me
+            </h3>
 
-                    <textarea name="aboutMe" placeholder="About Me" rows="4" className="border p-3 rounded-lg md:col-span-2" value={formData.aboutMe} onChange={handleChange} />
+            <textarea name="aboutMe" placeholder="About Me" rows="4" className="border p-3 rounded-lg md:col-span-2" value={formData.aboutMe} onChange={handleChange} />
 
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Partner Preferences
-                    </h3>
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Partner Preferences
+            </h3>
 
-                    <input name="preferredAgeFrom" placeholder="Preferred Age From" className="border p-3 rounded-lg" value={formData.preferredAgeFrom} onChange={handleChange} />
-                    <input name="preferredAgeTo" placeholder="Preferred Age To" className="border p-3 rounded-lg" value={formData.preferredAgeTo} onChange={handleChange} />
-                    <input name="preferredCaste" placeholder="Preferred Caste" className="border p-3 rounded-lg" value={formData.preferredCaste} onChange={handleChange} />
-                    <input name="preferredLocation" placeholder="Preferred Location" className="border p-3 rounded-lg" value={formData.preferredLocation} onChange={handleChange} />
+            <input name="preferredAgeFrom" placeholder="Preferred Age From" className="border p-3 rounded-lg" value={formData.preferredAgeFrom} onChange={handleChange} />
+            <input name="preferredAgeTo" placeholder="Preferred Age To" className="border p-3 rounded-lg" value={formData.preferredAgeTo} onChange={handleChange} />
+            <input name="preferredCaste" placeholder="Preferred Caste" className="border p-3 rounded-lg" value={formData.preferredCaste} onChange={handleChange} />
+            <input name="preferredLocation" placeholder="Preferred Location" className="border p-3 rounded-lg" value={formData.preferredLocation} onChange={handleChange} />
 
-                    
 
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Family Details
-                    </h3>
 
-                    <textarea
-                        name="familyDetails"
-                        placeholder="Family Details"
-                        rows="3"
-                        className="border p-3 rounded-lg md:col-span-2"
-                        value={formData.familyDetails}
-                        onChange={handleChange}
-                    />
+            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
+                Family Details
+            </h3>
+
+            <textarea
+                name="familyDetails"
+                placeholder="Family Details"
+                rows="3"
+                className="border p-3 rounded-lg md:col-span-2"
+                value={formData.familyDetails}
+                onChange={handleChange}
+            />
 
             <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
                 Contact Preference
@@ -327,17 +327,17 @@ export default function CreateProfile({ onClose }) {
                 How would you prefer prospective matches to contact you?
             </p>
 
-                    <select
-                        name="contactPreference"
-                        className="border p-3 rounded-lg"
-                        value={formData.contactPreference}
-                        onChange={handleChange}
-                    >
-                        <option value="Phone">Phone</option>
-                        <option value="WhatsApp">WhatsApp</option>
-                        <option value="Email">Email</option>
-                        <option value="Any">Any</option>
-                    </select>
+            <select
+                name="contactPreference"
+                className="border p-3 rounded-lg"
+                value={formData.contactPreference}
+                onChange={handleChange}
+            >
+                <option value="Phone">Phone</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Email">Email</option>
+                <option value="Any">Any</option>
+            </select>
 
             <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
                 Profile Photo
@@ -349,21 +349,21 @@ export default function CreateProfile({ onClose }) {
             <p className="text-xs text-gray-500">
                 Accepted formats: JPG, JPEG, PNG • Maximum size: 2 MB
             </p>
-                    <div className="md:col-span-2 flex flex-col items-center gap-3">
+            <div className="md:col-span-2 flex flex-col items-center gap-3">
 
-                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#800020] bg-gray-100">
-                            {photoPreview ? (
-                                <img
-                                    src={photoPreview}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    Photo
-                                </div>
-                            )}
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#800020] bg-gray-100">
+                    {photoPreview ? (
+                        <img
+                            src={photoPreview}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            Photo
                         </div>
+                    )}
+                </div>
 
                 <input
                     type="file"
@@ -373,12 +373,12 @@ export default function CreateProfile({ onClose }) {
                     className="text-sm"
                 />
 
-                    </div>
+            </div>
 
-                    <button type="submit" className="md:col-span-2 bg-[#800020] text-white py-3 rounded-xl font-semibold mt-4">
-                        Save Profile
-                    </button>
-                </form>
-            
+            <button type="submit" className="md:col-span-2 bg-[#800020] text-white py-3 rounded-xl font-semibold mt-4">
+                Save Profile
+            </button>
+        </form>
+
     );
 }

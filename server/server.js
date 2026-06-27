@@ -11,6 +11,7 @@ import path from "path";
 
 import interestRoutes from "./routes/interestRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import adminUserRoutes from "./routes/adminUserRoutes.js";
 
 dotenv.config({ path: "./.env" });
 
@@ -27,6 +28,7 @@ app.use("/api/profiles", profileRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/interests", interestRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminUserRoutes);
 
 import mongoose from "mongoose";
 

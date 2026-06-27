@@ -1,15 +1,22 @@
-﻿
+
 
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ProfileCard from "../components/ProfileCard";
+import { FaSearch } from "react-icons/fa";
 
 import { Link } from "react-router-dom";
 import Header from "../components/Header.jsx";
+
 import weddingHero from "../images/wedding-hero.png";
+
 import { useNavigate } from "react-router-dom";
 import RegisterModal from "../components/RegisterModal";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
 
 function Home() {
 
@@ -17,9 +24,6 @@ function Home() {
     const [profiles, setProfiles] = useState([]);
 
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-
-    
-   
 
     useEffect(() => {
         fetchProfiles();
@@ -29,7 +33,7 @@ function Home() {
     const fetchProfiles = async () => {
         try {
             const response = await axios.get(
-                "${API_BASE_URL}/profiles"
+                `${API_BASE_URL}/api/profiles`
             );
 
             setProfiles(response.data.profiles);
@@ -74,7 +78,7 @@ function Home() {
             <div className="max-w-7xl mx-auto px-6">
                 <main className="pt-25">
                     {/* Hero */}
-                   
+
                     <section
                         className="-mt-6 relative overflow-hidden text-white h-[60vh] flex items-center rounded-[40px] shadow-2xl border border-rose-100 pb-20 z-10"
                         style={{
@@ -89,38 +93,39 @@ function Home() {
                         <div className="relative z-10 px-10 pt-20 pb-8 w-full">
                             <div className="max-w-2xl">
 
-                                <h1 className="text-3xl md:text-5xl font-bold leading-tight px-4">
-                                    Blessed Matches,
+                                <h1 className="text-xl md:text-3xl lg:text-4xl font-bold leading-relaxed px-4 text-left">
+                                    చక్కని చిరకాల అనుబంధానికి
                                     <br />
-                                    Beautiful Beginnings
+                                    ముచ్చటైన వేదిక... మన నిశ్చయ వేదిక
                                 </h1>
 
-                                <p className="mt-6 text-xl text-white/90">
-                                    A trusted platform for Telugu families seeking lifelong companionship.
+                                <p className="mt-6 text-lg md:text-xl italic font-light text-amber-100 tracking-wide drop-shadow-lg">
+                                    ✨ Blessed unions bring lifelong happiness.
                                 </p>
 
-                                <div className="mt-8 flex gap-4">
+                                <div className="mt-8 flex gap-3">
+
                                     <button
                                         onClick={() => navigate("/search")}
-                                        className="primary-btn premium-hover"
+                                        className="primary-btn premium-hover px-5 py-2.5 min-w-[145px] text-[15px] font-medium tracking-[0.5px]"
                                     >
-                                        Search Now
+                                        Search Profiles
                                     </button>
 
                                     <button
                                         onClick={() => setIsRegisterOpen(true)}
-                                        className="primary-btn premium-hover"
+                                        className="primary-btn premium-hover px-5 py-2.5 min-w-[145px] text-[15px] font-medium tracking-[0.5px]"
                                     >
-                                        Register free
+                                        Register Free
                                     </button>
-                                    
+
                                 </div>
                             </div>
                         </div>
                     </section>
 
                     {/* Search */}
-                
+
                     {/* Floating Search Card */}
                     <div className="relative z-20 max-w-5xl mx-auto -mt-12 px-6">
                         <div className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
@@ -150,9 +155,9 @@ function Home() {
                             </div>
                         </div>
                     </div>
-                
 
-                {/* Stats */}
+
+                    {/* Stats */}
                     {/* Success Stories */}
                     <section className="mt-6 mb-2 bg-white rounded-[32px] shadow-lg border border-rose-100 p-8">
                         <div className="text-center mb-8">
@@ -164,8 +169,14 @@ function Home() {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {[
+                                {
+                                    names: "Arjun & Sravya",
+                                    place: "Hyderabad",
+                                    text: "We found our perfect match through NichayaVedika. A truly blessed journey."
+                                },
+
                                 {
                                     names: "Arjun & Sravya",
                                     place: "Hyderabad",
@@ -214,180 +225,180 @@ function Home() {
 
                     <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mt-6 mb-2">
 
-                    {/* Free */}
-                    <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#800020]">
+                        {/* Free */}
+                        <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#800020]">
 
-                        <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
-                            Free
-                        </h3>
+                            <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
+                                Free
+                            </h3>
 
-                        <div className="text-center mt-3">
-                            <span className="text-4xl font-bold">₹0</span>
+                            <div className="text-center mt-3">
+                                <span className="text-4xl font-bold">₹0</span>
+                            </div>
+
+                            <ul className="mt-5 space-y-2 text-gray-600 text-sm">
+                                <li>✓ Create Profile</li>
+                                <li>✓ Browse Profiles</li>
+                                <li>✓ View Limited Details</li>
+                                <li>✓ Up to 5 Profile Views</li>
+                                <li>✗ Contact Details Hidden</li>
+                            </ul>
+
+                            <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                                Get Started
+                            </button>
                         </div>
 
-                        <ul className="mt-5 space-y-2 text-gray-600 text-sm">
-                            <li>✓ Create Profile</li>
-                            <li>✓ Browse Profiles</li>
-                            <li>✓ View Limited Details</li>
-                            <li>✓ Up to 5 Profile Views</li>
-                            <li>✗ Contact Details Hidden</li>
-                        </ul>
+                        {/* Premium */}
+                        <div className="group relative bg-gradient-to-br from-[#800020] to-[#5c0017] text-white rounded-3xl shadow-xl p-6 min-h-[430px] transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-[0_20px_40px_rgba(128,0,32,0.25)]">
 
-                        <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
-                            Get Started
-                        </button>
+                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+
+                            <div className="text-center mb-2">
+                                <span className="bg-amber-400 text-[#800020] px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                                    Most Popular
+                                </span>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-center">
+                                Premium
+                            </h3>
+
+                            <div className="text-center mt-3">
+                                <span className="text-4xl font-bold">₹1,999</span>
+                                <span className="block mt-1 text-white/95 text-sm font-medium tracking-[0.5px]">
+                                    / 3 Months
+                                </span>
+                            </div>
+
+                            <ul className="mt-5 space-y-2 text-sm">
+                                <li>✓ Up to 20 Profile Views</li>
+                                <li>✓ Send Interests</li>
+                                <li>✓ View Contact Details</li>
+                                <li>✓ Priority Listing</li>
+                                <li>✓ WhatsApp Support</li>
+                            </ul>
+
+                            <button className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400">
+                                Choose Premium
+                            </button>
+                        </div>
+
+                        {/* Elite */}
+                        <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-amber-500">
+
+                            <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
+                                Elite
+                            </h3>
+
+                            <div className="text-center mt-3">
+                                <span className="text-4xl font-bold">₹4,999</span>
+                                <span className="block mt-1 text-gray-500 text-sm">
+                                    /6 Months
+                                </span>
+                            </div>
+
+                            <ul className="mt-5 space-y-2 text-gray-600 text-sm">
+                                <li>✓ Everything in Premium</li>
+                                <li>✓ Dedicated Relationship Manager</li>
+                                <li>✓ Profile Boost</li>
+                                <li>✓ Exclusive Matches</li>
+                                <li>✓ Priority Support</li>
+                            </ul>
+
+                            <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                                Choose Elite
+                            </button>
+                        </div>
+
                     </div>
 
-                    {/* Premium */}
-                    <div className="group relative bg-gradient-to-br from-[#800020] to-[#5c0017] text-white rounded-3xl shadow-xl p-6 min-h-[430px] transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-[0_20px_40px_rgba(128,0,32,0.25)]">
 
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-
-                        <div className="text-center mb-2">
-                            <span className="bg-amber-400 text-[#800020] px-3 py-1 rounded-full text-xs font-bold shadow-md">
-                                Most Popular
-                            </span>
-                        </div>
-
-                        <h3 className="text-xl font-bold text-center">
-                            Premium
-                        </h3>
-
-                        <div className="text-center mt-3">
-                            <span cla="text-4xl font-bold">₹2,000</span>
-                            <span className="block mt-1 text-rose-100 text-sm">
-                                /3 Months
-                            </span>
-                        </div>
-
-                        <ul className="mt-5 space-y-2 text-sm">
-                            <li>✓ Up to 20 Profile Views</li>
-                            <li>✓ Send Interests</li>
-                            <li>✓ View Contact Details</li>
-                            <li>✓ Priority Listing</li>
-                            <li>✓ WhatsApp Support</li>
-                        </ul>
-
-                        <button className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400">
-                            Choose Premium
-                        </button>
-                    </div>
-
-                    {/* Elite */}
-                    <div className="group bg-white rounded-3xl shadow-lg p-6 min-h-[430px] border border-rose-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-amber-500">
-
-                        <h3 className="text-xl font-bold text-center text-[#800020] transition-all duration-300 group-hover:text-amber-600">
-                            Elite
-                        </h3>
-
-                        <div className="text-center mt-3">
-                            <span className="text-4xl font-bold">₹5,000</span>
-                            <span className="block mt-1 text-gray-500 text-sm">
-                                /6 Months
-                            </span>
-                        </div>
-
-                        <ul className="mt-5 space-y-2 text-gray-600 text-sm">
-                            <li>✓ Everything in Premium</li>
-                            <li>✓ Dedicated Relationship Manager</li>
-                            <li>✓ Profile Boost</li>
-                            <li>✓ Exclusive Matches</li>
-                            <li>✓ Priority Support</li>
-                        </ul>
-
-                        <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
-                            Choose Elite
-                        </button>
-                    </div>
-
-                </div>
-
-                
                     <section className="mt-6 mb-2  mb-2nv-section bg-white">
-                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="max-w-7xl mx-auto px-6">
 
-                        <h2 className="text-4xl font-bold text-center text-gray-900">
-                            Why Choose NichayaVedika?
-                        </h2>
+                            <h2 className="text-4xl font-bold text-center text-gray-900">
+                                Why Choose NichayaVedika?
+                            </h2>
 
-                        <p className="text-center text-gray-500 mt-3 mb-12">
-                            A trusted platform built to help families find meaningful matches
-                        </p>
+                            <p className="text-center text-gray-500 mt-3 mb-12">
+                                A trusted platform built to help families find meaningful matches
+                            </p>
 
-                        <div className="grid md:grid-cols-4 gap-8">
+                            <div className="grid md:grid-cols-4 gap-8">
 
-                            {/* Card 1 */}
-                            <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl mb-4">🔒</div>
-                                <h3 className="text-xl font-bold mb-3">
-                                    Privacy Protected
-                                </h3>
-                                <p className="text-gray-600">
-                                    Your personal information remains secure and visible only to eligible members.
-                                </p>
-                            </div>
+                                {/* Card 1 */}
+                                <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
+                                    <div className="text-5xl mb-4">🔒</div>
+                                    <h3 className="text-xl font-bold mb-3">
+                                        Privacy Protected
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Your personal information remains secure and visible only to eligible members.
+                                    </p>
+                                </div>
 
-                            {/* Card 2 */}
-                            <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl mb-4">✅</div>
-                                <h3 className="text-xl font-bold mb-3">
-                                    Verified Profiles
-                                </h3>
-                                <p className="text-gray-600">
-                                    Every profile goes through verification to ensure authenticity and trust.
-                                </p>
-                            </div>
+                                {/* Card 2 */}
+                                <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
+                                    <div className="text-5xl mb-4">✅</div>
+                                    <h3 className="text-xl font-bold mb-3">
+                                        Verified Profiles
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Every profile goes through verification to ensure authenticity and trust.
+                                    </p>
+                                </div>
 
-                            {/* Card 3 */}
-                            <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl mb-4">❤️</div>
-                                <h3 className="text-xl font-bold mb-3">
-                                    Telugu Community Focus
-                                </h3>
-                                <p className="text-gray-600">
-                                    Dedicated to helping Telugu families find culturally compatible matches.
-                                </p>
-                            </div>
+                                {/* Card 3 */}
+                                <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
+                                    <div className="text-5xl mb-4">❤️</div>
+                                    <h3 className="text-xl font-bold mb-3">
+                                        Telugu Community Focus
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Dedicated to helping Telugu families find culturally compatible matches.
+                                    </p>
+                                </div>
 
-                            {/* Card 4 */}
-                            <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
-                                <div className="text-5xl mb-4">📞</div>
-                                <h3 className="text-xl font-bold mb-3">
-                                    Dedicated Support
-                                </h3>
-                                <p className="text-gray-600">
-                                    Our team is available to assist you throughout your matchmaking journey.
-                                </p>
+                                {/* Card 4 */}
+                                <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
+                                    <div className="text-5xl mb-4">📞</div>
+                                    <h3 className="text-xl font-bold mb-3">
+                                        Dedicated Support
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Our team is available to assist you throughout your matchmaking journey.
+                                    </p>
+                                </div>
+
                             </div>
 
                         </div>
+                    </section>
 
-                    </div>
-                </section>
-
-                {/* Profiles */}
+                    {/* Profiles */}
                     <section className="nv-section bg-gradient-to-b from-white to-rose-50 mt-2">
-                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="max-w-7xl mx-auto px-6">
 
-                        <h2 className="text-4xl font-bold text-center text-gray-900">
-                            Featured Profiles
-                        </h2>
+                            <h2 className="text-4xl font-bold text-center text-gray-900">
+                                Featured Profiles
+                            </h2>
 
-                        <p className="text-center text-gray-500 mt-3 mb-12">
-                            Discover verified brides and grooms from trusted families
-                        </p>
+                            <p className="text-center text-gray-500 mt-3 mb-12">
+                                Discover verified brides and grooms from trusted families
+                            </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {displayProfiles.slice(0, 4).map((profile) => (
-                                <ProfileCard
-                                    key={profile._id}
-                                    profile={profile}
-                                />
-                            ))}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {displayProfiles.slice(0, 4).map((profile) => (
+                                    <ProfileCard
+                                        key={profile._id}
+                                        profile={profile}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </section>
-                    </main>
+                    </section>
+                </main>
             </div>
             <footer className="bg-[#800020] text-white mt-2">
                 <div className="max-w-7xl mx-auto px-6 py-12">
@@ -439,7 +450,7 @@ function Home() {
                 isOpen={isRegisterOpen}
                 onClose={() => setIsRegisterOpen(false)}
             />
-            
+
         </>
     );
 }

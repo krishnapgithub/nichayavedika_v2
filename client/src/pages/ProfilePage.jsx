@@ -1,380 +1,369 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
+import "../styles/profilePage.css";
 
-import { API_BASE_URL } from "../config/api";
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
 
+const FREE_PROFILE_VIEW_LIMIT = 5;
 
+export default function ProfilePage() {
+    const { id } = useParams();
+    const navigate = useNavigate();
 
-export default function CreateProfile({ onClose }) {
+    const [profile, setProfile] = useState(null);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [viewLimitReached, setViewLimitReached] = useState(false);
 
-    
-    const [formData, setFormData] = useState({
-        fullName: "",
-        gender: "",
-        dateOfBirth: "",
-        age: "",
-        height: "",
-        maritalStatus: "Never Married",
+    useEffect(() => {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        } else {
+            toast.error("Please login to view profiles");
+            navigate("/");
+        }
+    }, [navigate]);
 
-        motherTongue: "Telugu",
-        religion: "Hindu",
-        caste: "",
-        subCaste: "",
-        gothram: "",
+    useEffect(() => {
 
-        education: "",
-        occupation: "",
-        annualIncome: "",
+        const fetchProfile = async () => {
 
-        city: "",
-        state: "",
-        country: "India",
+            try {
 
-        familyDetails: "",
-        contactPreference: "Phone",
+                const token = localStorage.getItem("token");
 
-        aboutMe: "",
+                const response = await axios.get(
+                    `${API_BASE_URL}/api/profiles/${id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
 
-        preferredAgeFrom: "",
-        preferredAgeTo: "",
-        preferredCaste: "",
-        preferredLocation: "",
-        profile
+                setProfile(response.data.profile);
 
+            } catch (error) {
 
-            : null,
-    });
+                console.error("Fetch Profile Error:", error);
 
-        const [photoPreview, setPhotoPreview] = useState(null);
+                toast.error(
+                    error.response?.data?.message ||
+                    "Failed to load profile"
+                );
 
-    const handlePhotoChange = (e) => {
-        const file = e.target.files[0];
+            } finally {
 
-        if (!file) return;
+                setLoading(false);
+            }
+        };
 
-        const allowedTypes = [
-            "image/jpeg",
-            "image/jpg",
-            "image/png"
-        ];
+        if (id) {
+            fetchProfile();
+        }
 
-        if (!allowedTypes.includes(file.type)) {
-            toast.success("Only JPG, JPEG and PNG files are allowed.");
+    }, [id]);
+    const isPremiumUser =
+        user?.membership === "premium" ||
+        user?.membershipType === "premium" ||
+        user?.role === "admin";
+
+    const canViewFullProfile = Boolean(user && isPremiumUser);
+
+    useEffect(() => {
+        if (!profile || !user) return;
+        if (isPremiumUser) return;
+
+        const viewedProfiles = JSON.parse(
+            localStorage.getItem("viewedProfiles") || "[]"
+        );
+
+        if (viewedProfiles.includes(profile._id)) return;
+
+        if (viewedProfiles.length >= FREE_PROFILE_VIEW_LIMIT) {
+            setViewLimitReached(true);
+            toast.error("Free profile view limit reached. Please upgrade.");
             return;
         }
 
-        const maxSize = 2 * 1024 * 1024; // 2MB
+        viewedProfiles.push(profile._id);
+        localStorage.setItem("viewedProfiles", JSON.stringify(viewedProfiles));
+    }, [profile, user, isPremiumUser]);
 
-        if (file.size > maxSize) {
-            toast.success("Photo size should be less than 2 MB.");
-            return;
-        }
-
-        setFormData({
-            ...formData,
-            profilePhoto: file,
-        });
-
-        setPhotoPreview(URL.createObjectURL(file));
-    };
-
-    
-
-    const calculateAge = (dob) => {
-        if (!dob) return "";
-
-        const birthDate = new Date(dob);
-        const today = new Date();
-
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        
-
-        if (
-            monthDiff < 0 ||
-            (monthDiff === 0 && today.getDate() < birthDate.getDate())
-        ) {
-            age--;
-        }
-
-        return age;
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        if (name === "dateOfBirth") {
-            setFormData({
-                ...formData,
-                dateOfBirth: value,
-                age: calculateAge(value),
-            });
-            return;
-        }
-
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
+    // ==========================================
+    // Send Interest
+    // Logged-in user can send interest to profile
+    // ==========================================
+    const handleSendInterest = async (profileId) => {
         try {
-            const payload = new FormData();
+            const savedUser = JSON.parse(localStorage.getItem("user"));
+            const token = localStorage.getItem("token");
 
-            Object.keys(formData).forEach((key) => {
-                payload.append(key, formData[key]);
-            });
+            if (!savedUser || !token) {
+                toast.error("Please login to send interest");
+                return;
+            }
 
-            await axios.post(
-                `${API_BASE_URL}/profiles/create`,
-                payload,
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/interests/send`,
+                {
+                    senderId: savedUser._id,
+                    receiverProfileId: profileId,
+                },
                 {
                     headers: {
-                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
 
-            toast.success("Profile Created Successfully");
-            onClose();
+            toast.success(response.data.message || "Interest sent successfully");
+
         } catch (error) {
-            console.error(error);
-            toast.success("Failed to create profile");
+            console.error("Interest failed:", error);
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to send interest"
+            );
         }
     };
+
+    const lockedValue = <span className="locked-value">Locked 🔒</span>;
+
+    const showValue = (value, locked = false) => {
+        if (locked && !canViewFullProfile) return lockedValue;
+        return value || "Not provided";
+    };
+
+    if (loading) {
+        return <div className="profile-page-loading">Loading profile...</div>;
+    }
+
+    // ==========================================
+    // Free User Restriction
+    // Hide sensitive information for free members
+    // ==========================================
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+
+    const canViewFullDetails =
+        savedUser?.role === "admin" ||
+        savedUser?.role === "super_admin" ||
+        savedUser?.membershipPlan !== "free";
+
+    if (viewLimitReached) {
+        return (
+            <div className="profile-page-container">
+                <div className="upgrade-box">
+                    <h3>Free View Limit Reached 🔒</h3>
+                    <p>
+                        You have viewed 5 profiles with your free membership. Please upgrade
+                        to continue viewing more profiles.
+                    </p>
+
+                    <Link to="/membership" className="upgrade-btn">
+                        Upgrade Membership
+                    </Link>
+
+                    <div className="profile-actions">
+                        <Link to="/search-profiles" className="back-btn">
+                            ← Back to Search
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <div className="profile-page-container">
+                <div className="profile-not-found">
+                    <h2>Profile not found</h2>
+                    <Link to="/search-profiles">Back to Search</Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        
-
-        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
-            <p className="md:col-span-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
-                Fields marked with <strong>*</strong> are required to create your profile.
-            </p>
-                    <h3 className="md:col-span-2 font-bold text-[#800020]">
-                        Basic Information
-                    </h3>
-
-            <input
-                name="fullName"
-                placeholder="Full Name *"
-                className="border p-3 rounded-lg"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-            />
-
-            <select
-                name="gender"
-                className="border p-3 rounded-lg"
-                value={formData.gender}
-                onChange={handleChange}
-                required
-            >
-                <option value="">Select Gender *</option>
-                <option value="Bride">Bride</option>
-                <option value="Groom">Groom</option>
-            </select>
-
-
-            <input
-                type="date"
-                name="dateOfBirth"
-                className="border p-3 rounded-lg"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                required
-            />
-
-            <input
-                name="age"
-                placeholder="Age"
-                className="border p-3 rounded-lg bg-gray-100"
-                value={formData.age}
-                readOnly
-            />
-
-            <input
-                name="height"
-                placeholder="Height * (e.g. 5ft 8in)"
-                className="border p-3 rounded-lg"
-                value={formData.height}
-                onChange={handleChange}
-                required
-            />
-
-            <select
-                name="maritalStatus"
-                className="border p-3 rounded-lg"
-                value={formData.maritalStatus}
-                onChange={handleChange}
-            >
-                <option value="Never Married">Never Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
-            </select>
-
-            <input
-                name="motherTongue"
-                placeholder="Mother Tongue"
-                className="border p-3 rounded-lg"
-                value={formData.motherTongue}
-                onChange={handleChange}
-            />
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Community Information
-                    </h3>
-
-                    <input name="religion" placeholder="Religion" className="border p-3 rounded-lg" value={formData.religion} onChange={handleChange} />
-            <input
-                name="caste"
-                placeholder="Caste *"
-                className="border p-3 rounded-lg"
-                value={formData.caste}
-                onChange={handleChange}
-                required
-            />
-
-            <input name="subCaste" placeholder="Sub Caste" className="border p-3 rounded-lg" value={formData.subCaste} onChange={handleChange} />
-                    <input name="gothram" placeholder="Gothram" className="border p-3 rounded-lg" value={formData.gothram} onChange={handleChange} />
-
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Education & Career
-                    </h3>
-
-            <input
-                name="education"
-                placeholder="Education *"
-                className="border p-3 rounded-lg"
-                value={formData.education}
-                onChange={handleChange}
-                required
-            />
-
-            <input
-                name="occupation"
-                placeholder="Occupation *"
-                className="border p-3 rounded-lg"
-                value={formData.occupation}
-                onChange={handleChange}
-                required
-            />
-                    <input name="annualIncome" placeholder="Annual Income" className="border p-3 rounded-lg" value={formData.annualIncome} onChange={handleChange} />
-
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Location
-                    </h3>
-
-            <input
-                name="city"
-                placeholder="City *"
-                className="border p-3 rounded-lg"
-                value={formData.city}
-                onChange={handleChange}
-                required
-            />
-
-            <input
-                name="state"
-                placeholder="State *"
-                className="border p-3 rounded-lg"
-                value={formData.state}
-                onChange={handleChange}
-                required
-            />
-                    <input name="country" placeholder="Country" className="border p-3 rounded-lg" value={formData.country} onChange={handleChange} />
-
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        About Me
-                    </h3>
-
-                    <textarea name="aboutMe" placeholder="About Me" rows="4" className="border p-3 rounded-lg md:col-span-2" value={formData.aboutMe} onChange={handleChange} />
-
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Partner Preferences
-                    </h3>
-
-                    <input name="preferredAgeFrom" placeholder="Preferred Age From" className="border p-3 rounded-lg" value={formData.preferredAgeFrom} onChange={handleChange} />
-                    <input name="preferredAgeTo" placeholder="Preferred Age To" className="border p-3 rounded-lg" value={formData.preferredAgeTo} onChange={handleChange} />
-                    <input name="preferredCaste" placeholder="Preferred Caste" className="border p-3 rounded-lg" value={formData.preferredCaste} onChange={handleChange} />
-                    <input name="preferredLocation" placeholder="Preferred Location" className="border p-3 rounded-lg" value={formData.preferredLocation} onChange={handleChange} />
-
-                    
-
-                    <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                        Family Details
-                    </h3>
-
-                    <textarea
-                        name="familyDetails"
-                        placeholder="Family Details"
-                        rows="3"
-                        className="border p-3 rounded-lg md:col-span-2"
-                        value={formData.familyDetails}
-                        onChange={handleChange}
-                    />
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Contact Preference
-            </h3>
-
-            <p className="md:col-span-2 text-sm text-gray-500 -mt-2">
-                How would you prefer prospective matches to contact you?
-            </p>
-
-                    <select
-                        name="contactPreference"
-                        className="border p-3 rounded-lg"
-                        value={formData.contactPreference}
-                        onChange={handleChange}
-                    >
-                        <option value="Phone">Phone</option>
-                        <option value="WhatsApp">WhatsApp</option>
-                        <option value="Email">Email</option>
-                        <option value="Any">Any</option>
-                    </select>
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Profile Photo
-            </h3>
-
-            <p className="md:col-span-2 text-sm text-gray-500 -mt-2">
-                Upload a clear profile photo. <span className="text-red-600">*</span> Required
-            </p>
-            <p className="text-xs text-gray-500">
-                Accepted formats: JPG, JPEG, PNG • Maximum size: 2 MB
-            </p>
-                    <div className="md:col-span-2 flex flex-col items-center gap-3">
-
-                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#800020] bg-gray-100">
-                            {photoPreview ? (
-                                <img
-                                    src={photoPreview}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    Photo
-                                </div>
-                            )}
-                        </div>
-
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    required={!photoPreview}
-                    className="text-sm"
-                />
-
+        <div className="profile-page-container">
+            <div className="profile-detail-card">
+                <div className="profile-top-section">
+                    <div className="profile-photo-box">
+                        {canViewFullProfile && profile.profilePhoto ? (
+                            <img
+                                src={profile.profilePhoto}
+                                alt="Profile"
+                                className="profile-photo"
+                            />
+                        ) : (
+                            <div className="profile-photo-locked">
+                                <span>🔒</span>
+                                <p>Photo Locked</p>
+                            </div>
+                        )}
                     </div>
 
-                    <button type="submit" className="md:col-span-2 bg-[#800020] text-white py-3 rounded-xl font-semibold mt-4">
-                        Save Profile
+                    <div className="profile-basic-info">
+                        <h1>
+                            {showValue(profile.fullName || profile.name, true)}
+
+                            {profile.membership === "premium" && (
+                                <span className="premium-badge">
+                                    ⭐ Premium
+                                </span>
+                            )}
+                        </h1>
+
+                        <p className="profile-subtitle">
+                            {profile.age || "Age not provided"} years •{" "}
+                            {profile.caste || "Caste not provided"} •{" "}
+                            {profile.city || "City not provided"}
+                        </p>
+
+                        {!canViewFullProfile && (
+                            <div className="profile-lock-alert">
+                                ✨ Upgrade to Premium to unlock complete profiles and connect with families.
+                                for premium members.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="profile-section">
+                    <h2>Basic Details</h2>
+
+                    <div className="profile-grid">
+                        <Info label="Age" value={showValue(profile.age)} />
+                        <Info label="Gender" value={showValue(profile.gender)} />
+                        <Info label="Height" value={showValue(profile.height)} />
+                        <Info label="Marital Status" value={showValue(profile.maritalStatus)} />
+                        <Info label="Caste" value={showValue(profile.caste)} />
+                        <Info label="Sub Caste" value={showValue(profile.subCaste)} />
+
+                        <p>
+                            <strong>Gothram:</strong>{" "}
+                            {canViewFullDetails ? profile.gothram : "🔒 Premium Only"}
+                        </p>
+
+                        <Info
+                            label="Location"
+                            value={showValue(`${profile.city || ""}, ${profile.state || ""}`)}
+                        />
+                    </div>
+                </div>
+
+                <div className="profile-section">
+                    <h2>Education & Career</h2>
+
+                    <div className="profile-grid">
+                        <Info label="Education" value={showValue(profile.education)} />
+                        <Info label="Occupation" value={showValue(profile.occupation)} />
+                        <p>
+                            <strong>Income:</strong>{" "}
+                            {canViewFullDetails ? profile.annualIncome : "🔒 Premium Only"}
+                        </p>
+
+                        <Info label="Company" value={showValue(profile.company, true)} />
+                    </div>
+                </div>
+
+                <div className="profile-section">
+                    <h2>Contact Details</h2>
+
+                    <div className="profile-grid">
+                        <p>
+                            <strong>Mobile:</strong>{" "}
+                            {canViewFullDetails ? profile.mobile : "🔒 Premium Only"}
+                        </p>
+                        <p>
+                            <strong>Email:</strong>{" "}
+                            {canViewFullDetails ? profile.email : "🔒 Premium Only"}
+                        </p>
+
+                        <Info label="Address" value={showValue(profile.address, true)} />
+                    </div>
+                </div>
+
+                <div className="profile-section">
+                    <h2>Family Details</h2>
+
+                    <div className="profile-grid">
+                        <Info label="Father Name" value={showValue(profile.fatherName, true)} />
+                        <Info label="Mother Name" value={showValue(profile.motherName, true)} />
+                        <Info label="Family Type" value={showValue(profile.familyType, true)} />
+                        <Info label="Family Status" value={showValue(profile.familyStatus, true)} />
+                    </div>
+                </div>
+
+                <div className="profile-section">
+                    <h2>About</h2>
+                    <p className="profile-about">
+                        {showValue(profile.aboutMe || profile.about)}
+                    </p>
+                </div>
+
+                {!canViewFullProfile && (
+                    <div className="upgrade-box">
+                        <h3>Upgrade Required</h3>
+                        <p>
+                            Upgrade to premium membership to view full name, photo, mobile,
+                            email, income, and family details.
+                        </p>
+
+                        <Link to="/membership" className="upgrade-btn">
+                            View Membership Plans
+                        </Link>
+                    </div>
+                )}
+
+                {/* ==========================================
+    Premium Upgrade Banner
+========================================== */}
+                {!canViewFullDetails && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 my-6 text-center shadow-sm">
+
+                        <h3 className="text-lg font-bold text-[#800020]">
+                            🔒 Premium Membership Required
+                        </h3>
+
+                        <p className="text-gray-600 mt-2 text-sm">
+                            Mobile number, email, income, gothram, horoscope,
+                            and complete profile details are available only to Premium members.
+                        </p>
+
+                        <button className="mt-4 bg-gradient-to-r from-[#800020] to-[#a52a2a] text-white px-6 py-2 rounded-full shadow-lg hover:scale-105 transition">
+                            Upgrade to Premium
+                        </button>
+
+                    </div>
+                )}
+
+                <div className="profile-actions">
+                    <button className="interest-btn" onClick={handleSendInterest}>
+                        ❤️ Send Interest
                     </button>
-                </form>
-            
+
+                    <Link to="/search-profiles" className="back-btn">
+                        ← Back to Search
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function Info({ label, value }) {
+    return (
+        <div className="profile-info-item">
+            <span>{label}</span>
+            <strong>{value}</strong>
+        </div>
     );
 }

@@ -1,5 +1,6 @@
 import express from "express";
 import multer from "multer";
+
 import { protect } from "../middleware/authMiddleware.js";
 import { adminOnly } from "../middleware/adminMiddleware.js";
 
@@ -15,87 +16,126 @@ import {
     updateProfileStatus,
 } from "../controllers/profileController.js";
 
-
-
 const router = express.Router();
 
+// ==========================================
+// Multer Configuration
+// ==========================================
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: (req, file, cb) => {
         cb(null, "uploads/");
     },
-    filename: function (req, file, cb) {
+
+    filename: (req, file, cb) => {
         cb(null, Date.now() + "-" + file.originalname);
     },
 });
 
-{/*export const getPendingProfiles = async (req, res) => {
-    try {
-        const profiles = await Profile.find({
-            status: "pending",
-        }).populate("user", "fullName email mobile");
-
-        return res.json({
-            success: true,
-            profiles,
-        });
-    } catch (error) {
-        console.error("GET PENDING PROFILES ERROR:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error",
-        });
-    }
-};*/}
-
 const upload = multer({
     storage,
+
     limits: {
-        fileSize: 2 * 1024 * 1024,
+        fileSize: 2 * 1024 * 1024, // 2 MB
     },
+
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+        const allowedTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+        ];
 
         if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error("Only JPG, JPEG and PNG files are allowed"));
+            return cb(
+                new Error("Only JPG, JPEG and PNG files are allowed")
+            );
         }
 
         cb(null, true);
     },
 });
 
+// ==========================================
+// Create Profile
+// ==========================================
 router.post(
-    "/create", protect,
+    "/create",
+    protect,
     upload.single("profilePhoto"),
     createProfile
 );
 
+// ==========================================
+// Update Profile
+// ==========================================
 router.put(
-    "/user/:userId", protect,
+    "/user/:userId",
+    protect,
     upload.single("profilePhoto"),
     updateProfile
 );
 
-// Order should be like this
+// ==========================================
+// Get Profile By User
+// ==========================================
+router.get(
+    "/user/:userId",
+    protect,
+    getProfileByUser
+);
 
-router.get("/user/:userId", protect, getProfileByUser);
+// ==========================================
+// Search Profiles
+// ==========================================
+router.get(
+    "/search",
+    protect,
+    searchProfiles
+);
 
-router.get("/search", protect, searchProfiles);
+// ==========================================
+// Free User Profile View Limit
+// Premium/Admin = unlimited
+// Free = max 5 profiles
+// ==========================================
+router.put(
+    "/profile-view",
+    protect,
+    checkProfileViewAccess
+);
 
-router.put("/users/:userId/profile-view", protect, checkProfileViewAccess);
+// ==========================================
+// Home Page Profiles (Public)
+// ==========================================
+router.get(
+    "/",
+    getProfiles
+);
 
-router.get("/", protect, getProfiles);
+// ==========================================
+// Admin Routes
+// ==========================================
+router.get(
+    "/admin/pending",
+    protect,
+    adminOnly,
+    getPendingProfiles
+);
 
-router.put("/admin/:profileId/status", protect, adminOnly, updateProfileStatus);
+router.put(
+    "/admin/:profileId/status",
+    protect,
+    adminOnly,
+    updateProfileStatus
+);
 
-router.get("/:id", protect, getProfileById);
-
-router.get("/admin/pending", protect, adminOnly, getPendingProfiles);
-
-
-
-
-// comment this for now
-// router.get("/:id", getProfileById);
+// ==========================================
+// Single Profile Details
+// ==========================================
+router.get(
+    "/:id",
+    protect,
+    getProfileById
+);
 
 export default router;

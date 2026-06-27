@@ -28,16 +28,16 @@
     flex-shrink: 0;
 }
 
-    .create-profile-header h2 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-    }
+.create-profile-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+}
 
-    .create-profile-header p {
-        margin: 2px 0 0;
-        font-size: 13px;
-    }
+.create-profile-header p {
+    margin: 2px 0 0;
+    font-size: 13px;
+}
 
 .create-profile-body {
     flex: 1;
@@ -55,4 +55,14 @@
     font-size: 30px;
     cursor: pointer;
     z-index: 20;
+}
+
+.premium-badge {
+    margin-left: 12px;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
 }

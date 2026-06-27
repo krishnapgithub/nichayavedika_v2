@@ -94,6 +94,31 @@ export const getReceivedInterests = async (req, res) => {
     }
 };
 
+const handleSendInterest = async () => {
+    if (!user) {
+        toast.error("Please login first");
+        navigate("/");
+        return;
+    }
+
+    if (!canViewFullProfile) {
+        toast.error("Upgrade to Premium membership to send interests");
+        return;
+    }
+
+    try {
+        await axios.post(`${API_BASE_URL}/api/interests/send`, {
+            fromUser: user._id,
+            toProfile: profile._id,
+        });
+
+        toast.success("Interest sent successfully ❤️");
+    } catch (error) {
+        console.error(error);
+        toast.error(error.response?.data?.message || "Unable to send interest");
+    }
+};
+
 export const sendInterest = async (req, res) => {
     try {
         const { fromUser, toProfile } = req.body;
@@ -105,21 +130,25 @@ export const sendInterest = async (req, res) => {
             });
         }
 
+        // ==========================================
+        // Prevent duplicate interest
+        // ==========================================
         const existingInterest = await Interest.findOne({
-            fromUser,
-            toProfile,
+            sender: senderId,
+            receiverProfile: receiverProfileId,
         });
 
         if (existingInterest) {
-            return res.status(409).json({
+            return res.status(400).json({
                 success: false,
-                message: "Interest already sent",
+                message: "Interest already sent to this profile",
             });
         }
 
         const interest = await Interest.create({
-            fromUser,
-            toProfile,
+            sender: senderId,
+            receiverProfile: receiverProfileId,
+            status: "pending",
         });
 
         res.status(201).json({

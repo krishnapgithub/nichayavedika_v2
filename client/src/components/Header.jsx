@@ -1,41 +1,29 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import "../styles/home.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CreateProfileModal from "./CreateProfileModal";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+import nvLogo from "../images/nvlogo-v1.png";
 import {
     FaUserCircle,
-    FaSearch,
-    FaHeart,
-    FaPhoneAlt,
-    FaEnvelope,
-    FaWhatsapp,
-    FaFacebook,
-    FaInstagram,
-    FaSignOutAlt,
-    FaUserPlus,
     FaBars,
     FaTimes
 } from "react-icons/fa";
 
 export default function Header() {
-
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
     const [user, setUser] = useState(null);
-
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const navigate = useNavigate();
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
-
         if (savedUser) {
             setUser(JSON.parse(savedUser));
         }
@@ -46,34 +34,23 @@ export default function Header() {
     const handleLogout = () => {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
-
         setUser(null);
-
         setIsLoginOpen(false);
         setIsRegisterOpen(false);
         setIsCreateProfileOpen(false);
-
-        console.log("🙏 Sita Rama Blessings!");
-
         toast.success("Logged out successfully!");
-
         navigate("/");
     };
-
 
     const handleLoginSuccess = (userData) => {
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
-
         setIsLoginOpen(false);
         setIsRegisterOpen(false);
         setIsCreateProfileOpen(true);
     };
 
     return (
-
-
-
         <div className="fixed top-0 left-0 w-full z-[9999]">
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
@@ -82,20 +59,29 @@ export default function Header() {
             <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-6 relative -top-2">
                     <div className="flex items-center justify-between h-20">
-                        <div>
-                            <h1 className="text-3xl font-bold text-[#800020]">
-                                నిశ్చయ వేదిక
-                            </h1>
+                        <div className="flex items-center gap-3">
 
-                            <p className="text-xs text-gray-500">
-                                Trusted Telugu Matrimony
-                            </p>
+                            {/* Small Logo */}
+                            <img
+                                src={nvLogo}
+                                alt="నిశ్చయ వేదిక"
+                                className="h-16 w-16 object-contain"
+                            />
+
+                            {/* Title & Subtitle */}
+                            <div>
+                                <h1 className="text-3xl font-bold text-[#800020] leading-none">
+                                    నిశ్చయ వేదిక
+                                </h1>
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Trusted Telugu Matrimony
+                                </p>
+                            </div>
+
                         </div>
 
-
-
                         <nav className="hidden lg:flex items-center text-sm font-medium">
-
                             <Link className="nav-link" to="/">
                                 Home
                             </Link>
@@ -103,7 +89,7 @@ export default function Header() {
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
                             <Link className="nav-link" to="/search">
-                                Search 
+                                Search
                             </Link>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
@@ -115,7 +101,7 @@ export default function Header() {
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
                             <Link className="nav-link" to="/success-stories">
-                                Success 
+                                Success
                             </Link>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
@@ -124,18 +110,11 @@ export default function Header() {
                                 Events
                             </Link>
 
-
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
                             <Link className="nav-link" to="/contact">
                                 Contact
                             </Link>
-
-                            
-                            {/* ---------------- LOGGED OUT MENU ---------------- */}
-
-                            
-
                         </nav>
 
                         <button
@@ -202,13 +181,13 @@ export default function Header() {
                                         Hi, {user.fullName}
                                     </div>
 
-                                    {user?.role === "admin" && (
-                                        <Link className="mobile-menu-link" to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
-                                            🛡️ Admin
-                                        </Link>
-                                    )}
 
-                                    <Link className="mobile-menu-link" to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+
+                                    <Link
+                                        className="mobile-menu-link"
+                                        to="/dashboard"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
                                         👤 Dashboard
                                     </Link>
 
@@ -222,13 +201,40 @@ export default function Header() {
                                         💍 Profile
                                     </button>
 
-                                    <Link className="mobile-menu-link" to="/sent-interests" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link
+                                        className="mobile-menu-link"
+                                        to="/sent-interests"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
                                         📤 Sent
                                     </Link>
 
-                                    <Link className="mobile-menu-link" to="/received-interests" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link
+                                        className="mobile-menu-link"
+                                        to="/received-interests"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
                                         📥 Received
                                     </Link>
+
+                                    {["admin", "super_admin"].includes(user?.role) && (
+                                        <Link
+                                            className="mobile-menu-link"
+                                            to="/admin/profiles"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            🛡️ Admin
+                                        </Link>
+                                    )}
+                                    {user?.role === "super_admin" && (
+                                        <Link
+                                            className="mobile-menu-link"
+                                            to="/admin/users"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            👑 Super Admin
+                                        </Link>
+                                    )}
 
                                     <button
                                         onClick={() => {
@@ -273,7 +279,6 @@ export default function Header() {
                     isOpen={isLoginOpen}
                     onClose={() => {
                         setIsLoginOpen(false);
-
                         const savedUser = localStorage.getItem("user");
                         if (savedUser) {
                             setUser(JSON.parse(savedUser));
@@ -294,13 +299,11 @@ export default function Header() {
 
             {isLoggedIn && (
                 <div className="hidden lg:flex fixed top-40 right-5 z-[9998] flex-col gap-3 side-user-menu">
-                    {user?.role === "admin" && (
-                        <Link className="side-menu-link" to="/admin">
-                            🛡️ Admin
-                        </Link>
-                    )}
 
-                    <Link className="side-menu-link" to="/dashboard">👤 Dashboard</Link>
+
+                    <Link className="side-menu-link" to="/dashboard">
+                        👤 Dashboard
+                    </Link>
 
                     <button
                         onClick={() => setIsCreateProfileOpen(true)}
@@ -309,12 +312,25 @@ export default function Header() {
                         💍 Profile
                     </button>
 
-                    <Link className="side-menu-link" to="/sent-interests">📤 Sent</Link>
-                    <Link className="side-menu-link" to="/received-interests">📥 Received</Link>
+                    <Link className="side-menu-link" to="/sent-interests">
+                        📤 Sent
+                    </Link>
+
+                    <Link className="side-menu-link" to="/received-interests">
+                        📥 Received
+                    </Link>
+                    {["admin", "super_admin"].includes(user?.role) && (
+                        <Link className="side-menu-link" to="/admin/profiles">
+                            🛡️ Admin
+                        </Link>
+                    )}
+                    {user?.role === "super_admin" && (
+                        <Link className="side-menu-link" to="/admin/users">
+                            👑 Super Admin
+                        </Link>
+                    )}
                 </div>
             )}
         </div>
-            
-        
     );
 }
