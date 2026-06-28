@@ -1,9 +1,7 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Header from "../components/Header.jsx";
 import toast from "react-hot-toast";
-import { Navigate } from "react-router-dom";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -11,17 +9,16 @@ const API_BASE_URL =
     "http://localhost:5000";
 
 export default function AdminUsers() {
-
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const loggedInUser = JSON.parse(localStorage.getItem("user"));
-
+    const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const token = localStorage.getItem("token");
 
+    const userRole = loggedInUser?.role?.toLowerCase?.().trim();
 
-
-
-
+    const isSuperAdmin = userRole === "super_admin";
+    const canManageUsers = userRole === "admin" || userRole === "super_admin";
 
     const authConfig = {
         headers: {
@@ -29,34 +26,27 @@ export default function AdminUsers() {
         },
     };
 
+    const fetchUsers = async () => {
+        try {
+            if (!canManageUsers || !token) {
+                setLoading(false);
+                return;
+            }
+
+            const res = await axios.get(`${API_BASE_URL}/api/admin/users`, authConfig);
+
+            setUsers(res.data.users || []);
+        } catch (error) {
+            console.error("Fetch users failed:", error);
+            toast.error(error.response?.data?.message || "Unable to load users");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
     }, []);
-
-    const fetchUsers = async () => {
-        const loggedInUser = JSON.parse(localStorage.getItem("user"));
-
-        if (
-            !loggedInUser ||
-            !["admin", "superadmin", "superAdmin"].includes(loggedInUser.role)
-        ) {
-            return;
-        }
-
-        const token = localStorage.getItem("token");
-
-        const res = await axios.get(
-            `${API_BASE_URL}/api/admin/users`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
-        setUsers(res.data.users);
-    };
-
 
     const updateAccess = async (userId, field, value) => {
         try {
@@ -96,38 +86,6 @@ export default function AdminUsers() {
         }
     };
 
-    const updateAccess_old = async (userId, field, value) => {
-        try {
-            const currentUser = users.find((u) => u._id === userId);
-
-            if (
-                loggedInUser?._id === userId &&
-                field === "isActive" &&
-                value === false
-            ) {
-                toast.error("You cannot deactivate your own account");
-                return;
-            }
-
-            await axios.put(
-                `${API_BASE_URL}/api/admin/users/${userId}/access`,
-                {
-                    role: field === "role" ? value : currentUser.role,
-                    status: field === "status" ? value : currentUser.status,
-                    membershipPlan: field === "membershipPlan" ? value : currentUser.membershipPlan,
-                    isActive: field === "isActive" ? value : currentUser.isActive,
-                },
-                authConfig
-            );
-
-
-            toast.success("User updated");
-            fetchUsers();
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Unable to update user");
-        }
-    };
-
     const resetPassword = async (userId) => {
         const newPassword = prompt("Enter new password");
 
@@ -146,7 +104,7 @@ export default function AdminUsers() {
         }
     };
 
-    if (loggedInUser?.role !== "super_admin") {
+    if (!isSuperAdmin) {
         return (
             <>
                 <Header />
@@ -167,117 +125,117 @@ export default function AdminUsers() {
                         Super Admin - User Management
                     </h1>
 
-                    <div className="overflow-x-auto bg-white rounded-2xl shadow">
-                        <table className="w-full text-sm">
-                            <thead className="bg-[#800020] text-white">
-                                <tr>
-                                    <th className="p-3 text-left">Name</th>
-                                    <th className="p-3 text-left">Email</th>
-                                    <th className="p-3 text-left">Mobile</th>
-                                    <th className="p-3 text-left">Role</th>
-                                    <th className="p-3 text-left">Status</th>
-                                    <th className="p-3 text-left">Membership</th>
-                                    <th className="p-3 text-left">Active</th>
-                                    <th className="p-3 text-left">Action</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {users.map((u) => (
-                                    <tr key={u._id} className="border-b">
-                                        <td className="p-3 font-semibold">{u.fullName}</td>
-                                        <td className="p-3">{u.email}</td>
-                                        <td className="p-3">{u.mobile || "-"}</td>
-
-                                        <td className="p-3">
-                                            <select
-                                                value={u.role || "user"}
-                                                onChange={(e) =>
-                                                    updateAccess(u._id, "role", e.target.value)
-                                                }
-                                                className="border rounded px-2 py-1"
-                                            >
-                                                <option value="user">user</option>
-                                                <option value="executive">executive</option>
-                                                <option value="admin">admin</option>
-                                                <option value="super_admin">super_admin</option>
-                                            </select>
-                                        </td>
-
-                                        <td className="p-3">
-                                            <select
-                                                value={u.status || "pending"}
-                                                onChange={(e) =>
-                                                    updateAccess(u._id, "status", e.target.value)
-                                                }
-                                                className="border rounded px-2 py-1"
-                                            >
-                                                <option value="pending">pending</option>
-                                                <option value="approved">approved</option>
-                                                <option value="rejected">rejected</option>
-                                            </select>
-                                        </td>
-
-                                        <td className="p-3">
-                                            <select
-                                                value={u.membershipPlan || "free"}
-                                                onChange={(e) =>
-                                                    updateAccess(u._id, "membershipPlan", e.target.value)
-                                                }
-                                                className="border rounded px-2 py-1"
-                                            >
-                                                <option value="free">free</option>
-                                                <option value="premium">premium</option>
-                                                <option value="assisted">assisted</option>
-                                            </select>
-                                        </td>
-
-                                        <td className="p-3">
-
-                                            <div className="text-xs text-gray-500 mb-2">
-                                                DEBUG: {String(u.isActive)}
-                                            </div>
-
-                                            <button
-                                                onClick={() =>
-                                                    updateAccess(u._id, "isActive", !u.isActive)
-                                                }
-                                                className={`px-3 py-2 rounded-lg text-white ${u.isActive
-                                                        ? "bg-red-600"
-                                                        : "bg-green-600"
-                                                    }`}
-                                            >
-                                                {u.isActive ? "Deactivate" : "Activate"}
-                                            </button>
-
-                                        </td>
-
-
-
-
-
-
-                                        <td className="p-3">
-                                            <button
-                                                onClick={() => resetPassword(u._id)}
-                                                className="bg-[#800020] text-white px-3 py-2 rounded-lg"
-                                            >
-                                                Reset Password
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-
-                                {users.length === 0 && (
+                    {loading ? (
+                        <div className="bg-white rounded-2xl shadow p-6 text-center font-semibold text-[#800020]">
+                            Loading users...
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto bg-white rounded-2xl shadow">
+                            <table className="w-full text-sm">
+                                <thead className="bg-[#800020] text-white">
                                     <tr>
-                                        <td colSpan="8" className="p-6 text-center">
-                                            No users found.
-                                        </td>
+                                        <th className="p-3 text-left">Name</th>
+                                        <th className="p-3 text-left">Email</th>
+                                        <th className="p-3 text-left">Mobile</th>
+                                        <th className="p-3 text-left">Role</th>
+                                        <th className="p-3 text-left">Status</th>
+                                        <th className="p-3 text-left">Membership</th>
+                                        <th className="p-3 text-left">Active</th>
+                                        <th className="p-3 text-left">Action</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+
+                                <tbody>
+                                    {users.map((u) => (
+                                        <tr key={u._id} className="border-b">
+                                            <td className="p-3 font-semibold">
+                                                {u.fullName || "-"}
+                                            </td>
+
+                                            <td className="p-3">{u.email || "-"}</td>
+                                            <td className="p-3">{u.mobile || "-"}</td>
+
+                                            <td className="p-3">
+                                                <select
+                                                    value={u.role || "user"}
+                                                    onChange={(e) =>
+                                                        updateAccess(u._id, "role", e.target.value)
+                                                    }
+                                                    className="border rounded px-2 py-1"
+                                                >
+                                                    <option value="user">user</option>
+                                                    <option value="executive">executive</option>
+                                                    <option value="admin">admin</option>
+                                                    <option value="super_admin">super_admin</option>
+                                                </select>
+                                            </td>
+
+                                            <td className="p-3">
+                                                <select
+                                                    value={u.status || "pending"}
+                                                    onChange={(e) =>
+                                                        updateAccess(u._id, "status", e.target.value)
+                                                    }
+                                                    className="border rounded px-2 py-1"
+                                                >
+                                                    <option value="pending">pending</option>
+                                                    <option value="approved">approved</option>
+                                                    <option value="rejected">rejected</option>
+                                                </select>
+                                            </td>
+
+                                            <td className="p-3">
+                                                <select
+                                                    value={u.membershipPlan || "free"}
+                                                    onChange={(e) =>
+                                                        updateAccess(
+                                                            u._id,
+                                                            "membershipPlan",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="border rounded px-2 py-1"
+                                                >
+                                                    <option value="free">free</option>
+                                                    <option value="premium">premium</option>
+                                                    <option value="assisted">assisted</option>
+                                                </select>
+                                            </td>
+
+                                            <td className="p-3">
+                                                <button
+                                                    onClick={() =>
+                                                        updateAccess(u._id, "isActive", !u.isActive)
+                                                    }
+                                                    className={`px-3 py-2 rounded-lg text-white ${u.isActive ? "bg-red-600" : "bg-green-600"
+                                                        }`}
+                                                >
+                                                    {u.isActive ? "Deactivate" : "Activate"}
+                                                </button>
+                                            </td>
+
+                                            <td className="p-3">
+                                                <button
+                                                    onClick={() => resetPassword(u._id)}
+                                                    className="bg-[#800020] text-white px-3 py-2 rounded-lg"
+                                                >
+                                                    Reset Password
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+
+                                    {users.length === 0 && (
+                                        <tr>
+                                            <td colSpan="8" className="p-6 text-center">
+                                                No users found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
