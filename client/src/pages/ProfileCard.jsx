@@ -1,6 +1,4 @@
 ﻿import { useNavigate } from "react-router-dom";
-
-
 import nvLogo from "../images/wedding-hero.png";
 
 export default function ProfileCard({ profile }) {

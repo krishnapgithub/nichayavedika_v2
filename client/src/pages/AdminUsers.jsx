@@ -119,125 +119,210 @@ export default function AdminUsers() {
         <>
             <Header />
 
-            <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
+            <div className="min-h-screen bg-[#fff8f2] pt-28 px-3 sm:px-4 pb-12">
                 <div className="max-w-7xl mx-auto">
-                    <h1 className="text-3xl font-bold text-[#800020] mb-6">
-                        Super Admin - User Management
-                    </h1>
+                    <div className="mb-6">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-[#800020]">
+                            Super Admin - User Management
+                        </h1>
+                    </div>
 
                     {loading ? (
                         <div className="bg-white rounded-2xl shadow p-6 text-center font-semibold text-[#800020]">
                             Loading users...
                         </div>
                     ) : (
-                        <div className="overflow-x-auto bg-white rounded-2xl shadow">
-                            <table className="w-full text-sm">
-                                <thead className="bg-[#800020] text-white">
-                                    <tr>
-                                        <th className="p-3 text-left">Name</th>
-                                        <th className="p-3 text-left">Email</th>
-                                        <th className="p-3 text-left">Mobile</th>
-                                        <th className="p-3 text-left">Role</th>
-                                        <th className="p-3 text-left">Status</th>
-                                        <th className="p-3 text-left">Membership</th>
-                                        <th className="p-3 text-left">Active</th>
-                                        <th className="p-3 text-left">Action</th>
-                                    </tr>
-                                </thead>
+                        <>
+                            {/* Desktop / Tablet Table */}
+                            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
+                                <table className="min-w-[1050px] w-full text-sm">
+                                    <thead className="bg-[#800020] text-white">
+                                        <tr>
+                                            <th className="p-3 text-left">Name</th>
+                                            <th className="p-3 text-left">Email</th>
+                                            <th className="p-3 text-left">Mobile</th>
+                                            <th className="p-3 text-left">Role</th>
+                                            <th className="p-3 text-left">Status</th>
+                                            <th className="p-3 text-left">Membership</th>
+                                            <th className="p-3 text-left">Active</th>
+                                            <th className="p-3 text-left">Action</th>
+                                        </tr>
+                                    </thead>
 
-                                <tbody>
-                                    {users.map((u) => (
-                                        <tr key={u._id} className="border-b">
-                                            <td className="p-3 font-semibold">
+                                    <tbody>
+                                        {users.map((u) => (
+                                            <tr key={u._id} className="border-b">
+                                                <td className="p-3 font-semibold">{u.fullName || "-"}</td>
+                                                <td className="p-3">{u.email || "-"}</td>
+                                                <td className="p-3">{u.mobile || "-"}</td>
+
+                                                <td className="p-3">
+                                                    <select
+                                                        value={u.role || "user"}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "role", e.target.value)
+                                                        }
+                                                        className="w-full border rounded px-2 py-1"
+                                                    >
+                                                        <option value="user">user</option>
+                                                        <option value="executive">executive</option>
+                                                        <option value="admin">admin</option>
+                                                        <option value="super_admin">super_admin</option>
+                                                    </select>
+                                                </td>
+
+                                                <td className="p-3">
+                                                    <select
+                                                        value={u.status || "pending"}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "status", e.target.value)
+                                                        }
+                                                        className="w-full border rounded px-2 py-1"
+                                                    >
+                                                        <option value="pending">pending</option>
+                                                        <option value="approved">approved</option>
+                                                        <option value="rejected">rejected</option>
+                                                    </select>
+                                                </td>
+
+                                                <td className="p-3">
+                                                    <select
+                                                        value={u.membershipPlan || "free"}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "membershipPlan", e.target.value)
+                                                        }
+                                                        className="w-full border rounded px-2 py-1"
+                                                    >
+                                                        <option value="free">free</option>
+                                                        <option value="premium">premium</option>
+                                                        <option value="assisted">assisted</option>
+                                                    </select>
+                                                </td>
+
+                                                <td className="p-3">
+                                                    <button
+                                                        onClick={() =>
+                                                            updateAccess(u._id, "isActive", !u.isActive)
+                                                        }
+                                                        className={`w-full px-3 py-2 rounded-lg text-white ${u.isActive ? "bg-red-600" : "bg-green-600"
+                                                            }`}
+                                                    >
+                                                        {u.isActive ? "Deactivate" : "Activate"}
+                                                    </button>
+                                                </td>
+
+                                                <td className="p-3">
+                                                    <button
+                                                        onClick={() => resetPassword(u._id)}
+                                                        className="w-full bg-[#800020] text-white px-3 py-2 rounded-lg"
+                                                    >
+                                                        Reset Password
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile Cards */}
+                            <div className="md:hidden space-y-4">
+                                {users.map((u) => (
+                                    <div key={u._id} className="bg-white rounded-2xl shadow p-4">
+                                        <div className="mb-4">
+                                            <h3 className="text-lg font-bold text-[#800020]">
                                                 {u.fullName || "-"}
-                                            </td>
+                                            </h3>
+                                            <p className="text-sm text-gray-600 break-all">
+                                                {u.email || "-"}
+                                            </p>
+                                            <p className="text-sm text-gray-600">{u.mobile || "-"}</p>
+                                        </div>
 
-                                            <td className="p-3">{u.email || "-"}</td>
-                                            <td className="p-3">{u.mobile || "-"}</td>
-
-                                            <td className="p-3">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">
+                                                    Role
+                                                </label>
                                                 <select
                                                     value={u.role || "user"}
                                                     onChange={(e) =>
                                                         updateAccess(u._id, "role", e.target.value)
                                                     }
-                                                    className="border rounded px-2 py-1"
+                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
                                                 >
                                                     <option value="user">user</option>
                                                     <option value="executive">executive</option>
                                                     <option value="admin">admin</option>
                                                     <option value="super_admin">super_admin</option>
                                                 </select>
-                                            </td>
+                                            </div>
 
-                                            <td className="p-3">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">
+                                                    Status
+                                                </label>
                                                 <select
                                                     value={u.status || "pending"}
                                                     onChange={(e) =>
                                                         updateAccess(u._id, "status", e.target.value)
                                                     }
-                                                    className="border rounded px-2 py-1"
+                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
                                                 >
                                                     <option value="pending">pending</option>
                                                     <option value="approved">approved</option>
                                                     <option value="rejected">rejected</option>
                                                 </select>
-                                            </td>
+                                            </div>
 
-                                            <td className="p-3">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">
+                                                    Membership
+                                                </label>
                                                 <select
                                                     value={u.membershipPlan || "free"}
                                                     onChange={(e) =>
-                                                        updateAccess(
-                                                            u._id,
-                                                            "membershipPlan",
-                                                            e.target.value
-                                                        )
+                                                        updateAccess(u._id, "membershipPlan", e.target.value)
                                                     }
-                                                    className="border rounded px-2 py-1"
+                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
                                                 >
                                                     <option value="free">free</option>
                                                     <option value="premium">premium</option>
                                                     <option value="assisted">assisted</option>
                                                 </select>
-                                            </td>
+                                            </div>
 
-                                            <td className="p-3">
+                                            <div className="grid grid-cols-1 gap-3 pt-2">
                                                 <button
                                                     onClick={() =>
                                                         updateAccess(u._id, "isActive", !u.isActive)
                                                     }
-                                                    className={`px-3 py-2 rounded-lg text-white ${u.isActive ? "bg-red-600" : "bg-green-600"
+                                                    className={`w-full px-3 py-3 rounded-xl text-white font-semibold ${u.isActive ? "bg-red-600" : "bg-green-600"
                                                         }`}
                                                 >
                                                     {u.isActive ? "Deactivate" : "Activate"}
                                                 </button>
-                                            </td>
 
-                                            <td className="p-3">
                                                 <button
                                                     onClick={() => resetPassword(u._id)}
-                                                    className="bg-[#800020] text-white px-3 py-2 rounded-lg"
+                                                    className="w-full bg-[#800020] text-white px-3 py-3 rounded-xl font-semibold"
                                                 >
                                                     Reset Password
                                                 </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
 
-                                    {users.length === 0 && (
-                                        <tr>
-                                            <td colSpan="8" className="p-6 text-center">
-                                                No users found.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                {users.length === 0 && (
+                                    <div className="bg-white rounded-2xl shadow p-6 text-center">
+                                        No users found.
+                                    </div>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
-            </div>
-        </>
+            </div>        </>
     );
 }

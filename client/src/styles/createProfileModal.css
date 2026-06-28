@@ -1,68 +1,199 @@
-.create-profile-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    z-index: 99999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    overflow: hidden;
+.nv-profile-card {
+    max-width: 520px;
+    width: 100%;
+    height: 270px;
+    position: relative;
+    padding: 24px;
+    color: white;
+    justify-self: center;
+    border-radius: 24px;
+    overflow: visible;
+    isolation: isolate;
+    cursor: pointer;
+    transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.create-profile-modal {
+    .nv-profile-card:hover {
+        transform: translateY(-6px) scale(1.01);
+        filter: saturate(1.06);
+    }
+
+.nv-profile-content {
     position: relative;
-    width: min(1100px, 96vw);
-    height: 90vh;
-    background: #ffffff;
-    border-radius: 24px;
-    overflow: hidden;
+    z-index: 4;
+    height: 100%;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
 }
 
-.create-profile-header {
-    background: #a00030;
-    color: white;
-    padding: 12px 28px;
-    flex-shrink: 0;
+.nv-profile-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
 }
 
-.create-profile-header h2 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.create-profile-header p {
-    margin: 2px 0 0;
-    font-size: 13px;
-}
-
-.create-profile-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-}
-
-.create-profile-close {
-    position: absolute;
-    top: 14px;
-    right: 24px;
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-    z-index: 20;
-}
-
-.premium-badge {
-    margin-left: 12px;
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
-    color: white;
-    padding: 4px 10px;
+.nv-card-label {
+    width: fit-content;
+    margin-bottom: 6px;
+    padding: 4px 9px;
     border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(8px);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.nv-profile-top h3 {
+    max-width: 270px;
+    font-size: 18px;
+    line-height: 1.2;
+    font-weight: 800;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.nv-profile-top span {
+    height: fit-content;
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    backdrop-filter: blur(8px);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.nv-profile-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 18px;
+}
+
+    .nv-profile-bottom h2 {
+        max-width: 300px;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.15;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .nv-profile-bottom p {
+        max-width: 300px;
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.35;
+        opacity: 0.96;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .nv-profile-bottom button {
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        color: #800020;
+        background: white;
+        padding: 10px 17px;
+        border-radius: 999px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .nv-profile-bottom button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+        }
+
+.nv-card-bg,
+.nv-card-overlay,
+.nv-card-shine {
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.nv-card-bg {
+    z-index: 0;
+    background: #800020;
+}
+
+    .nv-card-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.45s ease;
+    }
+
+.nv-profile-card:hover .nv-card-bg img {
+    transform: scale(1.06);
+}
+
+.nv-card-overlay {
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(62, 0, 24, 0.9), rgba(128, 0, 32, 0.58), rgba(0, 0, 0, 0.16)), linear-gradient(0deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.02) 55%);
+}
+
+.nv-card-shine {
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 28%), linear-gradient(315deg, rgba(255, 215, 160, 0.22), transparent 38%);
+    opacity: 0.75;
+}
+
+.nv-card-shadow {
+    position: absolute;
+    width: 88%;
+    height: 86%;
+    left: 50%;
+    bottom: -18px;
+    transform: translateX(-50%);
+    z-index: -1;
+    border-radius: 24px;
+    overflow: hidden;
+    filter: blur(18px);
+    opacity: 0.48;
+}
+
+    .nv-card-shadow img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+@media (max-width: 640px) {
+    .nv-profile-card {
+        height: 245px;
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    .nv-card-bg,
+    .nv-card-overlay,
+    .nv-card-shine {
+        border-radius: 20px;
+    }
+
+    .nv-profile-top h3 {
+        max-width: 210px;
+        font-size: 16px;
+    }
+
+    .nv-profile-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+        .nv-profile-bottom h2 {
+            font-size: 20px;
+        }
+
+        .nv-profile-bottom button {
+            width: 100%;
+        }
 }

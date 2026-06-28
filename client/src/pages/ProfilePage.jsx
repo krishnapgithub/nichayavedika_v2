@@ -12,6 +12,14 @@ const API_BASE_URL =
 
 const FREE_PROFILE_VIEW_LIMIT = 5;
 
+function getSavedUser() {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+        return null;
+    }
+}
+
 export default function ProfilePage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -22,14 +30,15 @@ export default function ProfilePage() {
     const [viewLimitReached, setViewLimitReached] = useState(false);
 
     useEffect(() => {
-        const savedUser = localStorage.getItem("user");
+        const savedUser = getSavedUser();
 
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-        } else {
+        if (!savedUser) {
             toast.error("Please login to view profiles");
             navigate("/");
+            return;
         }
+
+        setUser(savedUser);
     }, [navigate]);
 
     useEffect(() => {
@@ -37,43 +46,49 @@ export default function ProfilePage() {
             try {
                 const token = localStorage.getItem("token");
 
+                if (!token) {
+                    toast.error("Please login again");
+                    navigate("/");
+                    return;
+                }
+
                 const response = await axios.get(`${API_BASE_URL}/api/profiles/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
-                setProfile(response.data.profile);
+                setProfile(response.data.profile || response.data);
             } catch (error) {
                 console.error("Fetch Profile Error:", error);
-
                 toast.error(error.response?.data?.message || "Failed to load profile");
             } finally {
                 setLoading(false);
             }
         };
 
-        if (id) {
-            fetchProfile();
-        }
-    }, [id]);
+        if (id) fetchProfile();
+    }, [id, navigate]);
+
+    const userRole = user?.role?.toLowerCase?.().trim();
 
     const isPremiumUser =
         user?.membership === "premium" ||
         user?.membershipType === "premium" ||
         user?.membershipPlan === "premium" ||
-        user?.role === "admin" ||
-        user?.role === "super_admin";
+        userRole === "admin" ||
+        userRole === "super_admin";
 
     const canViewFullProfile = Boolean(user && isPremiumUser);
     const canViewFullDetails = canViewFullProfile;
 
     useEffect(() => {
-        if (!profile || !user) return;
-        if (isPremiumUser) return;
+        if (!profile || !user || isPremiumUser) return;
+
+        const storageKey = `viewedProfiles_${user._id || user.id || "guest"}`;
 
         const viewedProfiles = JSON.parse(
-            localStorage.getItem("viewedProfiles") || "[]"
+            localStorage.getItem(storageKey) || "[]"
         );
 
         if (viewedProfiles.includes(profile._id)) return;
@@ -85,12 +100,12 @@ export default function ProfilePage() {
         }
 
         viewedProfiles.push(profile._id);
-        localStorage.setItem("viewedProfiles", JSON.stringify(viewedProfiles));
+        localStorage.setItem(storageKey, JSON.stringify(viewedProfiles));
     }, [profile, user, isPremiumUser]);
 
     const handleSendInterest = async (profileId) => {
         try {
-            const savedUser = JSON.parse(localStorage.getItem("user"));
+            const savedUser = getSavedUser();
             const token = localStorage.getItem("token");
 
             if (!savedUser || !token) {
@@ -101,7 +116,7 @@ export default function ProfilePage() {
             const response = await axios.post(
                 `${API_BASE_URL}/api/interests/send`,
                 {
-                    senderId: savedUser._id,
+                    senderId: savedUser._id || savedUser.id,
                     receiverProfileId: profileId,
                 },
                 {
@@ -114,7 +129,6 @@ export default function ProfilePage() {
             toast.success(response.data.message || "Interest sent successfully");
         } catch (error) {
             console.error("Interest failed:", error.response?.data || error);
-
             toast.error(error.response?.data?.message || "Failed to send interest");
         }
     };
@@ -139,11 +153,9 @@ export default function ProfilePage() {
         return (
             <>
                 <Header />
-
                 <div className="profile-page-container">
                     <div className="upgrade-box">
                         <h3>Free View Limit Reached 🔒</h3>
-
                         <p>
                             You have viewed 5 profiles with your free membership. Please
                             upgrade to continue viewing more profiles.
@@ -168,7 +180,6 @@ export default function ProfilePage() {
         return (
             <>
                 <Header />
-
                 <div className="profile-page-container">
                     <div className="profile-not-found">
                         <h2>Profile not found</h2>
@@ -225,94 +236,70 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className="profile-section">
-                        <h2>Basic Details</h2>
+                    <ProfileSection title="Basic Details">
+                        <Info label="Age" value={showValue(profile.age)} />
+                        <Info label="Gender" value={showValue(profile.gender)} />
+                        <Info label="Height" value={showValue(profile.height)} />
+                        <Info
+                            label="Marital Status"
+                            value={showValue(profile.maritalStatus)}
+                        />
+                        <Info label="Caste" value={showValue(profile.caste)} />
+                        <Info label="Sub Caste" value={showValue(profile.subCaste)} />
+                        <Info
+                            label="Gothram"
+                            value={canViewFullDetails ? profile.gothram : "🔒 Premium Only"}
+                        />
+                        <Info
+                            label="Location"
+                            value={showValue(
+                                [profile.city, profile.state].filter(Boolean).join(", ")
+                            )}
+                        />
+                    </ProfileSection>
 
-                        <div className="profile-grid">
-                            <Info label="Age" value={showValue(profile.age)} />
-                            <Info label="Gender" value={showValue(profile.gender)} />
-                            <Info label="Height" value={showValue(profile.height)} />
-                            <Info
-                                label="Marital Status"
-                                value={showValue(profile.maritalStatus)}
-                            />
-                            <Info label="Caste" value={showValue(profile.caste)} />
-                            <Info label="Sub Caste" value={showValue(profile.subCaste)} />
+                    <ProfileSection title="Education & Career">
+                        <Info label="Education" value={showValue(profile.education)} />
+                        <Info label="Occupation" value={showValue(profile.occupation)} />
+                        <Info
+                            label="Income"
+                            value={
+                                canViewFullDetails ? profile.annualIncome : "🔒 Premium Only"
+                            }
+                        />
+                        <Info label="Company" value={showValue(profile.company, true)} />
+                    </ProfileSection>
 
-                            <Info
-                                label="Gothram"
-                                value={canViewFullDetails ? profile.gothram : "🔒 Premium Only"}
-                            />
+                    <ProfileSection title="Contact Details">
+                        <Info
+                            label="Mobile"
+                            value={canViewFullDetails ? profile.mobile : "🔒 Premium Only"}
+                        />
+                        <Info
+                            label="Email"
+                            value={canViewFullDetails ? profile.email : "🔒 Premium Only"}
+                        />
+                        <Info label="Address" value={showValue(profile.address, true)} />
+                    </ProfileSection>
 
-                            <Info
-                                label="Location"
-                                value={showValue(
-                                    [profile.city, profile.state].filter(Boolean).join(", ")
-                                )}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="profile-section">
-                        <h2>Education & Career</h2>
-
-                        <div className="profile-grid">
-                            <Info label="Education" value={showValue(profile.education)} />
-                            <Info label="Occupation" value={showValue(profile.occupation)} />
-
-                            <Info
-                                label="Income"
-                                value={
-                                    canViewFullDetails
-                                        ? profile.annualIncome
-                                        : "🔒 Premium Only"
-                                }
-                            />
-
-                            <Info label="Company" value={showValue(profile.company, true)} />
-                        </div>
-                    </div>
-
-                    <div className="profile-section">
-                        <h2>Contact Details</h2>
-
-                        <div className="profile-grid">
-                            <Info
-                                label="Mobile"
-                                value={canViewFullDetails ? profile.mobile : "🔒 Premium Only"}
-                            />
-
-                            <Info
-                                label="Email"
-                                value={canViewFullDetails ? profile.email : "🔒 Premium Only"}
-                            />
-
-                            <Info label="Address" value={showValue(profile.address, true)} />
-                        </div>
-                    </div>
-
-                    <div className="profile-section">
-                        <h2>Family Details</h2>
-
-                        <div className="profile-grid">
-                            <Info
-                                label="Father Name"
-                                value={showValue(profile.fatherName, true)}
-                            />
-                            <Info
-                                label="Mother Name"
-                                value={showValue(profile.motherName, true)}
-                            />
-                            <Info
-                                label="Family Type"
-                                value={showValue(profile.familyType, true)}
-                            />
-                            <Info
-                                label="Family Status"
-                                value={showValue(profile.familyStatus, true)}
-                            />
-                        </div>
-                    </div>
+                    <ProfileSection title="Family Details">
+                        <Info
+                            label="Father Name"
+                            value={showValue(profile.fatherName, true)}
+                        />
+                        <Info
+                            label="Mother Name"
+                            value={showValue(profile.motherName, true)}
+                        />
+                        <Info
+                            label="Family Type"
+                            value={showValue(profile.familyType, true)}
+                        />
+                        <Info
+                            label="Family Status"
+                            value={showValue(profile.familyStatus, true)}
+                        />
+                    </ProfileSection>
 
                     <div className="profile-section">
                         <h2>About</h2>
@@ -324,7 +311,6 @@ export default function ProfilePage() {
                     {!canViewFullProfile && (
                         <div className="upgrade-box">
                             <h3>Upgrade Required</h3>
-
                             <p>
                                 Upgrade to premium membership to view full name, photo, mobile,
                                 email, income, and family details.
@@ -332,26 +318,6 @@ export default function ProfilePage() {
 
                             <Link to="/membership" className="upgrade-btn">
                                 View Membership Plans
-                            </Link>
-                        </div>
-                    )}
-
-                    {!canViewFullDetails && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 my-6 text-center shadow-sm">
-                            <h3 className="text-lg font-bold text-[#800020]">
-                                🔒 Premium Membership Required
-                            </h3>
-
-                            <p className="text-gray-600 mt-2 text-sm">
-                                Mobile number, email, income, gothram, horoscope, and complete
-                                profile details are available only to Premium members.
-                            </p>
-
-                            <Link
-                                to="/membership"
-                                className="inline-block mt-4 bg-gradient-to-r from-[#800020] to-[#a52a2a] text-white px-6 py-2 rounded-full shadow-lg hover:scale-105 transition"
-                            >
-                                Upgrade to Premium
                             </Link>
                         </div>
                     )}
@@ -364,13 +330,22 @@ export default function ProfilePage() {
                             ❤️ Send Interest
                         </button>
 
-                        <Link to="/search" className="back-btn">
+                        <Link to="/search-profiles" className="back-btn">
                             ← Back to Search
                         </Link>
                     </div>
                 </div>
             </div>
         </>
+    );
+}
+
+function ProfileSection({ title, children }) {
+    return (
+        <div className="profile-section">
+            <h2>{title}</h2>
+            <div className="profile-grid">{children}</div>
+        </div>
     );
 }
 

@@ -1,85 +1,49 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useState } from "react";
 import axios from "axios";
-
+import toast from "react-hot-toast";
 import { API_BASE_URL } from "../config/api";
 import { authHeader } from "../utils/authHeader";
 
+const initialFormData = {
+    user: "6a39857828603c403e7c71bf",
 
+    fullName: "",
+    gender: "",
+    dateOfBirth: "",
+    age: "",
+    height: "",
+    maritalStatus: "Never Married",
+
+    motherTongue: "Telugu",
+    religion: "Hindu",
+    caste: "",
+    subCaste: "",
+    gothram: "",
+
+    education: "",
+    occupation: "",
+    annualIncome: "",
+
+    city: "",
+    state: "",
+    country: "India",
+
+    familyDetails: "",
+    contactPreference: "Phone",
+    aboutMe: "",
+
+    preferredAgeFrom: "",
+    preferredAgeTo: "",
+    preferredCaste: "",
+    preferredLocation: "",
+
+    profilePhoto: null,
+};
 
 export default function CreateProfile({ onClose }) {
-
-
-    const [formData, setFormData] = useState({
-
-        user: "6a39857828603c403e7c71bf",
-
-        fullName: "",
-        gender: "",
-        dateOfBirth: "",
-        age: "",
-        height: "",
-        maritalStatus: "Never Married",
-
-        motherTongue: "Telugu",
-        religion: "Hindu",
-        caste: "",
-        subCaste: "",
-        gothram: "",
-
-        education: "",
-        occupation: "",
-        annualIncome: "",
-
-        city: "",
-        state: "",
-        country: "India",
-
-        familyDetails: "",
-        contactPreference: "Phone",
-
-        aboutMe: "",
-
-        preferredAgeFrom: "",
-        preferredAgeTo: "",
-        preferredCaste: "",
-        preferredLocation: "",
-        profilePhoto: null,
-    });
-
+    const [formData, setFormData] = useState(initialFormData);
     const [photoPreview, setPhotoPreview] = useState(null);
-
-    const handlePhotoChange = (e) => {
-        const file = e.target.files[0];
-
-        if (!file) return;
-
-        const allowedTypes = [
-            "image/jpeg",
-            "image/jpg",
-            "image/png"
-        ];
-
-        if (!allowedTypes.includes(file.type)) {
-            //toast.success("Only JPG, JPEG and PNG files are allowed.");
-            return;
-        }
-
-        const maxSize = 2 * 1024 * 1024; // 2MB
-
-        if (file.size > maxSize) {
-            //toast.success("Photo size should be less than 2 MB.");
-            return;
-        }
-
-        setFormData({
-            ...formData,
-            profilePhoto: file,
-        });
-
-        setPhotoPreview(URL.createObjectURL(file));
-    };
-
-
+    const [loading, setLoading] = useState(false);
 
     const calculateAge = (dob) => {
         if (!dob) return "";
@@ -89,7 +53,6 @@ export default function CreateProfile({ onClose }) {
 
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
-
 
         if (
             monthDiff < 0 ||
@@ -105,280 +68,378 @@ export default function CreateProfile({ onClose }) {
         const { name, value } = e.target;
 
         if (name === "dateOfBirth") {
-            setFormData({
-                ...formData,
+            setFormData((prev) => ({
+                ...prev,
                 dateOfBirth: value,
                 age: calculateAge(value),
-            });
+            }));
             return;
         }
 
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [name]: value,
-        });
+        }));
+    };
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Only JPG, JPEG and PNG files are allowed.");
+            return;
+        }
+
+        const maxSize = 2 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            toast.error("Photo size should be less than 2 MB.");
+            return;
+        }
+
+        setFormData((prev) => ({
+            ...prev,
+            profilePhoto: file,
+        }));
+
+        setPhotoPreview(URL.createObjectURL(file));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-
-
         try {
+            setLoading(true);
+
             const payload = new FormData();
 
-            Object.keys(formData).forEach((key) => {
-                payload.append(key, formData[key]);
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    payload.append(key, value);
+                }
             });
 
+            await axios.post(`${API_BASE_URL}/profiles/create`, payload, {
+                ...authHeader(),
+                headers: {
+                    ...authHeader().headers,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
-
-            await axios.post(
-                `${API_BASE_URL}/profiles/create`,
-                formData,
-                authHeader()
-            );
-
-
-            //toast.success("Profile Created Successfully");
-            onClose();
+            toast.success("Profile created successfully");
+            onClose?.();
         } catch (error) {
-            console.log("FULL ERROR:", error);
-            console.log("BACKEND ERROR:", error.response?.data);
-
-            //toast.success(error.response?.data?.message || "Failed to create profile");
+            console.log("CREATE PROFILE ERROR:", error.response?.data || error);
+            toast.error(error.response?.data?.message || "Failed to create profile");
+        } finally {
+            setLoading(false);
         }
     };
+
     return (
-
-
-        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
-            <p className="md:col-span-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
-                Fields marked with <strong>*</strong> are required to create your profile.
-            </p>
-            <h3 className="md:col-span-2 font-bold text-[#800020]">
-                Basic Information
-            </h3>
-
-            <input
-                name="fullName"
-                placeholder="Full Name *"
-                className="border p-3 rounded-lg"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-            />
-
-            <select
-                name="gender"
-                className="border p-3 rounded-lg"
-                value={formData.gender}
-                onChange={handleChange}
-                required
-            >
-                <option value="">Select Gender *</option>
-                <option value="Bride">Bride</option>
-                <option value="Groom">Groom</option>
-            </select>
-
-
-            <input
-                type="date"
-                name="dateOfBirth"
-                className="border p-3 rounded-lg"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                required
-            />
-
-            <input
-                name="age"
-                placeholder="Age"
-                className="border p-3 rounded-lg bg-gray-100"
-                value={formData.age}
-                readOnly
-            />
-
-            <input
-                name="height"
-                placeholder="Height * (e.g. 5ft 8in)"
-                className="border p-3 rounded-lg"
-                value={formData.height}
-                onChange={handleChange}
-                required
-            />
-
-            <select
-                name="maritalStatus"
-                className="border p-3 rounded-lg"
-                value={formData.maritalStatus}
-                onChange={handleChange}
-            >
-                <option value="Never Married">Never Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
-            </select>
-
-            <input
-                name="motherTongue"
-                placeholder="Mother Tongue"
-                className="border p-3 rounded-lg"
-                value={formData.motherTongue}
-                onChange={handleChange}
-            />
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Community Information
-            </h3>
-
-            <input name="religion" placeholder="Religion" className="border p-3 rounded-lg" value={formData.religion} onChange={handleChange} />
-            <input
-                name="caste"
-                placeholder="Caste *"
-                className="border p-3 rounded-lg"
-                value={formData.caste}
-                onChange={handleChange}
-                required
-            />
-
-            <input name="subCaste" placeholder="Sub Caste" className="border p-3 rounded-lg" value={formData.subCaste} onChange={handleChange} />
-            <input name="gothram" placeholder="Gothram" className="border p-3 rounded-lg" value={formData.gothram} onChange={handleChange} />
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Education & Career
-            </h3>
-
-            <input
-                name="education"
-                placeholder="Education *"
-                className="border p-3 rounded-lg"
-                value={formData.education}
-                onChange={handleChange}
-                required
-            />
-
-            <input
-                name="occupation"
-                placeholder="Occupation *"
-                className="border p-3 rounded-lg"
-                value={formData.occupation}
-                onChange={handleChange}
-                required
-            />
-            <input name="annualIncome" placeholder="Annual Income" className="border p-3 rounded-lg" value={formData.annualIncome} onChange={handleChange} />
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Location
-            </h3>
-
-            <input
-                name="city"
-                placeholder="City *"
-                className="border p-3 rounded-lg"
-                value={formData.city}
-                onChange={handleChange}
-                required
-            />
-
-            <input
-                name="state"
-                placeholder="State *"
-                className="border p-3 rounded-lg"
-                value={formData.state}
-                onChange={handleChange}
-                required
-            />
-            <input name="country" placeholder="Country" className="border p-3 rounded-lg" value={formData.country} onChange={handleChange} />
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                About Me
-            </h3>
-
-            <textarea name="aboutMe" placeholder="About Me" rows="4" className="border p-3 rounded-lg md:col-span-2" value={formData.aboutMe} onChange={handleChange} />
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Partner Preferences
-            </h3>
-
-            <input name="preferredAgeFrom" placeholder="Preferred Age From" className="border p-3 rounded-lg" value={formData.preferredAgeFrom} onChange={handleChange} />
-            <input name="preferredAgeTo" placeholder="Preferred Age To" className="border p-3 rounded-lg" value={formData.preferredAgeTo} onChange={handleChange} />
-            <input name="preferredCaste" placeholder="Preferred Caste" className="border p-3 rounded-lg" value={formData.preferredCaste} onChange={handleChange} />
-            <input name="preferredLocation" placeholder="Preferred Location" className="border p-3 rounded-lg" value={formData.preferredLocation} onChange={handleChange} />
-
-
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Family Details
-            </h3>
-
-            <textarea
-                name="familyDetails"
-                placeholder="Family Details"
-                rows="3"
-                className="border p-3 rounded-lg md:col-span-2"
-                value={formData.familyDetails}
-                onChange={handleChange}
-            />
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Contact Preference
-            </h3>
-
-            <p className="md:col-span-2 text-sm text-gray-500 -mt-2">
-                How would you prefer prospective matches to contact you?
-            </p>
-
-            <select
-                name="contactPreference"
-                className="border p-3 rounded-lg"
-                value={formData.contactPreference}
-                onChange={handleChange}
-            >
-                <option value="Phone">Phone</option>
-                <option value="WhatsApp">WhatsApp</option>
-                <option value="Email">Email</option>
-                <option value="Any">Any</option>
-            </select>
-
-            <h3 className="md:col-span-2 font-bold text-[#800020] mt-4">
-                Profile Photo
-            </h3>
-
-            <p className="md:col-span-2 text-sm text-gray-500 -mt-2">
-                Upload a clear profile photo. <span className="text-red-600">*</span> Required
-            </p>
-            <p className="text-xs text-gray-500">
-                Accepted formats: JPG, JPEG, PNG • Maximum size: 2 MB
-            </p>
-            <div className="md:col-span-2 flex flex-col items-center gap-3">
-
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#800020] bg-gray-100">
-                    {photoPreview ? (
-                        <img
-                            src={photoPreview}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            Photo
-                        </div>
-                    )}
-                </div>
-
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    required={!photoPreview}
-                    className="text-sm"
-                />
-
+        <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="rounded-2xl border border-[#800020]/15 bg-[#fff8f2] p-5">
+                <h2 className="text-2xl font-bold text-[#800020]">Create Profile</h2>
+                <p className="mt-1 text-sm text-gray-600">
+                    Fields marked with <span className="font-bold text-red-600">*</span>{" "}
+                    are required.
+                </p>
             </div>
 
-            <button type="submit" className="md:col-span-2 bg-[#800020] text-white py-3 rounded-xl font-semibold mt-4">
-                Save Profile
+            <Section title="Basic Information">
+                <Input
+                    name="fullName"
+                    placeholder="Full Name *"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    required
+                    options={[
+                        ["", "Select Gender *"],
+                        ["Bride", "Bride"],
+                        ["Groom", "Groom"],
+                    ]}
+                />
+
+                <Input
+                    type="date"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Input
+                    name="age"
+                    placeholder="Age"
+                    value={formData.age}
+                    readOnly
+                    className="bg-gray-100"
+                />
+
+                <Input
+                    name="height"
+                    placeholder="Height * (e.g. 5ft 8in)"
+                    value={formData.height}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Select
+                    name="maritalStatus"
+                    value={formData.maritalStatus}
+                    onChange={handleChange}
+                    options={[
+                        ["Never Married", "Never Married"],
+                        ["Divorced", "Divorced"],
+                        ["Widowed", "Widowed"],
+                    ]}
+                />
+
+                <Input
+                    name="motherTongue"
+                    placeholder="Mother Tongue"
+                    value={formData.motherTongue}
+                    onChange={handleChange}
+                />
+            </Section>
+
+            <Section title="Community Information">
+                <Input
+                    name="religion"
+                    placeholder="Religion"
+                    value={formData.religion}
+                    onChange={handleChange}
+                />
+
+                <Input
+                    name="caste"
+                    placeholder="Caste *"
+                    value={formData.caste}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Input
+                    name="subCaste"
+                    placeholder="Sub Caste"
+                    value={formData.subCaste}
+                    onChange={handleChange}
+                />
+
+                <Input
+                    name="gothram"
+                    placeholder="Gothram"
+                    value={formData.gothram}
+                    onChange={handleChange}
+                />
+            </Section>
+
+            <Section title="Education & Career">
+                <Input
+                    name="education"
+                    placeholder="Education *"
+                    value={formData.education}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Input
+                    name="occupation"
+                    placeholder="Occupation *"
+                    value={formData.occupation}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Input
+                    name="annualIncome"
+                    placeholder="Annual Income"
+                    value={formData.annualIncome}
+                    onChange={handleChange}
+                />
+            </Section>
+
+            <Section title="Location">
+                <Input
+                    name="city"
+                    placeholder="City *"
+                    value={formData.city}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Input
+                    name="state"
+                    placeholder="State *"
+                    value={formData.state}
+                    onChange={handleChange}
+                    required
+                />
+
+                <Input
+                    name="country"
+                    placeholder="Country"
+                    value={formData.country}
+                    onChange={handleChange}
+                />
+            </Section>
+
+            <Section title="About Me">
+                <Textarea
+                    name="aboutMe"
+                    placeholder="Write a short profile summary"
+                    value={formData.aboutMe}
+                    onChange={handleChange}
+                />
+            </Section>
+
+            <Section title="Partner Preferences">
+                <Input
+                    name="preferredAgeFrom"
+                    placeholder="Preferred Age From"
+                    value={formData.preferredAgeFrom}
+                    onChange={handleChange}
+                />
+
+                <Input
+                    name="preferredAgeTo"
+                    placeholder="Preferred Age To"
+                    value={formData.preferredAgeTo}
+                    onChange={handleChange}
+                />
+
+                <Input
+                    name="preferredCaste"
+                    placeholder="Preferred Caste"
+                    value={formData.preferredCaste}
+                    onChange={handleChange}
+                />
+
+                <Input
+                    name="preferredLocation"
+                    placeholder="Preferred Location"
+                    value={formData.preferredLocation}
+                    onChange={handleChange}
+                />
+            </Section>
+
+            <Section title="Family & Contact">
+                <Textarea
+                    name="familyDetails"
+                    placeholder="Family Details"
+                    value={formData.familyDetails}
+                    onChange={handleChange}
+                />
+
+                <Select
+                    name="contactPreference"
+                    value={formData.contactPreference}
+                    onChange={handleChange}
+                    options={[
+                        ["Phone", "Phone"],
+                        ["WhatsApp", "WhatsApp"],
+                        ["Email", "Email"],
+                        ["Any", "Any"],
+                    ]}
+                />
+            </Section>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-1 text-lg font-bold text-[#800020]">
+                    Profile Photo <span className="text-red-600">*</span>
+                </h3>
+
+                <p className="mb-4 text-sm text-gray-500">
+                    Accepted formats: JPG, JPEG, PNG. Maximum size: 2 MB.
+                </p>
+
+                <div className="flex flex-col items-center gap-4 sm:flex-row">
+                    <div className="h-32 w-32 overflow-hidden rounded-2xl border-4 border-[#800020] bg-gray-100">
+                        {photoPreview ? (
+                            <img
+                                src={photoPreview}
+                                alt="Profile preview"
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-400">
+                                Photo
+                            </div>
+                        )}
+                    </div>
+
+                    <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg"
+                        onChange={handlePhotoChange}
+                        required={!photoPreview}
+                        className="w-full rounded-xl border border-gray-300 p-3 text-sm sm:max-w-sm"
+                    />
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-xl bg-[#800020] py-4 text-lg font-bold text-white shadow-lg hover:bg-[#5c0017] disabled:opacity-60"
+            >
+                {loading ? "Saving Profile..." : "Save Profile"}
             </button>
         </form>
+    );
+}
 
+function Section({ title, children }) {
+    return (
+        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-lg font-bold text-[#800020]">{title}</h3>
+            <div className="grid gap-4 md:grid-cols-2">{children}</div>
+        </section>
+    );
+}
+
+function Input({ className = "", ...props }) {
+    return (
+        <input
+            {...props}
+            className={`w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/10 ${className}`}
+        />
+    );
+}
+
+function Select({ options, className = "", ...props }) {
+    return (
+        <select
+            {...props}
+            className={`w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/10 ${className}`}
+        >
+            {options.map(([value, label]) => (
+                <option key={value || label} value={value}>
+                    {label}
+                </option>
+            ))}
+        </select>
+    );
+}
+
+function Textarea({ className = "", ...props }) {
+    return (
+        <textarea
+            {...props}
+            rows="4"
+            className={`w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/10 md:col-span-2 ${className}`}
+        />
     );
 }
