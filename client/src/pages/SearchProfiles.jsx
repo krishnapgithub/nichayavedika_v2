@@ -1,9 +1,13 @@
 ﻿import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ProfileCard from "../components/ProfileCard";
+
 import Header from "../components/Header.jsx";
+import ProfileCard from "../components/ProfileCard";
+
+
 import { useNavigate } from "react-router-dom";
+
 function SearchProfiles() {
 
     const [profiles, setProfiles] = useState([]);
@@ -58,6 +62,10 @@ function SearchProfiles() {
     }, []);
 
     return (
+
+        <>
+
+         <Header />
 
         <div className="max-w-7xl mx-auto py-10 px-6">
 
@@ -150,7 +158,10 @@ function SearchProfiles() {
             </div>
 
         </div>
+
+        </>
     );
+    
 }
 
 export default SearchProfiles;
