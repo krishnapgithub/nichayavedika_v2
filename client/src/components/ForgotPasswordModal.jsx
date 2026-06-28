@@ -13,6 +13,14 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
 
     if (!isOpen) return null;
 
+    const closeModal = () => {
+        setStep(1);
+        setEmail("");
+        setOtp("");
+        setPassword("");
+        onClose();
+    };
+
     const handleSendOtp = async () => {
         if (!isValidEmail(email)) {
             toast.error("Please enter a valid email address");
@@ -22,45 +30,36 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         try {
             setLoading(true);
 
-            await axios.post(
-                `${API_BASE_URL}/auth/forgot-password`,
-                { email }
-            );
+            await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+                email,
+            });
 
             toast.success("OTP sent to your email");
             setStep(2);
-
         } catch (error) {
-            toast.error(
-                error.response?.data?.message ||
-                "Failed to send OTP"
-            );
+            toast.error(error.response?.data?.message || "Failed to send OTP");
         } finally {
             setLoading(false);
         }
     };
 
     const handleResetPassword = async () => {
-
         if (!isValidEmail(email)) {
-           // toast.success("Please enter a valid email address");
-            toast.success("Please enter a valid email address");
+            toast.error("Please enter a valid email address");
             return;
         }
 
         if (otp.length !== 6) {
-            toast.success("Please enter a valid 6-digit OTP");
+            toast.error("Please enter a valid 6-digit OTP");
             return;
         }
 
         if (password.length < 6) {
-            toast.success("Password must be at least 6 characters");
+            toast.error("Password must be at least 6 characters");
             return;
         }
 
-
         try {
-
             setLoading(true);
 
             await axios.post(`${API_BASE_URL}/auth/reset-password`, {
@@ -70,9 +69,9 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
             });
 
             toast.success("Password updated successfully. Please login.");
-            onClose();
+            closeModal();
         } catch (error) {
-            toast.success(error.response?.data?.message || "Password reset failed");
+            toast.error(error.response?.data?.message || "Password reset failed");
         } finally {
             setLoading(false);
         }
@@ -80,77 +79,105 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
 
     return (
         <div
-            className="fixed top-0 left-0 w-screen h-screen z-[100000] bg-black/60 flex items-start justify-center px-4 pt-24"
-            onClick={onClose}
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm"
+            onClick={closeModal}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
+                className="relative w-full max-w-xl overflow-hidden rounded-[28px] bg-white shadow-2xl"
             >
                 <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600"
+                    type="button"
+                    onClick={closeModal}
+                    className="absolute right-5 top-5 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl text-gray-700 shadow hover:bg-gray-100"
                 >
-                    ✕
+                    ×
                 </button>
 
-                <div className="bg-[#800020] text-white -mx-8 -mt-8 mb-8 px-8 py-6 rounded-t-[40px] relative z-10">
-                    <h2 className="text-2xl font-bold text-center">
+                <div className="select-none bg-[#99002f] px-8 py-8 text-center text-white">
+                    <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
                         Forgot Password
                     </h2>
-                    <p className="text-center text-gray-200 mt-2 text-sm">
+
+                    <p className="mt-3 text-base sm:text-lg">
                         Reset your NichayaVedika password
                     </p>
                 </div>
 
-                {step === 1 && (
-                    <div className="space-y-4">
-                        <input
-                            type="email"
-                            placeholder="Enter registered email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="border rounded-xl px-4 py-3 w-full"
-                        />
+                <div className="p-8">
+                    {step === 1 && (
+                        <div>
+                            <input
+                                type="email"
+                                placeholder="Enter registered email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="mb-5 w-full rounded-2xl border border-black px-5 py-4 text-lg outline-none focus:border-[#99002f]"
+                            />
 
-                        <button
-                            onClick={handleSendOtp}
-                            disabled={loading}
-                            className="w-full bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017] disabled:opacity-60"
-                        >
-                            {loading ? "Sending..." : "Send OTP"}
-                        </button>
-                    </div>
-                )}
+                            <button
+                                type="button"
+                                onClick={handleSendOtp}
+                                disabled={loading}
+                                className="w-full rounded-xl bg-[#99002f] py-4 text-lg font-bold text-white hover:bg-[#760024] disabled:opacity-60"
+                            >
+                                {loading ? "Sending..." : "Send OTP"}
+                            </button>
+                        </div>
+                    )}
 
-                {step === 2 && (
-                    <div className="space-y-4">
-                        <input
-                            type="text"
-                            maxLength={6}
-                            placeholder="Enter OTP"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            className="border rounded-xl px-4 py-3 w-full text-center tracking-[8px] text-xl"
-                        />
+                    {step === 2 && (
+                        <div>
+                            <div className="mb-5 rounded-2xl bg-[#fff4f7] px-5 py-4 text-sm text-[#800020]">
+                                OTP has been sent to <strong>{email}</strong>
+                            </div>
 
-                        <input
-                            type="password"
-                            placeholder="New Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="border rounded-xl px-4 py-3 w-full"
-                        />
+                            <label className="mb-2 block text-sm font-bold text-[#800020]">
+                                Enter OTP
+                            </label>
 
-                        <button
-                            onClick={handleResetPassword}
-                            disabled={loading}
-                            className="w-full bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017] disabled:opacity-60"
-                        >
-                            {loading ? "Updating..." : "Reset Password"}
-                        </button>
-                    </div>
-                )}
+                            <input
+                                type="text"
+                                maxLength={6}
+                                placeholder="000000"
+                                value={otp}
+                                onChange={(e) =>
+                                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                                }
+                                className="mb-5 w-full rounded-2xl border border-black px-5 py-4 text-center text-xl tracking-[0.45em] outline-none focus:border-[#99002f]"
+                            />
+
+                            <label className="mb-2 block text-sm font-bold text-[#800020]">
+                                New Password
+                            </label>
+
+                            <input
+                                type="password"
+                                placeholder="Enter new password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="mb-5 w-full rounded-2xl border border-black px-5 py-4 text-lg outline-none focus:border-[#99002f]"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={handleResetPassword}
+                                disabled={loading}
+                                className="w-full rounded-xl bg-[#99002f] py-4 text-lg font-bold text-white hover:bg-[#760024] disabled:opacity-60"
+                            >
+                                {loading ? "Updating..." : "Reset Password"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="mt-4 w-full text-sm font-bold text-[#99002f] hover:underline"
+                            >
+                                Change email address
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
