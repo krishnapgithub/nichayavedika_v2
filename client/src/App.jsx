@@ -1,9 +1,10 @@
 ﻿import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import SessionTimeout from "./components/SessionTimeout.jsx";
 import Home from "./pages/Home.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import CreateProfile from "./pages/CreateProfile.jsx";
 import SearchProfiles from "./pages/SearchProfiles.jsx";
-import SessionTimeout from "./components/SessionTimeout.jsx";
+
 import SentInterests from "./pages/SentInterests.jsx";
 import ReceivedInterests from "./pages/ReceivedInterests.jsx";
 import Dashboard from "./pages/Dashboard.jsx";

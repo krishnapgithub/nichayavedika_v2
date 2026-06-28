@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import "../styles/ProfilePage.css";
+import Header from "../components/Header.jsx";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||

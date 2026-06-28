@@ -16,8 +16,6 @@ import RegisterModal from "../components/RegisterModal";
 import ProfileCard from "../components/ProfileCard";
 
 
-
-
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
@@ -135,7 +133,7 @@ function Home() {
                                 <h1 className="text-xl md:text-3xl lg:text-4xl font-bold leading-relaxed px-4 text-left">
                                     చక్కని చిరకాల అనుబంధానికి
                                     <br />
-                                    ముచ్చటైన వేదిక... మన నిశ్చయ వేదిక
+                                    ముచ్చటైన వేదిక... మన నిశ్చయ!!!
                                 </h1>
 
                                 <p className="mt-6 text-lg md:text-xl italic font-light text-amber-100 tracking-wide drop-shadow-lg">

@@ -53,6 +53,7 @@ export const getMyProfile = async (req, res) => {
 
 export const searchProfiles = async (req, res) => {
     try {
+
         const {
             gender,
             ageFrom,
@@ -67,11 +68,9 @@ export const searchProfiles = async (req, res) => {
             limit = 10,
         } = req.query;
 
-        //const filter = {
-        //  status: "approved",
-        //};
-
-        const filter = {};
+        const filter = {
+            status: "approved",
+        };
 
         if (gender) filter.gender = gender;
         if (caste) filter.caste = new RegExp(caste, "i");
@@ -82,29 +81,44 @@ export const searchProfiles = async (req, res) => {
         if (state) filter.state = new RegExp(state, "i");
 
         if (ageFrom || ageTo) {
+
             filter.age = {};
-            if (ageFrom) filter.age.$gte = Number(ageFrom);
-            if (ageTo) filter.age.$lte = Number(ageTo);
+
+            if (ageFrom)
+                filter.age.$gte = Number(ageFrom);
+
+            if (ageTo)
+                filter.age.$lte = Number(ageTo);
         }
 
-        const skip = (Number(page) - 1) * Number(limit);
+        const skip =
+            (Number(page) - 1) * Number(limit);
 
         const profiles = await Profile.find(filter)
+            .populate("user", "fullName email")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(Number(limit));
 
-        const total = await Profile.countDocuments(filter);
+        const total =
+            await Profile.countDocuments(filter);
 
         res.json({
             success: true,
             total,
             page: Number(page),
-            totalPages: Math.ceil(total / Number(limit)),
+            totalPages: Math.ceil(
+                total / Number(limit)
+            ),
             profiles,
         });
+
     } catch (error) {
-        console.error("Search profiles error:", error);
+
+        console.error(
+            "Search profiles error:",
+            error
+        );
 
         res.status(500).json({
             success: false,

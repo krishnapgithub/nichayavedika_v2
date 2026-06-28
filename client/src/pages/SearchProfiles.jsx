@@ -1,14 +1,18 @@
 ﻿import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import "../styles/searchProfiles.css";
-
+import ProfileCard from "../components/ProfileCard";
+import Header from "../components/Header.jsx";
+import { useNavigate } from "react-router-dom";
 function SearchProfiles() {
-    const navigate = useNavigate();
 
     const [profiles, setProfiles] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL ||
+        import.meta.env.VITE_API_URL ||
+        "http://localhost:5000";
 
     const [filters, setFilters] = useState({
         gender: "",
@@ -18,174 +22,133 @@ function SearchProfiles() {
         city: "",
     });
 
-    const token = localStorage.getItem("token");
+    const handleSearch = async () => {
+        console.log("Search button clicked");
 
-    const fetchProfiles = async () => {
         try {
             setLoading(true);
 
-            if (!token) {
-                toast.error("Please login to search profiles");
-                return;
-            }
+            console.log("API URL:", import.meta.env.VITE_API_URL);
+
+            const token = localStorage.getItem("token");
 
             const res = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/profiles/search`,
+                `${API_BASE_URL}/api/profiles/search`,
                 {
+                    params: filters,
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                    params: filters,
                 }
             );
 
+            console.log("SEARCH RESPONSE:", res.data);
+
             setProfiles(res.data.profiles || []);
         } catch (error) {
-            toast.error(
-                error.response?.data?.message || "Failed to load profiles"
-            );
+            console.log("SEARCH ERROR:", error.response?.data || error.message);
+            toast.error(error.response?.data?.message || "Search failed");
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchProfiles();
+        handleSearch();
     }, []);
 
-    const handleChange = (e) => {
-        setFilters({
-            ...filters,
-            [e.target.name]: e.target.value,
-        });
-    };
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        fetchProfiles();
-    };
-
-    const handleViewProfile = async (profileId) => {
-        try {
-            const savedUser = JSON.parse(localStorage.getItem("user"));
-
-            if (!token || !savedUser) {
-                toast.error("Please login to view profile");
-                return;
-            }
-
-            await axios.put(
-                `${import.meta.env.VITE_API_URL}/api/profiles/profile-view`,
-                { profileId },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            navigate(`/profile/${profileId}`);
-        } catch (error) {
-            toast.error(
-                error.response?.data?.message || "Unable to view profile"
-            );
-        }
-    };
-
     return (
-        <div className="search-page">
-            <div className="search-container">
-                <h1 className="search-title">Search Profiles</h1>
-                <p className="search-subtitle">
-                    Find suitable Telugu bride and groom profiles
-                </p>
 
-                <form className="search-filter-card" onSubmit={handleSearch}>
-                    <select name="gender" value={filters.gender} onChange={handleChange}>
-                        <option value="">Looking For</option>
+        <div className="max-w-7xl mx-auto py-10 px-6">
+
+            <h2 className="text-3xl font-bold text-center text-[#800020] mb-8">
+                Search Profiles
+            </h2>
+
+            {/* Search Filters */}
+            <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
+
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+                    <select
+                        value={filters.gender}
+                        onChange={(e) =>
+                            setFilters({
+                                ...filters,
+                                gender: e.target.value,
+                            })
+                        }
+                        className="border rounded-xl p-3"
+                    >
+                        <option value="">Bride / Groom</option>
                         <option value="Bride">Bride</option>
                         <option value="Groom">Groom</option>
                     </select>
 
                     <input
                         type="number"
-                        name="ageFrom"
                         placeholder="Age From"
                         value={filters.ageFrom}
-                        onChange={handleChange}
+                        onChange={(e) =>
+                            setFilters({
+                                ...filters,
+                                ageFrom: e.target.value,
+                            })
+                        }
+                        className="border rounded-xl p-3"
                     />
 
                     <input
                         type="number"
-                        name="ageTo"
                         placeholder="Age To"
                         value={filters.ageTo}
-                        onChange={handleChange}
+                        onChange={(e) =>
+                            setFilters({
+                                ...filters,
+                                ageTo: e.target.value,
+                            })
+                        }
+                        className="border rounded-xl p-3"
                     />
 
                     <input
                         type="text"
-                        name="caste"
                         placeholder="Caste"
                         value={filters.caste}
-                        onChange={handleChange}
+                        onChange={(e) =>
+                            setFilters({
+                                ...filters,
+                                caste: e.target.value,
+                            })
+                        }
+                        className="border rounded-xl p-3"
                     />
 
-                    <input
-                        type="text"
-                        name="city"
-                        placeholder="City"
-                        value={filters.city}
-                        onChange={handleChange}
-                    />
-
-                    <button type="submit">
+                    <button
+                        type="button"
+                        onClick={handleSearch}
+                        className="bg-[#800020] text-white rounded-xl p-3"
+                    >
                         Search
                     </button>
-                </form>
 
-                {loading && (
-                    <p className="search-loading">Loading profiles...</p>
-                )}
-
-                {!loading && profiles.length === 0 && (
-                    <p className="no-results">No profiles found</p>
-                )}
-
-                <div className="profile-grid">
-                    {profiles.map((profile) => (
-                        <div className="search-profile-card" key={profile._id}>
-                            <div className="profile-photo-box">
-                                {profile.profilePhoto ? (
-                                    <img
-                                        src={`${import.meta.env.VITE_API_URL}/${profile.profilePhoto}`}
-                                        alt={profile.user?.fullName || "Profile"}
-                                    />
-                                ) : (
-                                    <div className="profile-placeholder">
-                                        {profile.gender === "Bride" ? "👰" : "🤵"}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="profile-card-body">
-                                <h3>{profile.user?.fullName || "Profile"}</h3>
-                                <p>{profile.age} years • {profile.gender}</p>
-                                <p>{profile.caste || "Caste not added"}</p>
-                                <p>{profile.city || "City not added"}</p>
-                                <p>{profile.occupation || "Occupation not added"}</p>
-
-                                <button
-                                    onClick={() => handleViewProfile(profile._id)}
-                                    className="view-profile-btn"
-                                >
-                                    View Profile
-                                </button>
-                            </div>
-                        </div>
-                    ))}
                 </div>
+
             </div>
+
+            {/* Results */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+                {Array.isArray(profiles) &&
+                    profiles.map((profile) => (
+                        <ProfileCard
+                            key={profile._id}
+                            profile={profile}
+                        />
+                    ))}
+
+            </div>
+
         </div>
     );
 }
