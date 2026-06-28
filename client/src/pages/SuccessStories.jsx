@@ -1,25 +1,24 @@
-﻿import Header from "../components/Header.jsx";
-import "../styles/successStories.css";
+﻿import "../styles/successStories.css";
 import logo from "../images/wedding-hero.png";
 
 export default function SuccessStories() {
   const stories = [
     {
-      names: "Rahul ❤️ Swathi",
+      names: "Rahul ?? Swathi",
       location: "Hyderabad",
       date: "12 Jan 2026",
       message:
         "We found each other through Nichaya Vedika. Thank you for helping our families connect.",
     },
     {
-      names: "Sandeep ❤️ Lakshmi",
+      names: "Sandeep ?? Lakshmi",
       location: "Vijayawada",
       date: "20 Feb 2026",
       message:
         "Nichaya Vedika made the search simple, respectful, and family friendly.",
     },
     {
-      names: "Kiran ❤️ Deepika",
+      names: "Kiran ?? Deepika",
       location: "Bengaluru",
       date: "05 Mar 2026",
       message:
@@ -29,7 +28,6 @@ export default function SuccessStories() {
 
   return (
     <>
-      <Header />
 
       <div className="success-page">
         <div className="success-container">
@@ -47,8 +45,8 @@ export default function SuccessStories() {
                 <p className="story-message">“{story.message}”</p>
 
                 <div className="story-info">
-                  <p>📍 {story.location}</p>
-                  <p>💍 Married: {story.date}</p>
+                  <p>?? {story.location}</p>
+                  <p>?? Married: {story.date}</p>
                 </div>
               </div>
             ))}
@@ -58,3 +56,4 @@ export default function SuccessStories() {
     </>
   );
 }
+

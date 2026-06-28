@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import axios from "axios";
-import Header from "../components/Header.jsx";
 import toast from "react-hot-toast";
 
 const API_BASE_URL =
@@ -37,7 +36,6 @@ export default function SentInterests() {
 
     return (
         <>
-            <Header />
 
             <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
                 <div className="max-w-5xl mx-auto">
@@ -78,11 +76,11 @@ export default function SentInterests() {
                                         </h2>
 
                                         <p className="text-gray-600">
-                                            {profile?.age} yrs • {profile?.height}
+                                            {profile?.age} yrs â€¢ {profile?.height}
                                         </p>
 
                                         <p className="text-gray-600">
-                                            {profile?.education} • {profile?.occupation}
+                                            {profile?.education} â€¢ {profile?.occupation}
                                         </p>
 
                                         <p className="text-gray-600">
@@ -102,3 +100,4 @@ export default function SentInterests() {
         </>
     );
 }
+

@@ -1,10 +1,8 @@
-﻿import Header from "../components/Header.jsx";
-import "../styles/contact.css";
+﻿import "../styles/contact.css";
 
 export default function Contact() {
     return (
         <>
-            <Header />
 
             <div className="contact-page">
                 <div className="contact-container">
@@ -15,14 +13,14 @@ export default function Contact() {
 
                     <div className="contact-grid">
                         <div className="contact-info-card">
-                            <h2>నిశ్చయ వేదిక</h2>
+                            <h2>?????? ?????</h2>
                             <p className="contact-subtitle">Trusted Telugu Matrimony Platform</p>
 
                             <div className="contact-info">
-                                <p>📍 Hyderabad, Telangana</p>
-                                <p>📞 +91 XXXXX XXXXX</p>
-                                <p>✉️ info@nichayavedika.com</p>
-                                <p>🕘 Mon - Sat, 9:00 AM - 7:00 PM</p>
+                                <p>?? Hyderabad, Telangana</p>
+                                <p>?? +91 XXXXX XXXXX</p>
+                                <p>?? info@nichayavedika.com</p>
+                                <p>?? Mon - Sat, 9:00 AM - 7:00 PM</p>
                             </div>
 
                             <div className="social-links">
@@ -50,3 +48,4 @@ export default function Contact() {
         </>
     );
 }
+

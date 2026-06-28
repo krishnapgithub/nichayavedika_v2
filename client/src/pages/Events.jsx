@@ -1,5 +1,4 @@
 ﻿
-import Header from "../components/Header.jsx";
 import "../styles/events.css";
 
 export default function Events() {
@@ -24,7 +23,6 @@ export default function Events() {
 
     return (
         <>
-            <Header />
 
             <div className="events-page">
                 <div className="events-container">
@@ -42,10 +40,10 @@ export default function Events() {
                                 <p className="event-description">{event.description}</p>
 
                                 <div className="event-info">
-                                    <p>📅 {event.date}</p>
-                                    <p>📍 {event.venue}</p>
-                                    <p>👥 {event.seats}</p>
-                                    <p>📞 {event.contact}</p>
+                                    <p>?? {event.date}</p>
+                                    <p>?? {event.venue}</p>
+                                    <p>?? {event.seats}</p>
+                                    <p>?? {event.contact}</p>
                                 </div>
 
                                 <button>Register Interest</button>
@@ -57,3 +55,4 @@ export default function Events() {
         </>
     );
 }
+

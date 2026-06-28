@@ -1,7 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import Header from "../components/Header.jsx";
 
 export default function Dashboard() {
 
@@ -51,12 +50,11 @@ export default function Dashboard() {
 
     return (
         <>
-            <Header />
 
             <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
                 <div className="max-w-6xl mx-auto">
                     <h1 className="text-3xl font-bold text-[#800020] mb-2">
-                        Welcome to NichayaVedika 👋
+                        Welcome to NichayaVedika ??
                     </h1>
 
                     <p className="text-gray-600 mb-8">
@@ -64,20 +62,20 @@ export default function Dashboard() {
                     </p>
 
                     <div className="grid md:grid-cols-5 gap-4 mb-8">
-                        <StatCard title="❤️ Sent" count={stats.sent} />
-                        <StatCard title="💌 Received" count={stats.received} />
-                        <StatCard title="⏳ Pending" count={stats.pending} />
-                        <StatCard title="✅ Accepted" count={stats.accepted} />
-                        <StatCard title="❌ Rejected" count={stats.rejected} />
+                        <StatCard title="?? Sent" count={stats.sent} />
+                        <StatCard title="?? Received" count={stats.received} />
+                        <StatCard title="? Pending" count={stats.pending} />
+                        <StatCard title="? Accepted" count={stats.accepted} />
+                        <StatCard title="? Rejected" count={stats.rejected} />
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-6">
-                        <DashboardCard title="👤 My Profile" link="/create-profile" />
-                        <DashboardCard title="🔍 Search Profiles" link="/search" />
-                        <DashboardCard title="❤️ Sent Interests" link="/sent-interests" />
-                        <DashboardCard title="💌 Received Interests" link="/received-interests" />
-                        <DashboardCard title="⭐ Membership" link="/" />
-                        <DashboardCard title="⚙️ Settings" link="/" />
+                        <DashboardCard title="?? My Profile" link="/create-profile" />
+                        <DashboardCard title="?? Search Profiles" link="/search" />
+                        <DashboardCard title="?? Sent Interests" link="/sent-interests" />
+                        <DashboardCard title="?? Received Interests" link="/received-interests" />
+                        <DashboardCard title="? Membership" link="/" />
+                        <DashboardCard title="?? Settings" link="/" />
                     </div>
                 </div>
             </div>
@@ -106,3 +104,4 @@ function DashboardCard({ title, link }) {
         </Link>
     );
 }
+

@@ -1,12 +1,10 @@
 import express from "express";
-import {
-    forgotPassword,
-    resetPassword,
-} from "../controllers/authController.js";
 
 import {
     registerUser,
     loginUser,
+    forgotPassword,
+    resetPassword,
 } from "../controllers/authController.js";
 
 import {
@@ -19,21 +17,47 @@ import {
     verifyMobileOtp,
 } from "../controllers/mobileOtpController.js";
 
+import { createProfile } from "../controllers/profileController.js";
+import { protect } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-// Authentication
+/* =====================================================
+   AUTH ROUTES
+   Handles user registration and login
+===================================================== */
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// Email OTP
+/* =====================================================
+   EMAIL OTP ROUTES
+   Sends and verifies OTP for email verification
+===================================================== */
 router.post("/send-email-otp", sendEmailOtp);
 router.post("/verify-email-otp", verifyEmailOtp);
 
-// Mobile OTP
+/* =====================================================
+   MOBILE OTP ROUTES
+   Sends and verifies OTP for mobile verification
+===================================================== */
 router.post("/send-mobile-otp", sendMobileOtp);
 router.post("/verify-mobile-otp", verifyMobileOtp);
 
+/* =====================================================
+   PASSWORD RESET ROUTES
+   Sends password reset OTP and updates password
+===================================================== */
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+
+/* =====================================================
+   PROFILE ROUTE
+   Creates or updates logged-in user's profile
+===================================================== */
+router.post(
+    "/create",
+    protect,
+    createProfile
+);
 
 export default router;

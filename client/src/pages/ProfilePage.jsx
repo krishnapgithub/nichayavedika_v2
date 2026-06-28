@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import "../styles/ProfilePage.css";
-import Header from "../components/Header.jsx";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -11,6 +10,19 @@ const API_BASE_URL =
     "http://localhost:5000";
 
 const FREE_PROFILE_VIEW_LIMIT = 5;
+
+const getProfilePhotoUrl = (profilePhoto) => {
+    if (!profilePhoto) return "";
+    if (profilePhoto.startsWith("http")) return profilePhoto;
+
+    const photoPath = profilePhoto.replace(/\\/g, "/");
+
+    if (photoPath.startsWith("uploads/")) {
+        return `${API_BASE_URL}/${photoPath}`;
+    }
+
+    return `${API_BASE_URL}/uploads/${photoPath}`;
+};
 
 function getSavedUser() {
     try {
@@ -79,8 +91,13 @@ export default function ProfilePage() {
         userRole === "admin" ||
         userRole === "super_admin";
 
-    const canViewFullProfile = Boolean(user && isPremiumUser);
+    const isOwnProfile =
+        Boolean(profile?.user) &&
+        String(profile.user?._id || profile.user) === String(user?._id || user?.id);
+
+    const canViewFullProfile = Boolean(user && (isPremiumUser || isOwnProfile));
     const canViewFullDetails = canViewFullProfile;
+    const profilePhotoUrl = getProfilePhotoUrl(profile?.profilePhoto);
 
     useEffect(() => {
         if (!profile || !user || isPremiumUser) return;
@@ -133,7 +150,7 @@ export default function ProfilePage() {
         }
     };
 
-    const lockedValue = <span className="locked-value">Locked 🔒</span>;
+    const lockedValue = <span className="locked-value">Locked ðŸ”’</span>;
 
     const showValue = (value, locked = false) => {
         if (locked && !canViewFullProfile) return lockedValue;
@@ -143,7 +160,6 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <>
-                <Header />
                 <div className="profile-page-loading">Loading profile...</div>
             </>
         );
@@ -152,10 +168,9 @@ export default function ProfilePage() {
     if (viewLimitReached) {
         return (
             <>
-                <Header />
                 <div className="profile-page-container">
                     <div className="upgrade-box">
-                        <h3>Free View Limit Reached 🔒</h3>
+                        <h3>Free View Limit Reached ðŸ”’</h3>
                         <p>
                             You have viewed 5 profiles with your free membership. Please
                             upgrade to continue viewing more profiles.
@@ -167,7 +182,7 @@ export default function ProfilePage() {
 
                         <div className="profile-actions">
                             <Link to="/search-profiles" className="back-btn">
-                                ← Back to Search
+                                â† Back to Search
                             </Link>
                         </div>
                     </div>
@@ -179,7 +194,6 @@ export default function ProfilePage() {
     if (!profile) {
         return (
             <>
-                <Header />
                 <div className="profile-page-container">
                     <div className="profile-not-found">
                         <h2>Profile not found</h2>
@@ -192,21 +206,32 @@ export default function ProfilePage() {
 
     return (
         <>
-            <Header />
 
             <div className="profile-page-container">
+                <nav className="profile-breadcrumb">
+                    <Link to="/" className="hover:text-[#800020]">
+                        Home
+                    </Link>
+                    <span className="mx-2 text-amber-600">/</span>
+                    <Link to="/search" className="hover:text-[#800020]">
+                        Search
+                    </Link>
+                    <span className="mx-2 text-amber-600">/</span>
+                    <span className="text-[#800020]">Profile</span>
+                </nav>
+
                 <div className="profile-detail-card">
                     <div className="profile-top-section">
                         <div className="profile-photo-box">
-                            {canViewFullProfile && profile.profilePhoto ? (
+                            {canViewFullProfile && profilePhotoUrl ? (
                                 <img
-                                    src={profile.profilePhoto}
+                                    src={profilePhotoUrl}
                                     alt="Profile"
                                     className="profile-photo"
                                 />
                             ) : (
                                 <div className="profile-photo-locked">
-                                    <span>🔒</span>
+                                    <span>ðŸ”’</span>
                                     <p>Photo Locked</p>
                                 </div>
                             )}
@@ -217,19 +242,19 @@ export default function ProfilePage() {
                                 {showValue(profile.fullName || profile.name, true)}
 
                                 {profile.membership === "premium" && (
-                                    <span className="premium-badge">⭐ Premium</span>
+                                    <span className="premium-badge">â­ Premium</span>
                                 )}
                             </h1>
 
                             <p className="profile-subtitle">
-                                {profile.age || "Age not provided"} years •{" "}
-                                {profile.caste || "Caste not provided"} •{" "}
+                                {profile.age || "Age not provided"} years â€¢{" "}
+                                {profile.caste || "Caste not provided"} â€¢{" "}
                                 {profile.city || "City not provided"}
                             </p>
 
                             {!canViewFullProfile && (
                                 <div className="profile-lock-alert">
-                                    ✨ Upgrade to Premium to unlock complete profiles and connect
+                                    âœ¨ Upgrade to Premium to unlock complete profiles and connect
                                     with families.
                                 </div>
                             )}
@@ -248,7 +273,7 @@ export default function ProfilePage() {
                         <Info label="Sub Caste" value={showValue(profile.subCaste)} />
                         <Info
                             label="Gothram"
-                            value={canViewFullDetails ? profile.gothram : "🔒 Premium Only"}
+                            value={canViewFullDetails ? profile.gothram : "ðŸ”’ Premium Only"}
                         />
                         <Info
                             label="Location"
@@ -264,7 +289,7 @@ export default function ProfilePage() {
                         <Info
                             label="Income"
                             value={
-                                canViewFullDetails ? profile.annualIncome : "🔒 Premium Only"
+                                canViewFullDetails ? profile.annualIncome : "ðŸ”’ Premium Only"
                             }
                         />
                         <Info label="Company" value={showValue(profile.company, true)} />
@@ -273,11 +298,11 @@ export default function ProfilePage() {
                     <ProfileSection title="Contact Details">
                         <Info
                             label="Mobile"
-                            value={canViewFullDetails ? profile.mobile : "🔒 Premium Only"}
+                            value={canViewFullDetails ? profile.mobile : "ðŸ”’ Premium Only"}
                         />
                         <Info
                             label="Email"
-                            value={canViewFullDetails ? profile.email : "🔒 Premium Only"}
+                            value={canViewFullDetails ? profile.email : "ðŸ”’ Premium Only"}
                         />
                         <Info label="Address" value={showValue(profile.address, true)} />
                     </ProfileSection>
@@ -327,11 +352,11 @@ export default function ProfilePage() {
                             className="interest-btn"
                             onClick={() => handleSendInterest(profile._id)}
                         >
-                            ❤️ Send Interest
+                            â¤ï¸ Send Interest
                         </button>
 
                         <Link to="/search-profiles" className="back-btn">
-                            ← Back to Search
+                            â† Back to Search
                         </Link>
                     </div>
                 </div>
@@ -357,3 +382,5 @@ function Info({ label, value }) {
         </div>
     );
 }
+
+

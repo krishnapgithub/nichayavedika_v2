@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import axios from "axios";
-import Header from "../components/Header.jsx";
 import toast from "react-hot-toast";
 
 const API_BASE_URL =
@@ -107,7 +106,6 @@ export default function AdminUsers() {
     if (!isSuperAdmin) {
         return (
             <>
-                <Header />
                 <div className="pt-32 text-center text-red-700 font-bold">
                     Access denied. Super Admin only.
                 </div>
@@ -117,7 +115,6 @@ export default function AdminUsers() {
 
     return (
         <>
-            <Header />
 
             <div className="min-h-screen bg-[#fff8f2] pt-28 px-3 sm:px-4 pb-12">
                 <div className="max-w-7xl mx-auto">
@@ -326,3 +323,4 @@ export default function AdminUsers() {
             </div>        </>
     );
 }
+

@@ -1,5 +1,6 @@
 ﻿import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import SessionTimeout from "./components/SessionTimeout.jsx";
+import Header from "./components/Header.jsx";
 import Home from "./pages/Home.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import CreateProfile from "./pages/CreateProfile.jsx";
@@ -52,6 +53,8 @@ function App() {
                 }}
             />
 
+            <Header />
+
             <Routes>
 
 
@@ -102,11 +105,29 @@ function App() {
                 <Route path="/success-stories" element={<SuccessStories />} />
                 <Route
                     path="/admin"
-                    element={<AdminDashboard />}
+                    element={
+                        <ProtectedRoute>
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
                 />
 
-                <Route path="/admin/profiles" element={<AdminProfiles />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route
+                    path="/admin/profiles"
+                    element={
+                        <ProtectedRoute>
+                            <AdminProfiles />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/users"
+                    element={
+                        <ProtectedRoute>
+                            <AdminUsers />
+                        </ProtectedRoute>
+                    }
+                />
 
             </Routes>
         </>
@@ -114,3 +135,5 @@ function App() {
 }
 
 export default App;
+
+

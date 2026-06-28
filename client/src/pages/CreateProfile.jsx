@@ -1,11 +1,12 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../config/api";
 import { authHeader } from "../utils/authHeader";
 
 const initialFormData = {
-    user: "6a39857828603c403e7c71bf",
+    user: "",
+    profileNumber: "",
 
     fullName: "",
     gender: "",
@@ -40,10 +41,89 @@ const initialFormData = {
     profilePhoto: null,
 };
 
+const toDateInputValue = (dateValue) => {
+    if (!dateValue) return "";
+
+    return new Date(dateValue).toISOString().split("T")[0];
+};
+
+const getPhotoUrl = (profilePhoto) => {
+    if (!profilePhoto) return null;
+    if (profilePhoto.startsWith("http")) return profilePhoto;
+
+    const photoPath = profilePhoto.replace(/\\/g, "/");
+
+    if (photoPath.startsWith("uploads/")) {
+        return `${API_BASE_URL}/${photoPath}`;
+    }
+
+    return `${API_BASE_URL}/uploads/${photoPath}`;
+};
+
 export default function CreateProfile({ onClose }) {
     const [formData, setFormData] = useState(initialFormData);
     const [photoPreview, setPhotoPreview] = useState(null);
     const [loading, setLoading] = useState(false);
+    const isEditing = Boolean(formData.profileNumber);
+
+    useEffect(() => {
+        const loadExistingProfile = async () => {
+            try {
+                const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                const userId = savedUser?._id || savedUser?.id;
+
+                if (!userId) return;
+
+                const res = await axios.get(
+                    `${API_BASE_URL}/api/profiles/user/${userId}`,
+                    { headers: authHeader() }
+                );
+
+                const profile = res.data?.profile;
+
+                if (!profile) return;
+
+                setFormData({
+                    user: userId,
+                    profileNumber: profile.profileNumber || "",
+                    fullName: profile.fullName || "",
+                    gender: profile.gender || "",
+                    dateOfBirth: toDateInputValue(profile.dateOfBirth),
+                    age: profile.age ?? "",
+                    height: profile.height || "",
+                    maritalStatus: profile.maritalStatus || "Never Married",
+                    motherTongue: profile.motherTongue || "Telugu",
+                    religion: profile.religion || "Hindu",
+                    caste: profile.caste || "",
+                    subCaste: profile.subCaste || "",
+                    gothram: profile.gothram || "",
+                    education: profile.education || "",
+                    occupation: profile.occupation || "",
+                    annualIncome: profile.annualIncome || "",
+                    city: profile.city || "",
+                    state: profile.state || "",
+                    country: profile.country || "India",
+                    familyDetails: profile.familyDetails || "",
+                    contactPreference: profile.contactPreference || "Phone",
+                    aboutMe: profile.aboutMe || "",
+                    preferredAgeFrom: profile.preferredAgeFrom ?? "",
+                    preferredAgeTo: profile.preferredAgeTo ?? "",
+                    preferredCaste: profile.preferredCaste || "",
+                    preferredLocation: profile.preferredLocation || "",
+                    profilePhoto: profile.profilePhoto || null,
+                });
+
+                setPhotoPreview(getPhotoUrl(profile.profilePhoto));
+            } catch (error) {
+                if (error.response?.status !== 404) {
+                    console.log("LOAD PROFILE ERROR:", error.response?.data || error);
+                    toast.error("Unable to load existing profile");
+                }
+            }
+        };
+
+        loadExistingProfile();
+    }, []);
 
     const calculateAge = (dob) => {
         if (!dob) return "";
@@ -115,289 +195,198 @@ export default function CreateProfile({ onClose }) {
         try {
             setLoading(true);
 
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                toast.error("Please login again");
+                return;
+            }
+
             const payload = new FormData();
 
             Object.entries(formData).forEach(([key, value]) => {
                 if (value !== null && value !== undefined) {
+                    if (key === "profilePhoto" && !(value instanceof File)) {
+                        return;
+                    }
+
                     payload.append(key, value);
                 }
             });
 
-            await axios.post(`${API_BASE_URL}/profiles/create`, payload, {
-                ...authHeader(),
+            const response = await axios.post(`${API_BASE_URL}/api/profiles/create`, payload, {
                 headers: {
-                    ...authHeader().headers,
+                    Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",
                 },
             });
 
-            toast.success("Profile created successfully");
+            toast.success(
+                response.data?.message ||
+                "Your profile has been submitted and is under admin review."
+            );
             onClose?.();
         } catch (error) {
             console.log("CREATE PROFILE ERROR:", error.response?.data || error);
-            toast.error(error.response?.data?.message || "Failed to create profile");
+            toast.error(error.response?.data?.message || "Failed to save profile");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="rounded-2xl border border-[#800020]/15 bg-[#fff8f2] p-5">
-                <h2 className="text-2xl font-bold text-[#800020]">Create Profile</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                    Fields marked with <span className="font-bold text-red-600">*</span>{" "}
-                    are required.
-                </p>
-            </div>
-
-            <Section title="Basic Information">
-                <Input
-                    name="fullName"
-                    placeholder="Full Name *"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    required
-                    options={[
-                        ["", "Select Gender *"],
-                        ["Bride", "Bride"],
-                        ["Groom", "Groom"],
-                    ]}
-                />
-
-                <Input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Input
-                    name="age"
-                    placeholder="Age"
-                    value={formData.age}
-                    readOnly
-                    className="bg-gray-100"
-                />
-
-                <Input
-                    name="height"
-                    placeholder="Height * (e.g. 5ft 8in)"
-                    value={formData.height}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Select
-                    name="maritalStatus"
-                    value={formData.maritalStatus}
-                    onChange={handleChange}
-                    options={[
-                        ["Never Married", "Never Married"],
-                        ["Divorced", "Divorced"],
-                        ["Widowed", "Widowed"],
-                    ]}
-                />
-
-                <Input
-                    name="motherTongue"
-                    placeholder="Mother Tongue"
-                    value={formData.motherTongue}
-                    onChange={handleChange}
-                />
-            </Section>
-
-            <Section title="Community Information">
-                <Input
-                    name="religion"
-                    placeholder="Religion"
-                    value={formData.religion}
-                    onChange={handleChange}
-                />
-
-                <Input
-                    name="caste"
-                    placeholder="Caste *"
-                    value={formData.caste}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Input
-                    name="subCaste"
-                    placeholder="Sub Caste"
-                    value={formData.subCaste}
-                    onChange={handleChange}
-                />
-
-                <Input
-                    name="gothram"
-                    placeholder="Gothram"
-                    value={formData.gothram}
-                    onChange={handleChange}
-                />
-            </Section>
-
-            <Section title="Education & Career">
-                <Input
-                    name="education"
-                    placeholder="Education *"
-                    value={formData.education}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Input
-                    name="occupation"
-                    placeholder="Occupation *"
-                    value={formData.occupation}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Input
-                    name="annualIncome"
-                    placeholder="Annual Income"
-                    value={formData.annualIncome}
-                    onChange={handleChange}
-                />
-            </Section>
-
-            <Section title="Location">
-                <Input
-                    name="city"
-                    placeholder="City *"
-                    value={formData.city}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Input
-                    name="state"
-                    placeholder="State *"
-                    value={formData.state}
-                    onChange={handleChange}
-                    required
-                />
-
-                <Input
-                    name="country"
-                    placeholder="Country"
-                    value={formData.country}
-                    onChange={handleChange}
-                />
-            </Section>
-
-            <Section title="About Me">
-                <Textarea
-                    name="aboutMe"
-                    placeholder="Write a short profile summary"
-                    value={formData.aboutMe}
-                    onChange={handleChange}
-                />
-            </Section>
-
-            <Section title="Partner Preferences">
-                <Input
-                    name="preferredAgeFrom"
-                    placeholder="Preferred Age From"
-                    value={formData.preferredAgeFrom}
-                    onChange={handleChange}
-                />
-
-                <Input
-                    name="preferredAgeTo"
-                    placeholder="Preferred Age To"
-                    value={formData.preferredAgeTo}
-                    onChange={handleChange}
-                />
-
-                <Input
-                    name="preferredCaste"
-                    placeholder="Preferred Caste"
-                    value={formData.preferredCaste}
-                    onChange={handleChange}
-                />
-
-                <Input
-                    name="preferredLocation"
-                    placeholder="Preferred Location"
-                    value={formData.preferredLocation}
-                    onChange={handleChange}
-                />
-            </Section>
-
-            <Section title="Family & Contact">
-                <Textarea
-                    name="familyDetails"
-                    placeholder="Family Details"
-                    value={formData.familyDetails}
-                    onChange={handleChange}
-                />
-
-                <Select
-                    name="contactPreference"
-                    value={formData.contactPreference}
-                    onChange={handleChange}
-                    options={[
-                        ["Phone", "Phone"],
-                        ["WhatsApp", "WhatsApp"],
-                        ["Email", "Email"],
-                        ["Any", "Any"],
-                    ]}
-                />
-            </Section>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-1 text-lg font-bold text-[#800020]">
-                    Profile Photo <span className="text-red-600">*</span>
-                </h3>
-
-                <p className="mb-4 text-sm text-gray-500">
-                    Accepted formats: JPG, JPEG, PNG. Maximum size: 2 MB.
-                </p>
-
-                <div className="flex flex-col items-center gap-4 sm:flex-row">
-                    <div className="h-32 w-32 overflow-hidden rounded-2xl border-4 border-[#800020] bg-gray-100">
-                        {photoPreview ? (
-                            <img
-                                src={photoPreview}
-                                alt="Profile preview"
-                                className="h-full w-full object-cover"
-                            />
-                        ) : (
-                            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-400">
-                                Photo
-                            </div>
-                        )}
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 px-3 py-6 backdrop-blur-sm sm:px-6">
+            <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+                <div className="flex items-start justify-between gap-4 border-b border-[#800020]/10 bg-[#fff8f2] px-5 py-5 sm:px-7">
+                    <div>
+                        <h2 className="text-2xl font-bold text-[#800020] sm:text-3xl">
+                            {isEditing ? "Update Profile" : "Create Profile"}
+                        </h2>
+                        <p className="mt-1 text-sm text-gray-600">
+                            Fields marked with{" "}
+                            <span className="font-bold text-red-600">*</span> are required.
+                        </p>
                     </div>
 
-                    <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/jpg"
-                        onChange={handlePhotoChange}
-                        required={!photoPreview}
-                        className="w-full rounded-xl border border-gray-300 p-3 text-sm sm:max-w-sm"
-                    />
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-2xl text-gray-700 shadow hover:bg-gray-100"
+                    >
+                        ×
+                    </button>
                 </div>
-            </div>
 
-            <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl bg-[#800020] py-4 text-lg font-bold text-white shadow-lg hover:bg-[#5c0017] disabled:opacity-60"
-            >
-                {loading ? "Saving Profile..." : "Save Profile"}
-            </button>
-        </form>
+                <form onSubmit={handleSubmit} className="space-y-7 overflow-y-auto p-5 sm:p-7">
+                    <Section title="Basic Information">
+                        {formData.profileNumber && (
+                            <div className="rounded-xl border border-[#800020]/20 bg-[#fff8f2] px-4 py-3 font-bold text-[#800020] md:col-span-2">
+                                Profile No: {formData.profileNumber}
+                            </div>
+                        )}
+
+                        <Input name="fullName" placeholder="Full Name *" value={formData.fullName} onChange={handleChange} required />
+
+                        <Select
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            required
+                            options={[
+                                ["", "Select Gender *"],
+                                ["Bride", "Bride"],
+                                ["Groom", "Groom"],
+                            ]}
+                        />
+
+                        <Input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} required />
+                        <Input name="age" placeholder="Age" value={formData.age} readOnly className="bg-gray-100" />
+                        <Input name="height" placeholder="Height * (e.g. 5ft 8in)" value={formData.height} onChange={handleChange} required />
+
+                        <Select
+                            name="maritalStatus"
+                            value={formData.maritalStatus}
+                            onChange={handleChange}
+                            options={[
+                                ["Never Married", "Never Married"],
+                                ["Divorced", "Divorced"],
+                                ["Widowed", "Widowed"],
+                            ]}
+                        />
+
+                        <Input name="motherTongue" placeholder="Mother Tongue" value={formData.motherTongue} onChange={handleChange} />
+                    </Section>
+
+                    <Section title="Community Information">
+                        <Input name="religion" placeholder="Religion" value={formData.religion} onChange={handleChange} />
+                        <Input name="caste" placeholder="Caste *" value={formData.caste} onChange={handleChange} required />
+                        <Input name="subCaste" placeholder="Sub Caste" value={formData.subCaste} onChange={handleChange} />
+                        <Input name="gothram" placeholder="Gothram" value={formData.gothram} onChange={handleChange} />
+                    </Section>
+
+                    <Section title="Education & Career">
+                        <Input name="education" placeholder="Education *" value={formData.education} onChange={handleChange} required />
+                        <Input name="occupation" placeholder="Occupation *" value={formData.occupation} onChange={handleChange} required />
+                        <Input name="annualIncome" placeholder="Annual Income" value={formData.annualIncome} onChange={handleChange} />
+                    </Section>
+
+                    <Section title="Location">
+                        <Input name="city" placeholder="City *" value={formData.city} onChange={handleChange} required />
+                        <Input name="state" placeholder="State *" value={formData.state} onChange={handleChange} required />
+                        <Input name="country" placeholder="Country" value={formData.country} onChange={handleChange} />
+                    </Section>
+
+                    <Section title="About Me">
+                        <Textarea name="aboutMe" placeholder="Write a short profile summary" value={formData.aboutMe} onChange={handleChange} />
+                    </Section>
+
+                    <Section title="Partner Preferences">
+                        <Input name="preferredAgeFrom" placeholder="Preferred Age From" value={formData.preferredAgeFrom} onChange={handleChange} />
+                        <Input name="preferredAgeTo" placeholder="Preferred Age To" value={formData.preferredAgeTo} onChange={handleChange} />
+                        <Input name="preferredCaste" placeholder="Preferred Caste" value={formData.preferredCaste} onChange={handleChange} />
+                        <Input name="preferredLocation" placeholder="Preferred Location" value={formData.preferredLocation} onChange={handleChange} />
+                    </Section>
+
+                    <Section title="Family & Contact">
+                        <Textarea name="familyDetails" placeholder="Family Details" value={formData.familyDetails} onChange={handleChange} />
+
+                        <Select
+                            name="contactPreference"
+                            value={formData.contactPreference}
+                            onChange={handleChange}
+                            options={[
+                                ["Phone", "Phone"],
+                                ["WhatsApp", "WhatsApp"],
+                                ["Email", "Email"],
+                                ["Any", "Any"],
+                            ]}
+                        />
+                    </Section>
+
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <h3 className="mb-1 text-lg font-bold text-[#800020]">
+                            Profile Photo <span className="text-red-600">*</span>
+                        </h3>
+
+                        <p className="mb-4 text-sm text-gray-500">
+                            Accepted formats: JPG, JPEG, PNG. Maximum size: 2 MB.
+                        </p>
+
+                        <div className="flex flex-col items-center gap-4 sm:flex-row">
+                            <div className="h-32 w-32 overflow-hidden rounded-2xl border-4 border-[#800020] bg-gray-100">
+                                {photoPreview ? (
+                                    <img src={photoPreview} alt="Profile preview" className="h-full w-full object-cover" />
+                                ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-400">
+                                        Photo
+                                    </div>
+                                )}
+                            </div>
+
+                            <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/jpg"
+                                onChange={handlePhotoChange}
+                                required={!photoPreview}
+                                className="w-full rounded-xl border border-gray-300 p-3 text-sm sm:max-w-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full rounded-xl bg-[#800020] py-4 text-lg font-bold text-white shadow-lg hover:bg-[#5c0017] disabled:opacity-60"
+                    >
+                        {loading
+                            ? "Saving Profile..."
+                            : isEditing
+                                ? "Update Profile"
+                                : "Create Profile"}
+                    </button>
+                </form>
+            </div>
+        </div>
     );
 }
 

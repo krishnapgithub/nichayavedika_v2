@@ -6,7 +6,7 @@ export const adminOnly = (req, res, next) => {
         });
     }
 
-    if (!["admin", "oper_admin"].includes(req.user.role)) {
+    if (!["admin", "oper_admin", "super_admin"].includes(req.user.role)) {
         return res.status(403).json({
             success: false,
             message: "Admin access only",

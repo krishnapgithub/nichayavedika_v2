@@ -10,13 +10,12 @@ export const maskName = (name = "") => {
 };
 
 export const getSafeProfile = (profile, user) => {
+    const isAdmin =
+        user?.role === "admin" || user?.role === "super_admin";
+    const isPaidMember = ["premium", "elite"].includes(user?.membershipPlan);
 
     // Admin and Premium users see everything
-    if (
-        user?.role === "admin" ||
-        user?.role === "super_admin" ||
-        user?.membershipPlan !== "free"
-    ) {
+    if (isAdmin || isPaidMember) {
         return profile;
     }
 

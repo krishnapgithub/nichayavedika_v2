@@ -1,27 +1,24 @@
 .nv-profile-card {
-    max-width: 520px;
+    max-width: 500px;
     width: 100%;
-    height: 270px;
+    height: 250px;
     position: relative;
     padding: 24px;
     color: white;
     justify-self: center;
-    border-radius: 24px;
+    border-radius: 20px;
     overflow: visible;
-    isolation: isolate;
-    cursor: pointer;
-    transition: transform 0.3s ease, filter 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
     .nv-profile-card:hover {
-        transform: translateY(-6px) scale(1.01);
-        filter: saturate(1.06);
+        transform: scale(1.02);
     }
 
 .nv-profile-content {
     position: relative;
     z-index: 4;
-    height: 100%;
+    min-height: 222px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -30,40 +27,48 @@
 .nv-profile-top {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     gap: 14px;
 }
 
+    .nv-card-label,
+    .nv-profile-top span {
+        width: fit-content;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        backdrop-filter: blur(10px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+
 .nv-card-label {
-    width: fit-content;
-    margin-bottom: 6px;
-    padding: 4px 9px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    backdrop-filter: blur(8px);
+    margin-bottom: 7px;
+    padding: 4px 10px;
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0;
+    line-height: 1;
 }
 
 .nv-profile-top h3 {
-    max-width: 270px;
+    max-width: 285px;
+    margin: 0;
     font-size: 18px;
     line-height: 1.2;
-    font-weight: 800;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    font-weight: 900;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .nv-profile-top span {
-    height: fit-content;
+    flex-shrink: 0;
+    padding: 7px 11px;
     white-space: nowrap;
-    border-radius: 999px;
-    padding: 7px 10px;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.24);
-    backdrop-filter: blur(8px);
     font-size: 13px;
-    font-weight: 800;
+    line-height: 1;
+    font-weight: 900;
 }
 
 .nv-profile-bottom {
@@ -74,38 +79,48 @@
 }
 
     .nv-profile-bottom h2 {
-        max-width: 300px;
+        max-width: 305px;
+        margin: 0;
         font-size: 24px;
         font-weight: 900;
         line-height: 1.15;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     .nv-profile-bottom p {
-        max-width: 300px;
-        margin-top: 6px;
+        max-width: 305px;
+        margin: 6px 0 0;
         font-size: 13px;
         line-height: 1.35;
         opacity: 0.96;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        text-shadow: 0 2px 9px rgba(0, 0, 0, 0.38);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .nv-profile-bottom button {
         flex-shrink: 0;
-        border: 1px solid rgba(255, 255, 255, 0.75);
+        min-width: 78px;
+        border: 1px solid rgba(255, 255, 255, 0.76);
         color: #800020;
-        background: white;
-        padding: 10px 17px;
+        background: #ffffff;
+        padding: 10px 18px;
         border-radius: 999px;
         font-weight: 900;
         cursor: pointer;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 
         .nv-profile-bottom button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+            background: #fff7fb;
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32);
         }
 
 .nv-card-bg,
@@ -126,29 +141,30 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.45s ease;
+        transform: scale(1.01);
+        transition: transform 0.5s ease;
     }
 
 .nv-profile-card:hover .nv-card-bg img {
-    transform: scale(1.06);
+    transform: scale(1.07);
 }
 
 .nv-card-overlay {
     z-index: 1;
-    background: linear-gradient(90deg, rgba(62, 0, 24, 0.9), rgba(128, 0, 32, 0.58), rgba(0, 0, 0, 0.16)), linear-gradient(0deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.02) 55%);
+    background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.16), transparent 28%), linear-gradient(90deg, rgba(48, 0, 18, 0.94), rgba(128, 0, 32, 0.66), rgba(0, 0, 0, 0.18)), linear-gradient(0deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.04) 58%);
 }
 
 .nv-card-shine {
     z-index: 2;
     pointer-events: none;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 28%), linear-gradient(315deg, rgba(255, 215, 160, 0.22), transparent 38%);
-    opacity: 0.75;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 26%), linear-gradient(315deg, rgba(255, 220, 170, 0.2), transparent 42%);
+    opacity: 0.72;
 }
 
 .nv-card-shadow {
     position: absolute;
     width: 88%;
-    height: 86%;
+    height: 84%;
     left: 50%;
     bottom: -18px;
     transform: translateX(-50%);
@@ -156,7 +172,7 @@
     border-radius: 24px;
     overflow: hidden;
     filter: blur(18px);
-    opacity: 0.48;
+    opacity: 0.45;
 }
 
     .nv-card-shadow img {
@@ -167,9 +183,13 @@
 
 @media (max-width: 640px) {
     .nv-profile-card {
-        height: 245px;
+        min-height: 255px;
         padding: 18px;
         border-radius: 20px;
+    }
+
+    .nv-profile-content {
+        min-height: 219px;
     }
 
     .nv-card-bg,
@@ -179,15 +199,20 @@
     }
 
     .nv-profile-top h3 {
-        max-width: 210px;
+        max-width: 205px;
         font-size: 16px;
     }
 
     .nv-profile-bottom {
-        align-items: flex-start;
+        align-items: stretch;
         flex-direction: column;
         gap: 12px;
     }
+
+        .nv-profile-bottom h2,
+        .nv-profile-bottom p {
+            max-width: 100%;
+        }
 
         .nv-profile-bottom h2 {
             font-size: 20px;

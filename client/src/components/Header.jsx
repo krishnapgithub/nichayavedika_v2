@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import "../styles/home.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import CreateProfileModal from "./CreateProfileModal";
+import HeaderInfoModal from "./HeaderInfoModal.jsx";
 import toast from "react-hot-toast";
 
 import nvLogo from "../images/nvlogo-v1.png";
@@ -19,8 +20,10 @@ export default function Header() {
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [infoModal, setInfoModal] = useState(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -30,6 +33,9 @@ export default function Header() {
     }, []);
 
     const isLoggedIn = !!user;
+    const userRole = user?.role?.toLowerCase?.().trim();
+    const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
+    const canManageUsers = userRole === "super_admin";
 
     const handleLogout = () => {
         localStorage.clear();
@@ -51,6 +57,19 @@ export default function Header() {
         setIsLoginOpen(false);
         setIsRegisterOpen(false);
         setIsCreateProfileOpen(true);
+    };
+
+    const openInfoModal = (type) => {
+        setInfoModal(type);
+        setIsMobileMenuOpen(false);
+    };
+
+    const navClass = (path, modalType = null) => {
+        const isActive = modalType
+            ? infoModal === modalType
+            : !infoModal && location.pathname === path;
+
+        return isActive ? "nav-link active" : "nav-link";
     };
 
     return (
@@ -91,39 +110,65 @@ export default function Header() {
                         </div>
 
                         <nav className="hidden lg:flex items-center text-sm font-medium">
-                            <Link className="nav-link" to="/">
+                            <Link className={navClass("/")} to="/">
                                 Home
                             </Link>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
-                            <Link className="nav-link" to="/search">
+                            <Link className={navClass("/search")} to="/search">
                                 Search
                             </Link>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
-                            <Link className="nav-link" to="/membership">
+                            <button
+                                type="button"
+                                className={`${navClass("/membership", "membership")} bg-transparent border-0 cursor-pointer`}
+                                onClick={() => openInfoModal("membership")}
+                            >
                                 Membership
-                            </Link>
+                            </button>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
-                            <Link className="nav-link" to="/success-stories">
+                            <button
+                                type="button"
+                                className={`${navClass("/success-stories", "success")} bg-transparent border-0 cursor-pointer`}
+                                onClick={() => openInfoModal("success")}
+                            >
                                 Success
-                            </Link>
+                            </button>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
-                            <Link className="nav-link" to="/events">
+                            <button
+                                type="button"
+                                className={`${navClass("/events", "events")} bg-transparent border-0 cursor-pointer`}
+                                onClick={() => openInfoModal("events")}
+                            >
                                 Events
-                            </Link>
+                            </button>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
-                            <Link className="nav-link" to="/contact">
+                            <button
+                                type="button"
+                                className={`${navClass("/muhurthalu", "muhurthalu")} bg-transparent border-0 cursor-pointer`}
+                                onClick={() => openInfoModal("muhurthalu")}
+                            >
+                                ముహూర్తాలు
+                            </button>
+
+                            <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
+
+                            <button
+                                type="button"
+                                className={`${navClass("/contact", "contact")} bg-transparent border-0 cursor-pointer`}
+                                onClick={() => openInfoModal("contact")}
+                            >
                                 Contact
-                            </Link>
+                            </button>
                         </nav>
 
                         <button
@@ -180,35 +225,39 @@ export default function Header() {
                             Home
                         </Link>
 
-                        <Link to="/membership" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                        <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("membership")}>
                             Membership
-                        </Link>
+                        </button>
 
-                        <Link to="/contact" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                        <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("contact")}>
                             Contact
-                        </Link>
+                        </button>
 
-                        <Link to="/events" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                        <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("events")}>
                             Events
-                        </Link>
+                        </button>
 
-                        <Link to="/success-stories" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                        <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("success")}>
                             Success Stories
-                        </Link>
+                        </button>
 
-                        {user && (user.role === "admin" || user.role === "superadmin" || user.role === "superAdmin") && (
-                            <Link to="/admin" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                                Admin Dashboard
-                            </Link>
-                        )}
+                        <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("muhurthalu")}>
+                            ముహూర్తాలు
+                        </button>
 
-                        {user && (user.role === "admin" || user.role === "superadmin") && (
+                        {canReviewProfiles && (
                             <Link
-                                to="/admin"
+                                to="/admin/profiles"
                                 className="mobile-nav-link"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
-                                Admin Dashboard
+                                Admin
+                            </Link>
+                        )}
+
+                        {canManageUsers && (
+                            <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                                Super Admin
                             </Link>
                         )}
 
@@ -279,35 +328,36 @@ export default function Header() {
             )}
 
             {isLoggedIn && (
-                <div className="hidden lg:flex fixed top-40 right-5 z-[9998] flex-col gap-3 side-user-menu">
+                <div className="hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
 
 
-                    <Link className="side-menu-link" to="/dashboard">
-                        👤 Dashboard
+                    <Link className="account-menu-link" data-label="Dashboard" to="/dashboard">
+                        Dashboard
                     </Link>
 
                     <button
                         onClick={() => setIsCreateProfileOpen(true)}
-                        className="side-menu-link"
+                        className="account-menu-link"
+                        data-label="Profile"
                     >
-                        💍 Profile
+                        Profile
                     </button>
 
-                    <Link className="side-menu-link" to="/sent-interests">
-                        📤 Sent
+                    <Link className="account-menu-link" data-label="Sent" to="/sent-interests">
+                        Sent
                     </Link>
 
-                    <Link className="side-menu-link" to="/received-interests">
-                        📥 Received
+                    <Link className="account-menu-link" data-label="Received" to="/received-interests">
+                        Received
                     </Link>
-                    {["admin", "super_admin"].includes(user?.role) && (
-                        <Link className="side-menu-link" to="/admin/profiles">
-                            🛡️ Admin
+                    {canReviewProfiles && (
+                        <Link className="account-menu-link" data-label="Admin" to="/admin/profiles">
+                            Admin
                         </Link>
                     )}
-                    {user?.role === "super_admin" && (
-                        <Link className="side-menu-link" to="/admin/users">
-                            👑 Super Admin
+                    {canManageUsers && (
+                        <Link className="account-menu-link" data-label="Super Admin" to="/admin/users">
+                            Super Admin
                         </Link>
                     )}
                 </div>
@@ -317,6 +367,13 @@ export default function Header() {
                 onClose={() => setIsLoginOpen(false)}
                 setUser={setUser}
             />
+
+            {infoModal && (
+                <HeaderInfoModal
+                    type={infoModal}
+                    onClose={() => setInfoModal(null)}
+                />
+            )}
         </div>
     );
 }

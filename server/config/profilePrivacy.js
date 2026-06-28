@@ -7,8 +7,10 @@ export const maskName = (name = "") => {
 export const getSafeProfile = (profile, user = null) => {
     const role = user?.role;
     const plan = user?.membershipPlan;
+    const isAdmin = role === "admin" || role === "super_admin";
+    const isPaidMember = plan === "premium" || plan === "elite";
 
-    if (role === "admin" || plan === "premium") {
+    if (isAdmin || isPaidMember) {
         return profile;
     }
 

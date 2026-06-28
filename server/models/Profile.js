@@ -9,6 +9,13 @@ const profileSchema = new mongoose.Schema(
             unique: true,
         },
 
+        profileNumber: {
+            type: String,
+            unique: true,
+            sparse: true,
+            index: true
+        },
+
         membershipPlan: {
             type: String,
             enum: ["free", "premium", "elite"],

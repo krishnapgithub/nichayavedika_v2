@@ -1,13 +1,24 @@
-﻿import { useNavigate } from "react-router-dom";
 import nvLogo from "../images/nvlogo-v1.png";
+import { API_BASE_URL } from "../config/api";
 
-export default function ProfileCard({ profile }) {
+const getImageUrl = (profilePhoto) => {
+    if (!profilePhoto) return nvLogo;
+    if (profilePhoto.startsWith("http")) return profilePhoto;
 
-    const navigate = useNavigate();
+    const photoPath = profilePhoto.replace(/\\/g, "/");
 
-    const imageUrl = profile.profilePhoto
-        ? `${import.meta.env.VITE_API_URL}/${profile.profilePhoto}`
-        : nvLogo;
+    if (photoPath.startsWith("uploads/")) {
+        return `${API_BASE_URL}/${photoPath}`;
+    }
+
+    return `${API_BASE_URL}/uploads/${photoPath}`;
+};
+
+export default function ProfileCard({ profile, onView }) {
+    const imageUrl = getImageUrl(profile.profilePhoto);
+    const aboutText = profile.aboutMe || "Traditional family with good values.";
+    const aboutPreview = aboutText.substring(0, 120);
+    const hasMoreAbout = aboutText.length > 120;
 
     return (
         <div
@@ -21,7 +32,7 @@ export default function ProfileCard({ profile }) {
                 hover:shadow-2xl
                 hover:-translate-y-2
                 transition-all duration-500
-                h-[220px]
+                h-[240px]
             "
         >
 
@@ -56,6 +67,12 @@ export default function ProfileCard({ profile }) {
                         {profile.fullName || "Profile Hidden"}
                     </h3>
 
+                    {profile.profileNumber && (
+                        <p className="mt-1 inline-flex rounded-full bg-[#fff8f2] px-3 py-1 text-xs font-bold text-[#800020] ring-1 ring-[#800020]/15">
+                            {profile.profileNumber}
+                        </p>
+                    )}
+
                     <p className="text-[15px] text-gray-700 mt-2 leading-5">
                         <span className="font-medium">Age:</span>{" "}
                         {profile.age || "N/A"}
@@ -77,42 +94,49 @@ export default function ProfileCard({ profile }) {
             <p
                 className="
                     mt-4
-                    pr-32
+                    pr-20
                     text-[14px]
                     text-gray-600
                     leading-6
                 "
             >
                 <strong>About:</strong>{" "}
-                {(profile.aboutMe ||
-                    "Traditional family with good values.")
-                    .substring(0, 80)}
-
-                {(profile.aboutMe?.length || 0) > 80 && "..."}
+                {aboutPreview}
+                {hasMoreAbout && (
+                    <button
+                        type="button"
+                        onClick={() => onView?.(profile)}
+                        className="ml-1 font-semibold text-[#800020] hover:underline"
+                    >
+                        more
+                    </button>
+                )}
             </p>
 
             {/* View Button */}
             <button
-                onClick={() => navigate(`/profile/${profile._id}`)}
+                type="button"
+                onClick={() => onView?.(profile)}
                 className="
                     absolute
                     bottom-4
                     right-4
                     bg-[#800020]
                     text-white
-                    px-5
+                    px-4
                     py-2
                     rounded-2xl
-                    text-sm
+                    text-xs
                     font-semibold
                     shadow-md
                     hover:bg-[#650018]
                     transition
                 "
             >
-                View Profile
+                View
             </button>
 
         </div>
     );
 }
+

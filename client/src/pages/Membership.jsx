@@ -1,11 +1,9 @@
 ﻿
-import Header from "../components/Header.jsx";
 import "../styles/membership.css";
 
 export default function Membership() {
     return (
         <>
-            <Header />
 
             <div className="membership-page">
                 <div className="membership-container">
@@ -24,15 +22,15 @@ export default function Membership() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">₹0</span>
+                                <span className="text-4xl font-bold">?0</span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-gray-600 text-sm">
-                                <li>✓ Create Profile</li>
-                                <li>✓ Browse Profiles</li>
-                                <li>✓ View Limited Details</li>
-                                <li>✓ Up to 5 Profile Views</li>
-                                <li>✗ Contact Details Hidden</li>
+                                <li>? Create Profile</li>
+                                <li>? Browse Profiles</li>
+                                <li>? View Limited Details</li>
+                                <li>? Up to 5 Profile Views</li>
+                                <li>? Contact Details Hidden</li>
                             </ul>
 
                             <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
@@ -56,18 +54,18 @@ export default function Membership() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">₹1,999</span>
+                                <span className="text-4xl font-bold">?1,999</span>
                                 <span className="block mt-1 text-white/95 text-sm font-medium tracking-[0.5px]">
                                     / 3 Months
                                 </span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-sm">
-                                <li>✓ Up to 20 Profile Views</li>
-                                <li>✓ Send Interests</li>
-                                <li>✓ View Contact Details</li>
-                                <li>✓ Priority Listing</li>
-                                <li>✓ WhatsApp Support</li>
+                                <li>? Up to 20 Profile Views</li>
+                                <li>? Send Interests</li>
+                                <li>? View Contact Details</li>
+                                <li>? Priority Listing</li>
+                                <li>? WhatsApp Support</li>
                             </ul>
 
                             <button className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400">
@@ -83,18 +81,18 @@ export default function Membership() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">₹4,999</span>
+                                <span className="text-4xl font-bold">?4,999</span>
                                 <span className="block mt-1 text-gray-500 text-sm">
                                     /6 Months
                                 </span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-gray-600 text-sm">
-                                <li>✓ Everything in Premium</li>
-                                <li>✓ Dedicated Relationship Manager</li>
-                                <li>✓ Profile Boost</li>
-                                <li>✓ Exclusive Matches</li>
-                                <li>✓ Priority Support</li>
+                                <li>? Everything in Premium</li>
+                                <li>? Dedicated Relationship Manager</li>
+                                <li>? Profile Boost</li>
+                                <li>? Exclusive Matches</li>
+                                <li>? Priority Support</li>
                             </ul>
 
                             <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
@@ -109,3 +107,4 @@ export default function Membership() {
         </>
     );
 }
+

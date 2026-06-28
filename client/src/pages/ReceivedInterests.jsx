@@ -1,6 +1,5 @@
 ﻿import { useEffect, useState } from "react";
 import axios from "axios";
-import Header from "../components/Header.jsx";
 import toast from "react-hot-toast";
 
 const API_BASE_URL =
@@ -51,7 +50,6 @@ export default function ReceivedInterests() {
 
     return (
         <>
-            <Header />
 
             <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
                 <div className="max-w-5xl mx-auto">
@@ -110,14 +108,14 @@ export default function ReceivedInterests() {
                                                     onClick={() => updateStatus(item._id, "accepted")}
                                                     className="bg-green-600 hover:bg-green-700 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer text-white px-5 py-2 rounded-lg shadow-md"
                                                 >
-                                                    ✅ Accept
+                                                    ? Accept
                                                 </button>
 
                                                 <button
                                                     onClick={() => updateStatus(item._id, "rejected")}
                                                     className="bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer text-white px-5 py-2 rounded-lg shadow-md"
                                                 >
-                                                    ❌ Reject
+                                                    ? Reject
                                                 </button>
                                             </div>
                                         ) : (
@@ -127,7 +125,7 @@ export default function ReceivedInterests() {
                                                     : "bg-red-100 text-red-700"
                                                     }`}
                                             >
-                                                {status === "accepted" ? "✅ Accepted" : "❌ Rejected"}
+                                                {status === "accepted" ? "? Accepted" : "? Rejected"}
                                             </span>
                                         )}
                                     </div>
@@ -140,3 +138,4 @@ export default function ReceivedInterests() {
         </>
     );
 }
+

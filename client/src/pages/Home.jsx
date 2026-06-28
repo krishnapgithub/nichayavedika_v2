@@ -6,7 +6,6 @@ import axios from "axios";
 import { FaSearch } from "react-icons/fa";
 
 import { Link } from "react-router-dom";
-import Header from "../components/Header.jsx";
 
 import weddingHero from "../images/wedding-hero.png";
 import nvLogo from "../images/nvlogo-v1.png";
@@ -14,6 +13,8 @@ import nvLogo from "../images/nvlogo-v1.png";
 import { useNavigate } from "react-router-dom";
 import RegisterModal from "../components/RegisterModal";
 import ProfileCard from "../components/ProfileCard";
+import ProfileViewModal from "../components/ProfileViewModal.jsx";
+import toast from "react-hot-toast";
 
 
 const API_BASE_URL =
@@ -27,7 +28,13 @@ function Home() {
     const [profiles, setProfiles] = useState([]);
 
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [homeFilters, setHomeFilters] = useState({
+        search: "",
+        gender: "",
+        ageRange: "",
+    });
 
     useEffect(() => {
         fetchProfiles();
@@ -38,15 +45,8 @@ function Home() {
         try {
             setLoading(true);
 
-            const token = localStorage.getItem("token");
-
             const res = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/profiles/search`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                `${API_BASE_URL}/api/profiles/search`
             );
 
             setProfiles(res.data.profiles || []);
@@ -57,11 +57,6 @@ function Home() {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchProfiles();
-    }, []);
-
 
     const toggleLike = (id) => {
         if (likedProfiles.includes(id)) {
@@ -88,19 +83,47 @@ function Home() {
     }
 
     const navigate = useNavigate();
+
+    const handleFilteredSearch = () => {
+        const params = new URLSearchParams();
+        const searchText = homeFilters.search.trim();
+
+        if (searchText && searchText.length < 3) {
+            toast.error("Please enter at least 3 characters to search.");
+            return;
+        }
+
+        if (searchText) params.set("search", searchText);
+
+        if (homeFilters.gender) params.set("gender", homeFilters.gender);
+
+        if (homeFilters.ageRange) {
+            const [ageFrom, ageTo] = homeFilters.ageRange.split("-");
+            params.set("ageFrom", ageFrom);
+            params.set("ageTo", ageTo);
+        }
+
+        const queryString = params.toString();
+
+        navigate(queryString ? `/search?${queryString}` : "/search");
+    };
+
+    const handleGuestProfileClick = (profile) => {
+        setSelectedProfile(profile);
+    };
+
     return (
 
 
         <>
-            <Header />
 
 
-            <div className="max-w-7xl mx-auto px-6">
-                <main className="pt-25">
+            <div className="max-w-7xl mx-auto px-6 pt-20 lg:pt-24">
+                <main>
                     {/* Hero */}
 
                     <section
-                        className="-mt-6 relative overflow-hidden text-white h-[60vh] flex items-center rounded-[40px] shadow-2xl border border-rose-100 pb-20 z-10"
+                        className="relative overflow-hidden text-white min-h-[430px] flex items-center rounded-b-[36px] rounded-t-none shadow-2xl border-x border-b border-rose-100 pb-24 z-10"
                         style={{
                             backgroundImage: `url(${weddingHero})`,
                             backgroundSize: "cover",
@@ -127,20 +150,20 @@ function Home() {
     "
                         />
 
-                        <div className="relative z-10 px-10 pt-20 pb-8 w-full">
+                        <div className="relative z-10 px-10 pt-6 pb-6 w-full">
                             <div className="max-w-2xl">
 
-                                <h1 className="text-xl md:text-3xl lg:text-4xl font-bold leading-relaxed px-4 text-left">
+                                <h1 className="text-xl md:text-3xl lg:text-[34px] font-bold leading-snug px-4 text-left">
                                     చక్కని చిరకాల అనుబంధానికి
                                     <br />
                                     ముచ్చటైన వేదిక... మన నిశ్చయ!!!
                                 </h1>
 
-                                <p className="mt-6 text-lg md:text-xl italic font-light text-amber-100 tracking-wide drop-shadow-lg">
+                                <p className="mt-4 text-base md:text-lg italic font-light text-amber-100 tracking-wide drop-shadow-lg">
                                     ✨ Blessed unions bring lifelong happiness.
                                 </p>
 
-                                <div className="mt-8 flex gap-3">
+                                <div className="mt-6 flex gap-3">
 
                                     <button
                                         onClick={() => navigate("/search")}
@@ -164,26 +187,58 @@ function Home() {
                     {/* Search */}
 
                     {/* Floating Search Card */}
-                    <div className="relative z-20 max-w-5xl mx-auto -mt-12 px-6">
-                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+                    <div className="relative z-20 max-w-5xl mx-auto -mt-10 px-6">
+                        <div className="bg-white rounded-3xl shadow-2xl p-5 border border-gray-100">
 
                             <div className="grid md:grid-cols-4 gap-4">
 
-                                <select className="border border-gray-200 p-3 rounded-xl">
-                                    <option>Bride</option>
-                                    <option>Groom</option>
+                                <select
+                                    value={homeFilters.gender}
+                                    onChange={(event) =>
+                                        setHomeFilters({
+                                            ...homeFilters,
+                                            gender: event.target.value,
+                                        })
+                                    }
+                                    className="border border-gray-200 p-3 rounded-xl"
+                                >
+                                    <option value="">Bride / Groom</option>
+                                    <option value="Bride">Bride</option>
+                                    <option value="Groom">Groom</option>
                                 </select>
 
-                                <select className="border border-gray-200 p-3 rounded-xl">
-                                    <option>Age</option>
+                                <select
+                                    value={homeFilters.ageRange}
+                                    onChange={(event) =>
+                                        setHomeFilters({
+                                            ...homeFilters,
+                                            ageRange: event.target.value,
+                                        })
+                                    }
+                                    className="border border-gray-200 p-3 rounded-xl"
+                                >
+                                    <option value="">Age</option>
+                                    <option value="18-25">18 - 25</option>
+                                    <option value="26-30">26 - 30</option>
+                                    <option value="31-35">31 - 35</option>
+                                    <option value="36-45">36 - 45</option>
                                 </select>
 
-                                <select className="border border-gray-200 p-3 rounded-xl">
-                                    <option>Caste</option>
-                                </select>
+                                <input
+                                    type="text"
+                                    value={homeFilters.search}
+                                    onChange={(event) =>
+                                        setHomeFilters({
+                                            ...homeFilters,
+                                            search: event.target.value,
+                                        })
+                                    }
+                                    placeholder="Profile No / Name / Caste - min 3 characters"
+                                    className="border border-gray-200 p-3 rounded-xl"
+                                />
 
                                 <button
-                                    onClick={() => navigate("/search")}
+                                    onClick={handleFilteredSearch}
                                     className="primary-btn premium-hover"
                                 >
                                     Search Profiles
@@ -196,7 +251,7 @@ function Home() {
                     
                     {/* Profiles */}
                     {/* Profiles */}
-                    <section className="nv-section bg-gradient-to-b from-white to-rose-50 -mt-8 pt-2">
+                    <section className="nv-section bg-gradient-to-b from-white to-rose-50 -mt-10 pt-1">
                         <div className="max-w-7xl mx-auto px-6">
 
                             <h2 className="text-4xl font-bold text-center text-gray-900 mb-2">
@@ -208,12 +263,17 @@ function Home() {
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                {displayProfiles.slice(0, 8).map((profile) => (
-                                    <ProfileCard
-                                        key={profile._id}
-                                        profile={profile}
-                                    />
-                                ))}
+                                {loading ? (
+                                    <HomeLoadingCards />
+                                ) : (
+                                    displayProfiles.slice(0, 8).map((profile) => (
+                                        <ProfileCard
+                                            key={profile._id}
+                                            profile={profile}
+                                            onView={handleGuestProfileClick}
+                                        />
+                                    ))
+                                )}
                             </div>
 
                         </div>
@@ -393,7 +453,7 @@ function Home() {
 
                                 {/* Card 1 */}
                                 <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
-                                    <div className="text-5xl mb-4">🔒</div>
+                                    <div className="text-5xl mb-4">ðŸ”’</div>
                                     <h3 className="text-xl font-bold mb-3">
                                         Privacy Protected
                                     </h3>
@@ -426,7 +486,7 @@ function Home() {
 
                                 {/* Card 4 */}
                                 <div className="bg-rose-50 rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition">
-                                    <div className="text-5xl mb-4">📞</div>
+                                    <div className="text-5xl mb-4">ðŸ“ž</div>
                                     <h3 className="text-xl font-bold mb-3">
                                         Dedicated Support
                                     </h3>
@@ -495,8 +555,47 @@ function Home() {
                 onClose={() => setIsRegisterOpen(false)}
             />
 
+            {selectedProfile && (
+                <ProfileViewModal
+                    profile={selectedProfile}
+                    onClose={() => setSelectedProfile(null)}
+                    guestPrompt
+                    onRegister={() => {
+                        setSelectedProfile(null);
+                        setIsRegisterOpen(true);
+                    }}
+                />
+            )}
+
         </>
     );
 }
 
+function HomeLoadingCards() {
+    return Array.from({ length: 4 }).map((_, index) => (
+        <div
+            key={index}
+            className="h-[240px] rounded-[28px] border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md"
+        >
+            <div className="flex gap-4">
+                <div className="h-20 w-20 flex-shrink-0 rounded-[18px] bg-rose-100" />
+                <div className="flex-1 space-y-3">
+                    <div className="h-5 w-3/4 rounded-full bg-rose-100" />
+                    <div className="h-4 w-1/2 rounded-full bg-amber-100" />
+                    <div className="h-4 w-2/3 rounded-full bg-rose-100" />
+                </div>
+            </div>
+            <div className="mt-6 space-y-3">
+                <div className="h-4 rounded-full bg-rose-100" />
+                <div className="h-4 w-5/6 rounded-full bg-amber-100" />
+            </div>
+            <div className="mt-5 rounded-2xl bg-[#800020] px-4 py-2 text-center text-xs font-semibold text-white">
+                Loading verified profile
+            </div>
+        </div>
+    ));
+}
+
 export default Home;
+
+
