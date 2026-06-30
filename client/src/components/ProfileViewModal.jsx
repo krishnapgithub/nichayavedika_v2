@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 import nvLogo from "../images/nvlogo-v1.png";
 import { API_BASE_URL } from "../config/api";
 
@@ -60,6 +62,8 @@ export default function ProfileViewModal({
 }) {
     const [adminDraft, setAdminDraft] = useState({});
     const [adminPhotoFiles, setAdminPhotoFiles] = useState({});
+    const [sendingInterest, setSendingInterest] = useState(false);
+    const [interestSent, setInterestSent] = useState(false);
 
     useEffect(() => {
         const handleEscape = (event) => {
@@ -113,6 +117,7 @@ export default function ProfileViewModal({
             showPhotosToMembers: profile?.showPhotosToMembers !== false,
         });
         setAdminPhotoFiles({});
+        setInterestSent(false);
     }, [profile]);
 
     if (!profile) return null;
@@ -122,10 +127,21 @@ export default function ProfileViewModal({
     const canViewFullDetails = showAdminActions || isFullAccessUser(viewer, profile);
     const shouldShowLimitedDetails = !effectiveGuestPrompt && !canViewFullDetails;
     const viewerRole = viewer?.role?.toLowerCase?.().trim();
+    const viewerMembership = (
+        viewer?.membershipPlan ||
+        viewer?.membershipType ||
+        viewer?.membership ||
+        ""
+    ).toString().toLowerCase();
     const isAdminViewer = ["admin", "oper_admin", "super_admin"].includes(viewerRole);
     const isOwnProfile =
         Boolean(profile?.user) &&
         String(profile.user?._id || profile.user) === String(viewer?._id || viewer?.id);
+    const canSendInterest =
+        !showAdminActions &&
+        !isAdminViewer &&
+        !isOwnProfile &&
+        ["premium", "elite"].includes(viewerMembership);
     const canViewProfilePhotos =
         showAdminActions || isAdminViewer || isOwnProfile || profile.showPhotosToMembers !== false;
     const photoUrl = canViewProfilePhotos ? getPhotoUrl(profile.profilePhoto) : "";
@@ -155,11 +171,45 @@ export default function ProfileViewModal({
             [field]: file,
         }));
     };
+    const handleSendInterest = async () => {
+        try {
+            const senderId = viewer?._id || viewer?.id;
+            const token = localStorage.getItem("token");
+
+            if (!senderId || !token) {
+                toast.error("Please login to send interest");
+                return;
+            }
+
+            setSendingInterest(true);
+
+            const response = await axios.post(
+                `${API_BASE_URL}/api/interests/send`,
+                {
+                    senderId,
+                    receiverProfileId: profile._id,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setInterestSent(true);
+            toast.success(response.data?.message || "Interest sent successfully");
+        } catch (error) {
+            console.error("Interest failed:", error.response?.data || error);
+            toast.error(error.response?.data?.message || "Failed to send interest");
+        } finally {
+            setSendingInterest(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden bg-black/55 px-4 py-6">
             <div className="relative max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-rose-100 bg-white px-5 py-4">
+                <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-rose-100 bg-white px-5 py-4">
                     <div>
                         <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
                             {profile.profileNumber || "Profile"}
@@ -169,13 +219,30 @@ export default function ProfileViewModal({
                         </h2>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                        Close
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {canSendInterest && (
+                            <button
+                                type="button"
+                                onClick={handleSendInterest}
+                                disabled={sendingInterest || interestSent}
+                                className="rounded-full border border-[#800020] bg-white px-4 py-2 text-sm font-bold text-[#800020] shadow-sm hover:bg-[#fff8f2] disabled:cursor-not-allowed disabled:border-green-500 disabled:text-green-700 disabled:opacity-80"
+                            >
+                                {interestSent
+                                    ? "Interest Sent"
+                                    : sendingInterest
+                                        ? "Sending..."
+                                        : "Send Interest"}
+                            </button>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                            Close
+                        </button>
+                    </div>
                 </div>
 
                 {effectiveGuestPrompt && (

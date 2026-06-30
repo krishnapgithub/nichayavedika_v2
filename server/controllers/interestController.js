@@ -1,4 +1,20 @@
 import Interest from "../models/Interest.js";
+import Profile from "../models/Profile.js";
+import User from "../models/User.js";
+
+const normalizeProfileGender = (gender) => {
+    const value = String(gender || "").trim().toLowerCase();
+
+    if (["bride", "female"].includes(value)) return "Bride";
+    if (["groom", "male"].includes(value)) return "Groom";
+    return "";
+};
+
+const isAdminUser = (user) => {
+    const role = user?.role?.toLowerCase?.().trim();
+
+    return ["admin", "oper_admin", "super_admin"].includes(role);
+};
 
 const normalizeStatus = (status) => {
     const value = String(status || "").toLowerCase();
@@ -28,6 +44,33 @@ export const sendInterest = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Sender and profile are required",
+            });
+        }
+
+        const [sender, receiverProfile] = await Promise.all([
+            User.findById(senderId).select("gender role"),
+            Profile.findById(receiverProfileId).select("gender"),
+        ]);
+
+        if (!sender || !receiverProfile) {
+            return res.status(404).json({
+                success: false,
+                message: "Sender or profile not found",
+            });
+        }
+
+        const senderGender = normalizeProfileGender(sender.gender);
+        const receiverGender = normalizeProfileGender(receiverProfile.gender);
+
+        if (
+            !isAdminUser(sender) &&
+            senderGender &&
+            receiverGender &&
+            senderGender === receiverGender
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Interest can be sent only between bride and groom profiles",
             });
         }
 

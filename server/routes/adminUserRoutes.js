@@ -6,8 +6,8 @@ import {
 } from "../controllers/adminUserController.js";
 
 import {
+    adminUserManagerOnly,
     protect,
-    superAdminOnly,
 } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -15,21 +15,21 @@ const router = express.Router();
 router.get(
     "/users",
     protect,
-    superAdminOnly,
+    adminUserManagerOnly,
     getAllUsers
 );
 
 router.put(
     "/users/:id/access",
     protect,
-    superAdminOnly,
+    adminUserManagerOnly,
     updateUserAccess
 );
 
 router.put(
     "/users/:id/reset-password",
     protect,
-    superAdminOnly,
+    adminUserManagerOnly,
     resetUserPassword
 );
 

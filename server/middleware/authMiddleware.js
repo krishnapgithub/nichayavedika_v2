@@ -41,6 +41,26 @@ export const protect = async (req, res, next) => {
     }
 };
 
+export const optionalProtect = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization || "";
+        const token = authHeader.startsWith("Bearer ")
+            ? authHeader.split(" ")[1]
+            : "";
+
+        if (!token || token === "null" || token === "undefined") {
+            return next();
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id).select("-password");
+
+        return next();
+    } catch {
+        return next();
+    }
+};
+
 
 
 export const superAdminOnly = (req, res, next) => {
@@ -48,6 +68,17 @@ export const superAdminOnly = (req, res, next) => {
         return res.status(403).json({
             success: false,
             message: "Super Admin access only",
+        });
+    }
+
+    next();
+};
+
+export const adminUserManagerOnly = (req, res, next) => {
+    if (!["admin", "super_admin"].includes(req.user?.role)) {
+        return res.status(403).json({
+            success: false,
+            message: "Admin access only",
         });
     }
 

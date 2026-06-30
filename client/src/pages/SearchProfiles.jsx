@@ -48,6 +48,22 @@ const advancedSearchFields = [
     ["preferredLocation", "Preferred Location"],
 ];
 
+const getSavedUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+        return null;
+    }
+};
+
+const getOppositeGender = (gender) => {
+    const value = String(gender || "").trim().toLowerCase();
+
+    if (value === "bride") return "Groom";
+    if (value === "groom") return "Bride";
+    return "";
+};
+
 function SearchProfiles() {
     const [searchParams] = useSearchParams();
     const filtersFromUrl = {
@@ -72,6 +88,14 @@ function SearchProfiles() {
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
     const [filters, setFilters] = useState(filtersFromUrl);
+    const savedUser = getSavedUser();
+    const userRole = savedUser?.role?.toLowerCase?.().trim();
+    const isAdminUser = ["admin", "oper_admin", "super_admin"].includes(userRole);
+    const oppositeGender = !isAdminUser ? getOppositeGender(savedUser?.gender) : "";
+    const shouldLockGender = Boolean(savedUser && oppositeGender);
+    const visibleAdvancedSearchFields = shouldLockGender
+        ? advancedSearchFields.filter(([value]) => value !== "gender")
+        : advancedSearchFields;
 
     const isSearchTextValid = (searchText) => {
         const trimmedSearch = searchText.trim();
@@ -94,6 +118,13 @@ function SearchProfiles() {
                 {
                     params: {
                         ...filtersToUse,
+                        ...(shouldLockGender
+                            ? {
+                                gender: oppositeGender,
+                                advancedField: filtersToUse.advancedField === "gender" ? "any" : filtersToUse.advancedField,
+                                advancedValue: filtersToUse.advancedField === "gender" ? "" : filtersToUse.advancedValue,
+                            }
+                            : {}),
                         page: pageToLoad,
                         limit: PAGE_SIZE,
                     },
@@ -127,8 +158,13 @@ function SearchProfiles() {
     };
 
     const handleClearFilters = () => {
-        setFilters(defaultFilters);
-        fetchProfiles(1, defaultFilters);
+        const nextFilters = {
+            ...defaultFilters,
+            ...(shouldLockGender ? { gender: oppositeGender } : {}),
+        };
+
+        setFilters(nextFilters);
+        fetchProfiles(1, nextFilters);
     };
 
     const handlePageChange = (nextPage) => {
@@ -166,7 +202,19 @@ function SearchProfiles() {
             return;
         }
 
-        fetchProfiles(1, filtersFromUrl);
+        const initialFilters = {
+            ...filtersFromUrl,
+            ...(shouldLockGender
+                ? {
+                    gender: oppositeGender,
+                    advancedField: filtersFromUrl.advancedField === "gender" ? "any" : filtersFromUrl.advancedField,
+                    advancedValue: filtersFromUrl.advancedField === "gender" ? "" : filtersFromUrl.advancedValue,
+                }
+                : {}),
+        };
+
+        setFilters(initialFilters);
+        fetchProfiles(1, initialFilters);
     }, []);
 
     return (
@@ -209,19 +257,26 @@ function SearchProfiles() {
                     />
 
                     <select
-                        value={filters.gender}
+                        value={shouldLockGender ? oppositeGender : filters.gender}
                         onChange={(e) =>
                             setFilters({
                                 ...filters,
                                 gender: e.target.value,
                             })
                         }
+                        disabled={shouldLockGender}
                         className="border rounded-xl p-3"
                     >
                         <option value="">Bride / Groom</option>
                         <option value="Bride">Bride</option>
                         <option value="Groom">Groom</option>
                     </select>
+
+                    {shouldLockGender && (
+                        <p className="rounded-xl border border-amber-200 bg-[#fff8f2] px-3 py-2 text-sm font-semibold text-[#800020] md:col-span-7">
+                            Showing only {oppositeGender} profiles for your account.
+                        </p>
+                    )}
 
                     <input
                         type="number"
@@ -305,7 +360,7 @@ function SearchProfiles() {
                             }
                             className="border rounded-xl bg-white p-3"
                         >
-                            {advancedSearchFields.map(([value, label]) => (
+                            {visibleAdvancedSearchFields.map(([value, label]) => (
                                 <option key={value} value={value}>
                                     {label}
                                 </option>

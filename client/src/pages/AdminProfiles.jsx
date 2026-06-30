@@ -71,6 +71,12 @@ const getStatusLabel = (status) => {
     return match?.[1] || "Pending Approval";
 };
 
+const getExpectedGender = (registeringFor) => {
+    if (["Son", "Brother"].includes(registeringFor)) return "Groom";
+    if (["Daughter", "Sister"].includes(registeringFor)) return "Bride";
+    return "";
+};
+
 export default function AdminProfiles() {
     const [profiles, setProfiles] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -583,6 +589,13 @@ function AssistedProfileModal({ onClose, onSave }) {
 
         if (!formData.profilePhoto) {
             toast.error("Please upload a profile photo");
+            return;
+        }
+
+        const expectedGender = getExpectedGender(formData.registeringFor);
+
+        if (expectedGender && formData.gender !== expectedGender) {
+            toast.error(`${formData.registeringFor} registration should be selected as ${expectedGender}`);
             return;
         }
 

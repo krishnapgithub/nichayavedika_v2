@@ -37,6 +37,34 @@ const hideProfilePhotos = (profile) => {
 const applyPhotoConsent = (profile, user = null) =>
     canSeeProfilePhotos(profile, user) ? profile : hideProfilePhotos(profile);
 
+const normalizeProfileGender = (gender) => {
+    const value = String(gender || "").trim().toLowerCase();
+
+    if (["bride", "female"].includes(value)) return "Bride";
+    if (["groom", "male"].includes(value)) return "Groom";
+    return "";
+};
+
+const getOppositeGender = (gender) => {
+    const normalizedGender = normalizeProfileGender(gender);
+
+    if (normalizedGender === "Bride") return "Groom";
+    if (normalizedGender === "Groom") return "Bride";
+    return "";
+};
+
+const getExpectedGender = (registeringFor) => {
+    if (["Son", "Brother"].includes(registeringFor)) return "Groom";
+    if (["Daughter", "Sister"].includes(registeringFor)) return "Bride";
+    return "";
+};
+
+const isAdminUser = (user) => {
+    const role = user?.role?.toLowerCase?.().trim();
+
+    return ["admin", "oper_admin", "super_admin"].includes(role);
+};
+
 const isCloudinaryConfigured = () =>
     Boolean(
         process.env.CLOUDINARY_CLOUD_NAME &&
@@ -185,14 +213,20 @@ export const searchProfiles = async (req, res) => {
             ],
         };
 
-        if (gender) {
-            const normalizedGender = gender.trim().toLowerCase();
+        const shouldForceOppositeGender = req.user && !isAdminUser(req.user);
+        const requiredGender =
+            shouldForceOppositeGender
+                ? getOppositeGender(req.user.gender)
+                : normalizeProfileGender(gender);
+
+        if (requiredGender) {
+            const normalizedGender = requiredGender.trim().toLowerCase();
             const genderPattern =
                 normalizedGender === "groom"
                     ? "^\\s*(groom|male)\\s*$"
                     : normalizedGender === "bride"
                         ? "^\\s*(bride|female)\\s*$"
-                        : `^\\s*${gender.trim()}\\s*$`;
+                        : `^\\s*${requiredGender.trim()}\\s*$`;
 
             filter.$and.push({
                 gender: new RegExp(genderPattern, "i"),
@@ -252,7 +286,10 @@ export const searchProfiles = async (req, res) => {
                 }
 
                 filter.$and.push({ $or: advancedConditions });
-            } else if (advancedSearchFields.includes(selectedAdvancedField)) {
+            } else if (
+                advancedSearchFields.includes(selectedAdvancedField) &&
+                !(shouldForceOppositeGender && selectedAdvancedField === "gender")
+            ) {
                 if (numericAdvancedFields.includes(selectedAdvancedField)) {
                     const numericValue = Number(trimmedAdvancedValue);
 
@@ -549,6 +586,15 @@ export const createAdminAssistedProfile = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Name, mobile, email, gender and registering for are required",
+            });
+        }
+
+        const expectedGender = getExpectedGender(registeringFor);
+
+        if (expectedGender && gender !== expectedGender) {
+            return res.status(400).json({
+                success: false,
+                message: `${registeringFor} registration should be selected as ${expectedGender}`,
             });
         }
 

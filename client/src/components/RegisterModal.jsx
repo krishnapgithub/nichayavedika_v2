@@ -8,6 +8,12 @@ import { isValidEmail } from "../utils/validation";
 
 const CLOUD_STORAGE_CONSENT_KEY = "cloudStorageConsentAccepted";
 
+const getExpectedGender = (registeringFor) => {
+    if (["Son", "Brother"].includes(registeringFor)) return "Groom";
+    if (["Daughter", "Sister"].includes(registeringFor)) return "Bride";
+    return "";
+};
+
 const validateRegisterForm = () => {
     const nameRegex = /^[A-Za-z\s.'-]+$/;
     const mobileRegex = /^[0-9]{10}$/;
@@ -110,6 +116,23 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
 
         if (!isValidEmail(formData.email)) {
             toast.error("Please enter a valid email address");
+            return false;
+        }
+
+        if (!formData.registeringFor) {
+            toast.error("Please select Registering For");
+            return false;
+        }
+
+        if (!formData.gender) {
+            toast.error("Please select Gender");
+            return false;
+        }
+
+        const expectedGender = getExpectedGender(formData.registeringFor);
+
+        if (expectedGender && formData.gender !== expectedGender) {
+            toast.error(`${formData.registeringFor} registration should be selected as ${expectedGender}`);
             return false;
         }
 

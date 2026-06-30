@@ -3,7 +3,7 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
-import { protect } from "../middleware/authMiddleware.js";
+import { optionalProtect, protect } from "../middleware/authMiddleware.js";
 import { adminOnly } from "../middleware/adminMiddleware.js";
 
 import {
@@ -98,6 +98,7 @@ router.get(
 // ==========================================
 router.get(
     "/search",
+    optionalProtect,
     searchProfiles
 );
 

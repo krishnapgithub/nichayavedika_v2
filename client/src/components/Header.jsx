@@ -66,7 +66,7 @@ export default function Header() {
     const isPremiumMember = membershipPlan === "premium";
     const isEliteMember = membershipPlan === "elite";
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
-    const canManageUsers = userRole === "super_admin";
+    const canManageUsers = ["admin", "super_admin"].includes(userRole);
     const displayName = user?.fullName?.trim?.() || "User";
 
     useEffect(() => {
@@ -445,6 +445,14 @@ export default function Header() {
                             Home
                         </button>
 
+                        <Link
+                            to="/search"
+                            className="mobile-nav-link"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Search
+                        </Link>
+
                         <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("membership")}>
                             Membership
                         </button>
@@ -497,7 +505,7 @@ export default function Header() {
 
                         {canManageUsers && (
                             <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                                Super Admin
+                                Users
                             </Link>
                         )}
 
@@ -575,8 +583,8 @@ export default function Header() {
                         </Link>
                     )}
                     {canManageUsers && (
-                        <Link className={accountLinkClass("/admin/users")} data-label="Super Admin" to="/admin/users">
-                            Super Admin
+                        <Link className={accountLinkClass("/admin/users")} data-label="Users" to="/admin/users">
+                            Users
                         </Link>
                     )}
                 </div>

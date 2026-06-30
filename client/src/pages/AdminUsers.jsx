@@ -18,6 +18,7 @@ export default function AdminUsers() {
 
     const isSuperAdmin = userRole === "super_admin";
     const canManageUsers = userRole === "admin" || userRole === "super_admin";
+    const canEditFullAccess = isSuperAdmin;
 
     const authConfig = {
         headers: {
@@ -62,18 +63,19 @@ export default function AdminUsers() {
                 [field]: value,
             };
 
-            await axios.put(
+            const response = await axios.put(
                 `${API_BASE_URL}/api/admin/users/${userId}/access`,
                 payload,
                 authConfig
             );
+            const updatedUser = response.data.user;
 
             setUsers((prevUsers) =>
                 prevUsers.map((u) =>
                     u._id === userId
                         ? {
                             ...u,
-                            [field]: value,
+                            ...(updatedUser || { [field]: value }),
                         }
                         : u
                 )
@@ -103,11 +105,11 @@ export default function AdminUsers() {
         }
     };
 
-    if (!isSuperAdmin) {
+    if (!canManageUsers) {
         return (
             <>
                 <div className="pt-40 text-center text-red-700 font-bold">
-                    Access denied. Super Admin only.
+                    Access denied. Admin only.
                 </div>
             </>
         );
@@ -120,8 +122,13 @@ export default function AdminUsers() {
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-6">
                         <h1 className="text-2xl sm:text-3xl font-bold text-[#800020]">
-                            Super Admin - User Management
+                            {isSuperAdmin ? "Super Admin - User Management" : "Admin - User Account Help"}
                         </h1>
+                        <p className="mt-1 text-sm text-gray-600">
+                            {isSuperAdmin
+                                ? "Manage roles, approval status, memberships, active state, and password resets."
+                                : "Activate/deactivate regular users and reset user passwords."}
+                        </p>
                     </div>
 
                     {loading ? (
@@ -149,51 +156,103 @@ export default function AdminUsers() {
                                     <tbody>
                                         {users.map((u) => (
                                             <tr key={u._id} className="border-b">
-                                                <td className="p-3 font-semibold">{u.fullName || "-"}</td>
-                                                <td className="p-3">{u.email || "-"}</td>
+                                                <td className="p-3">
+                                                    {canEditFullAccess ? (
+                                                        <input
+                                                            value={u.fullName || ""}
+                                                            onChange={(e) =>
+                                                                setUsers((prevUsers) =>
+                                                                    prevUsers.map((user) =>
+                                                                        user._id === u._id
+                                                                            ? { ...user, fullName: e.target.value }
+                                                                            : user
+                                                                    )
+                                                                )
+                                                            }
+                                                            onBlur={(e) => updateAccess(u._id, "fullName", e.target.value)}
+                                                            className="w-full min-w-[150px] rounded border px-2 py-1 font-semibold"
+                                                        />
+                                                    ) : (
+                                                        <span className="font-semibold">{u.fullName || "-"}</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-3">
+                                                    {canEditFullAccess ? (
+                                                        <input
+                                                            type="email"
+                                                            value={u.email || ""}
+                                                            onChange={(e) =>
+                                                                setUsers((prevUsers) =>
+                                                                    prevUsers.map((user) =>
+                                                                        user._id === u._id
+                                                                            ? { ...user, email: e.target.value }
+                                                                            : user
+                                                                    )
+                                                                )
+                                                            }
+                                                            onBlur={(e) => updateAccess(u._id, "email", e.target.value)}
+                                                            className="w-full min-w-[210px] rounded border px-2 py-1"
+                                                        />
+                                                    ) : (
+                                                        <span>{u.email || "-"}</span>
+                                                    )}
+                                                </td>
                                                 <td className="p-3">{u.mobile || "-"}</td>
 
                                                 <td className="p-3">
-                                                    <select
-                                                        value={u.role || "user"}
-                                                        onChange={(e) =>
-                                                            updateAccess(u._id, "role", e.target.value)
-                                                        }
-                                                        className="w-full border rounded px-2 py-1"
-                                                    >
-                                                        <option value="user">user</option>
-                                                        <option value="executive">executive</option>
-                                                        <option value="admin">admin</option>
-                                                        <option value="super_admin">super_admin</option>
-                                                    </select>
+                                                    {canEditFullAccess ? (
+                                                        <select
+                                                            value={u.role || "user"}
+                                                            onChange={(e) =>
+                                                                updateAccess(u._id, "role", e.target.value)
+                                                            }
+                                                            className="w-full border rounded px-2 py-1"
+                                                        >
+                                                            <option value="user">user</option>
+                                                            <option value="executive">executive</option>
+                                                            <option value="admin">admin</option>
+                                                            <option value="oper_admin">oper_admin</option>
+                                                            <option value="super_admin">super_admin</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span className="font-semibold text-gray-700">{u.role || "user"}</span>
+                                                    )}
                                                 </td>
 
                                                 <td className="p-3">
-                                                    <select
-                                                        value={u.status || "pending"}
-                                                        onChange={(e) =>
-                                                            updateAccess(u._id, "status", e.target.value)
-                                                        }
-                                                        className="w-full border rounded px-2 py-1"
-                                                    >
-                                                        <option value="pending">pending</option>
-                                                        <option value="approved">approved</option>
-                                                        <option value="rejected">rejected</option>
-                                                    </select>
+                                                    {canEditFullAccess ? (
+                                                        <select
+                                                            value={u.status || "pending"}
+                                                            onChange={(e) =>
+                                                                updateAccess(u._id, "status", e.target.value)
+                                                            }
+                                                            className="w-full border rounded px-2 py-1"
+                                                        >
+                                                            <option value="pending">pending</option>
+                                                            <option value="approved">approved</option>
+                                                            <option value="rejected">rejected</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span className="font-semibold text-gray-700">{u.status || "pending"}</span>
+                                                    )}
                                                 </td>
 
                                                 <td className="p-3">
-                                                    <select
-                                                        value={u.membershipPlan || "free"}
-                                                        onChange={(e) =>
-                                                            updateAccess(u._id, "membershipPlan", e.target.value)
-                                                        }
-                                                        className="w-full border rounded px-2 py-1"
-                                                    >
-                                                        <option value="free">free</option>
-                                                        <option value="premium">premium</option>
-                                                        <option value="assisted">assisted</option>
-                                                    </select>
+                                                    {canEditFullAccess ? (
+                                                        <select
+                                                            value={u.membershipPlan || "free"}
+                                                            onChange={(e) =>
+                                                                updateAccess(u._id, "membershipPlan", e.target.value)
+                                                            }
+                                                            className="w-full border rounded px-2 py-1"
+                                                        >
+                                                            <option value="free">free</option>
+                                                            <option value="premium">premium</option>
+                                                            <option value="elite">elite</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span className="font-semibold text-gray-700">{u.membershipPlan || "free"}</span>
+                                                    )}
                                                 </td>
 
                                                 <td className="p-3">
@@ -227,12 +286,59 @@ export default function AdminUsers() {
                                 {users.map((u) => (
                                     <div key={u._id} className="bg-white rounded-2xl shadow p-4">
                                         <div className="mb-4">
-                                            <h3 className="text-lg font-bold text-[#800020]">
-                                                {u.fullName || "-"}
-                                            </h3>
-                                            <p className="text-sm text-gray-600 break-all">
-                                                {u.email || "-"}
-                                            </p>
+                                            {canEditFullAccess ? (
+                                                <div className="space-y-3">
+                                                    <label className="block">
+                                                        <span className="text-xs font-bold text-gray-500">
+                                                            Display Name
+                                                        </span>
+                                                        <input
+                                                            value={u.fullName || ""}
+                                                            onChange={(e) =>
+                                                                setUsers((prevUsers) =>
+                                                                    prevUsers.map((user) =>
+                                                                        user._id === u._id
+                                                                            ? { ...user, fullName: e.target.value }
+                                                                            : user
+                                                                    )
+                                                                )
+                                                            }
+                                                            onBlur={(e) => updateAccess(u._id, "fullName", e.target.value)}
+                                                            className="mt-1 w-full rounded-lg border px-3 py-2 font-bold text-[#800020]"
+                                                        />
+                                                    </label>
+
+                                                    <label className="block">
+                                                        <span className="text-xs font-bold text-gray-500">
+                                                            Email
+                                                        </span>
+                                                        <input
+                                                            type="email"
+                                                            value={u.email || ""}
+                                                            onChange={(e) =>
+                                                                setUsers((prevUsers) =>
+                                                                    prevUsers.map((user) =>
+                                                                        user._id === u._id
+                                                                            ? { ...user, email: e.target.value }
+                                                                            : user
+                                                                    )
+                                                                )
+                                                            }
+                                                            onBlur={(e) => updateAccess(u._id, "email", e.target.value)}
+                                                            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm text-gray-700"
+                                                        />
+                                                    </label>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <h3 className="text-lg font-bold text-[#800020]">
+                                                        {u.fullName || "-"}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 break-all">
+                                                        {u.email || "-"}
+                                                    </p>
+                                                </>
+                                            )}
                                             <p className="text-sm text-gray-600">{u.mobile || "-"}</p>
                                         </div>
 
@@ -246,11 +352,13 @@ export default function AdminUsers() {
                                                     onChange={(e) =>
                                                         updateAccess(u._id, "role", e.target.value)
                                                     }
+                                                    disabled={!canEditFullAccess}
                                                     className="mt-1 w-full border rounded-lg px-3 py-2"
                                                 >
                                                     <option value="user">user</option>
                                                     <option value="executive">executive</option>
                                                     <option value="admin">admin</option>
+                                                    <option value="oper_admin">oper_admin</option>
                                                     <option value="super_admin">super_admin</option>
                                                 </select>
                                             </div>
@@ -264,6 +372,7 @@ export default function AdminUsers() {
                                                     onChange={(e) =>
                                                         updateAccess(u._id, "status", e.target.value)
                                                     }
+                                                    disabled={!canEditFullAccess}
                                                     className="mt-1 w-full border rounded-lg px-3 py-2"
                                                 >
                                                     <option value="pending">pending</option>
@@ -281,11 +390,12 @@ export default function AdminUsers() {
                                                     onChange={(e) =>
                                                         updateAccess(u._id, "membershipPlan", e.target.value)
                                                     }
+                                                    disabled={!canEditFullAccess}
                                                     className="mt-1 w-full border rounded-lg px-3 py-2"
                                                 >
                                                     <option value="free">free</option>
                                                     <option value="premium">premium</option>
-                                                    <option value="assisted">assisted</option>
+                                                    <option value="elite">elite</option>
                                                 </select>
                                             </div>
 

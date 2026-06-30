@@ -20,6 +20,12 @@ const generateToken = (userId) => {
     );
 };
 
+const getExpectedGender = (registeringFor) => {
+    if (["Son", "Brother"].includes(registeringFor)) return "Groom";
+    if (["Daughter", "Sister"].includes(registeringFor)) return "Bride";
+    return "";
+};
+
 
 
 export const registerUser = async (req, res) => {
@@ -32,6 +38,15 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Please fill all required fields",
+            });
+        }
+
+        const expectedGender = getExpectedGender(registeringFor);
+
+        if (expectedGender && gender !== expectedGender) {
+            return res.status(400).json({
+                success: false,
+                message: `${registeringFor} registration should be selected as ${expectedGender}`,
             });
         }
 

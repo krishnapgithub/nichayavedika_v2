@@ -1,9 +1,16 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 
+const isSuperAdmin = (user) => user?.role === "super_admin";
+const isPrivilegedUser = (user) => user?.role && user.role !== "user";
+
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find()
+        const filter = isSuperAdmin(req.user)
+            ? {}
+            : { role: "user" };
+
+        const users = await User.find(filter)
             .select("-password")
             .sort({ createdAt: -1 });
 
@@ -19,8 +26,88 @@ export const getAllUsers = async (req, res) => {
 export const updateUserAccess = async (req, res) => {
     try {
         const { id } = req.params;
+        const targetUser = await User.findById(id).select("-password");
+
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        if (String(req.user._id || req.user.id) === String(id) && req.body.isActive === false) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot deactivate your own account",
+            });
+        }
+
+        if (!isSuperAdmin(req.user)) {
+            if (isPrivilegedUser(targetUser)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Only Super Admin can manage admin accounts",
+                });
+            }
+
+            const requestedFields = Object.keys(req.body || {});
+            const allowedFields = ["isActive"];
+            const hasRestrictedField = requestedFields.some((field) => !allowedFields.includes(field));
+
+            if (hasRestrictedField) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin can only activate or deactivate regular users",
+                });
+            }
+        }
 
         const updateData = {};
+
+        if (isSuperAdmin(req.user) && req.body.fullName !== undefined) {
+            const fullName = String(req.body.fullName || "").trim();
+
+            if (!fullName) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Display name is required",
+                });
+            }
+
+            if (fullName.length > 200) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Display name cannot exceed 200 characters",
+                });
+            }
+
+            updateData.fullName = fullName;
+        }
+
+        if (isSuperAdmin(req.user) && req.body.email !== undefined) {
+            const email = String(req.body.email || "").trim().toLowerCase();
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid email address",
+                });
+            }
+
+            const existingUser = await User.findOne({
+                email,
+                _id: { $ne: id },
+            });
+
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Another account already uses this email address",
+                });
+            }
+
+            updateData.email = email;
+        }
 
         if (req.body.role !== undefined) {
             updateData.role = req.body.role;
@@ -48,7 +135,7 @@ export const updateUserAccess = async (req, res) => {
             { returnDocument: "after" }
         ).select("-password");
 
-        console.log("UPDATED USER:", user.email, user.isActive);
+        console.log("UPDATED USER:", user?.email, user?.isActive);
 
         res.json({
             success: true,
@@ -74,6 +161,22 @@ export const resetUserPassword = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Password must be at least 6 characters",
+            });
+        }
+
+        const targetUser = await User.findById(id).select("-password");
+
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        if (!isSuperAdmin(req.user) && isPrivilegedUser(targetUser)) {
+            return res.status(403).json({
+                success: false,
+                message: "Only Super Admin can reset admin account passwords",
             });
         }
 
