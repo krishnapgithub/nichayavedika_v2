@@ -10,6 +10,7 @@ const API_BASE_URL =
 export default function AdminUsers() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [quickSearch, setQuickSearch] = useState("");
 
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const token = localStorage.getItem("token");
@@ -19,6 +20,20 @@ export default function AdminUsers() {
     const isSuperAdmin = userRole === "super_admin";
     const canManageUsers = userRole === "admin" || userRole === "super_admin";
     const canEditFullAccess = isSuperAdmin;
+    const canEditGender = canManageUsers;
+    const normalizedQuickSearch = quickSearch.trim().toLowerCase();
+    const displayedUsers = normalizedQuickSearch
+        ? users.filter((user) =>
+            [
+                user.fullName,
+                user.email,
+                user.mobile,
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(normalizedQuickSearch)
+        )
+        : users;
 
     const authConfig = {
         headers: {
@@ -131,6 +146,26 @@ export default function AdminUsers() {
                         </p>
                     </div>
 
+                    {canManageUsers && (
+                        <div className="mb-5 rounded-2xl bg-white p-4 shadow">
+                            <label className="block">
+                                <span className="text-xs font-bold uppercase text-gray-500">
+                                    Quick Search
+                                </span>
+                                <input
+                                    type="search"
+                                    value={quickSearch}
+                                    onChange={(event) => setQuickSearch(event.target.value)}
+                                    placeholder="Search by name, email, or phone"
+                                    className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-[#800020]"
+                                />
+                            </label>
+                            <p className="mt-2 text-sm text-gray-500">
+                                Showing {displayedUsers.length} of {users.length} users
+                            </p>
+                        </div>
+                    )}
+
                     {loading ? (
                         <div className="bg-white rounded-2xl shadow p-6 text-center font-semibold text-[#800020]">
                             Loading users...
@@ -139,12 +174,13 @@ export default function AdminUsers() {
                         <>
                             {/* Desktop / Tablet Table */}
                             <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
-                                <table className="min-w-[1050px] w-full text-sm">
+                                <table className="min-w-[1150px] w-full text-sm">
                                     <thead className="bg-[#800020] text-white">
                                         <tr>
                                             <th className="p-3 text-left">Name</th>
                                             <th className="p-3 text-left">Email</th>
                                             <th className="p-3 text-left">Mobile</th>
+                                            <th className="p-3 text-left">Gender</th>
                                             <th className="p-3 text-left">Role</th>
                                             <th className="p-3 text-left">Status</th>
                                             <th className="p-3 text-left">Membership</th>
@@ -154,7 +190,15 @@ export default function AdminUsers() {
                                     </thead>
 
                                     <tbody>
-                                        {users.map((u) => (
+                                        {displayedUsers.length === 0 && (
+                                            <tr>
+                                                <td colSpan="9" className="p-6 text-center text-gray-600">
+                                                    {quickSearch ? "No users match your search." : "No users found."}
+                                                </td>
+                                            </tr>
+                                        )}
+
+                                        {displayedUsers.map((u) => (
                                             <tr key={u._id} className="border-b">
                                                 <td className="p-3">
                                                     {canEditFullAccess ? (
@@ -198,6 +242,24 @@ export default function AdminUsers() {
                                                     )}
                                                 </td>
                                                 <td className="p-3">{u.mobile || "-"}</td>
+
+                                                <td className="p-3">
+                                                    {canEditGender ? (
+                                                        <select
+                                                            value={u.gender || ""}
+                                                            onChange={(e) =>
+                                                                updateAccess(u._id, "gender", e.target.value)
+                                                            }
+                                                            className="w-full border rounded px-2 py-1"
+                                                        >
+                                                            <option value="">Select</option>
+                                                            <option value="Bride">Bride</option>
+                                                            <option value="Groom">Groom</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span className="font-semibold text-gray-700">{u.gender || "-"}</span>
+                                                    )}
+                                                </td>
 
                                                 <td className="p-3">
                                                     {canEditFullAccess ? (
@@ -283,7 +345,7 @@ export default function AdminUsers() {
 
                             {/* Mobile Cards */}
                             <div className="md:hidden space-y-4">
-                                {users.map((u) => (
+                                {displayedUsers.map((u) => (
                                     <div key={u._id} className="bg-white rounded-2xl shadow p-4">
                                         <div className="mb-4">
                                             {canEditFullAccess ? (
@@ -340,9 +402,30 @@ export default function AdminUsers() {
                                                 </>
                                             )}
                                             <p className="text-sm text-gray-600">{u.mobile || "-"}</p>
+                                            <p className="text-sm font-semibold text-gray-700">
+                                                Gender: {u.gender || "-"}
+                                            </p>
                                         </div>
 
                                         <div className="space-y-3">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">
+                                                    Gender
+                                                </label>
+                                                <select
+                                                    value={u.gender || ""}
+                                                    onChange={(e) =>
+                                                        updateAccess(u._id, "gender", e.target.value)
+                                                    }
+                                                    disabled={!canEditGender}
+                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                                                >
+                                                    <option value="">Select</option>
+                                                    <option value="Bride">Bride</option>
+                                                    <option value="Groom">Groom</option>
+                                                </select>
+                                            </div>
+
                                             <div>
                                                 <label className="text-xs font-bold text-gray-500">
                                                     Role
@@ -421,9 +504,9 @@ export default function AdminUsers() {
                                     </div>
                                 ))}
 
-                                {users.length === 0 && (
+                                {displayedUsers.length === 0 && (
                                     <div className="bg-white rounded-2xl shadow p-6 text-center">
-                                        No users found.
+                                        {quickSearch ? "No users match your search." : "No users found."}
                                     </div>
                                 )}
                             </div>

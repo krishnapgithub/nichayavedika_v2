@@ -15,6 +15,21 @@ import ProfileCard from "../components/ProfileCard";
 import ProfileViewModal from "../components/ProfileViewModal.jsx";
 import toast from "react-hot-toast";
 
+const getSavedUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+        return null;
+    }
+};
+
+const getOppositeGender = (gender) => {
+    const value = String(gender || "").trim().toLowerCase();
+
+    if (value === "bride") return "Groom";
+    if (value === "groom") return "Bride";
+    return "";
+};
 
 function Home() {
 
@@ -29,6 +44,12 @@ function Home() {
         gender: "",
         ageRange: "",
     });
+    const savedUser = getSavedUser();
+    const token = localStorage.getItem("token");
+    const userRole = savedUser?.role?.toLowerCase?.().trim();
+    const isAdminUser = ["admin", "oper_admin", "super_admin"].includes(userRole);
+    const oppositeGender = !isAdminUser ? getOppositeGender(savedUser?.gender) : "";
+    const shouldLockGender = Boolean(savedUser && token && oppositeGender);
 
     useEffect(() => {
         fetchProfiles();
@@ -43,6 +64,10 @@ function Home() {
                 params: {
                     page: 1,
                     limit: 4,
+                    ...(shouldLockGender ? { gender: oppositeGender } : {}),
+                },
+                headers: {
+                    Authorization: token ? `Bearer ${token}` : "",
                 },
             });
 
@@ -85,7 +110,11 @@ function Home() {
 
         if (searchText) params.set("search", searchText);
 
-        if (homeFilters.gender) params.set("gender", homeFilters.gender);
+        if (shouldLockGender) {
+            params.set("gender", oppositeGender);
+        } else if (homeFilters.gender) {
+            params.set("gender", homeFilters.gender);
+        }
 
         if (homeFilters.ageRange) {
             const [ageFrom, ageTo] = homeFilters.ageRange.split("-");
@@ -203,19 +232,26 @@ function Home() {
                             <div className="grid md:grid-cols-4 gap-4">
 
                                 <select
-                                    value={homeFilters.gender}
+                                    value={shouldLockGender ? oppositeGender : homeFilters.gender}
                                     onChange={(event) =>
                                         setHomeFilters({
                                             ...homeFilters,
                                             gender: event.target.value,
                                         })
                                     }
+                                    disabled={shouldLockGender}
                                     className="border border-gray-200 p-3 rounded-xl"
                                 >
                                     <option value="">Bride / Groom</option>
                                     <option value="Bride">Bride</option>
                                     <option value="Groom">Groom</option>
                                 </select>
+
+                                {shouldLockGender && (
+                                    <p className="rounded-xl border border-amber-200 bg-[#fff8f2] px-3 py-2 text-sm font-semibold text-[#800020] md:col-span-4">
+                                        Showing only {oppositeGender} profiles for your account.
+                                    </p>
+                                )}
 
                                 <select
                                     value={homeFilters.ageRange}

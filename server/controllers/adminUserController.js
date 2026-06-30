@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
+import Profile from "../models/Profile.js";
 
 const isSuperAdmin = (user) => user?.role === "super_admin";
 const isPrivilegedUser = (user) => user?.role && user.role !== "user";
+const canEditUserGender = (user) => ["admin", "super_admin"].includes(user?.role);
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -51,13 +53,13 @@ export const updateUserAccess = async (req, res) => {
             }
 
             const requestedFields = Object.keys(req.body || {});
-            const allowedFields = ["isActive"];
+            const allowedFields = ["isActive", "gender"];
             const hasRestrictedField = requestedFields.some((field) => !allowedFields.includes(field));
 
             if (hasRestrictedField) {
                 return res.status(403).json({
                     success: false,
-                    message: "Admin can only activate or deactivate regular users",
+                    message: "Admin can only activate, deactivate, or update gender for regular users",
                 });
             }
         }
@@ -109,6 +111,19 @@ export const updateUserAccess = async (req, res) => {
             updateData.email = email;
         }
 
+        if (canEditUserGender(req.user) && req.body.gender !== undefined) {
+            const gender = String(req.body.gender || "").trim();
+
+            if (!["Bride", "Groom"].includes(gender)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Gender must be Bride or Groom",
+                });
+            }
+
+            updateData.gender = gender;
+        }
+
         if (req.body.role !== undefined) {
             updateData.role = req.body.role;
         }
@@ -136,6 +151,13 @@ export const updateUserAccess = async (req, res) => {
         ).select("-password");
 
         console.log("UPDATED USER:", user?.email, user?.isActive);
+
+        if (user && Object.prototype.hasOwnProperty.call(updateData, "gender")) {
+            await Profile.findOneAndUpdate(
+                { user: user._id },
+                { gender: updateData.gender }
+            );
+        }
 
         res.json({
             success: true,

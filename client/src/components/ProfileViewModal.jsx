@@ -443,7 +443,6 @@ function ProfileSection({ title, children }) {
 function AdminProfileEditor({ draft, onChange }) {
     const fields = [
         ["fullName", "Full Name"],
-        ["gender", "Gender"],
         ["dateOfBirth", "Date of Birth", "date"],
         ["age", "Age"],
         ["height", "Height"],
@@ -497,6 +496,19 @@ function AdminProfileEditor({ draft, onChange }) {
                             />
                         </label>
                     ))}
+
+                    <label className="rounded-xl border border-rose-100 bg-white p-3">
+                        <span className="text-xs font-semibold uppercase text-gray-500">Gender</span>
+                        <select
+                            value={draft.gender || ""}
+                            onChange={(event) => onChange("gender", event.target.value)}
+                            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-[#800020]"
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="Bride">Bride</option>
+                            <option value="Groom">Groom</option>
+                        </select>
+                    </label>
 
                     <label className="rounded-xl border border-rose-100 bg-white p-3 sm:col-span-2">
                         <span className="text-xs font-semibold uppercase text-gray-500">Family Details</span>

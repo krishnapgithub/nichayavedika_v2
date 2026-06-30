@@ -959,6 +959,16 @@ export const updateProfileStatus = async (req, res) => {
             }
         });
 
+        if (
+            Object.prototype.hasOwnProperty.call(profileUpdates, "gender") &&
+            !["Bride", "Groom"].includes(profileUpdates.gender)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Gender must be Bride or Groom",
+            });
+        }
+
         const uploadedPrimaryPhoto = req.files?.profilePhoto?.[0];
         const stylishUploads = [
             ["stylishPhoto0", 0],
@@ -1003,6 +1013,12 @@ export const updateProfileStatus = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: "Profile not found",
+            });
+        }
+
+        if (Object.prototype.hasOwnProperty.call(profileUpdates, "gender")) {
+            await User.findByIdAndUpdate(profile.user, {
+                gender: profileUpdates.gender,
             });
         }
 
