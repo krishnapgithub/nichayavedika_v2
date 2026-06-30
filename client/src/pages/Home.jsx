@@ -115,7 +115,7 @@ function Home() {
                     {/* Hero */}
 
                     <section
-                        className="relative overflow-hidden text-white min-h-[430px] flex items-center rounded-b-[36px] rounded-t-none shadow-2xl border-x border-b border-rose-100 pb-24 z-10"
+                        className="relative overflow-hidden text-white min-h-[330px] flex items-center rounded-b-[36px] rounded-t-none shadow-2xl border-x border-b border-rose-100 pb-14 z-10"
                     >
                         <div className="absolute inset-0 bg-[#800020]"></div>
                         <img
@@ -152,10 +152,10 @@ function Home() {
     "
                         />
 
-                        <div className="relative z-10 px-10 pt-6 pb-6 w-full">
+                        <div className="relative z-10 px-10 pt-4 pb-4 w-full">
                             <div className="max-w-2xl">
 
-                                <h1 className="text-xl md:text-3xl lg:text-[34px] font-bold leading-snug px-4 text-left">
+                                <h1 className="text-xl md:text-3xl lg:text-[32px] font-bold leading-snug px-4 text-left">
                                     చక్కని చిరకాల అనుబంధానికి
                                     <br />
                                     ముచ్చటైన వేదిక... మన నిశ్చయ!!!
@@ -189,7 +189,7 @@ function Home() {
                     {/* Search */}
 
                     {/* Floating Search Card */}
-                    <div className="relative z-20 max-w-5xl mx-auto -mt-10 px-6">
+                    <div className="relative z-20 max-w-5xl mx-auto -mt-14 px-6">
                         <div className="bg-white rounded-3xl shadow-2xl p-5 border border-gray-100">
 
                             <div className="grid md:grid-cols-4 gap-4">
@@ -253,7 +253,7 @@ function Home() {
                     
                     {/* Profiles */}
                     {/* Profiles */}
-                    <section className="bg-gradient-to-b from-white to-rose-50 px-0 py-12">
+                    <section className="bg-gradient-to-b from-white to-rose-50 px-0 pb-10 pt-8">
                         <div className="max-w-7xl mx-auto px-6">
 
                             <h2 className="text-4xl font-bold text-center text-gray-900 mb-2">

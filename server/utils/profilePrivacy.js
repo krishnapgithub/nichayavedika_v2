@@ -4,9 +4,9 @@
 // ==========================================
 
 export const maskName = (name = "") => {
-    if (!name) return "Profile Name Hidden";
+    if (!name) return "Premium Match";
 
-    return name.charAt(0).toUpperCase() + "*****";
+    return `${name.charAt(0).toUpperCase()} • Premium Match`;
 };
 
 export const getSafeProfile = (profile, user) => {

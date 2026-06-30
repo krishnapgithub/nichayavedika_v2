@@ -304,8 +304,8 @@ export const getProfileById = async (req, res) => {
             profile: {
                 _id: profile._id,
                 fullName: profile.fullName
-                    ? profile.fullName.charAt(0).toUpperCase() + "*****"
-                    : "Profile Name Hidden",
+                    ? `${profile.fullName.charAt(0).toUpperCase()} • Premium Match`
+                    : "Premium Match",
                 age: profile.age,
                 gender: profile.gender,
                 height: profile.height,

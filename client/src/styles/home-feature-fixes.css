@@ -34,16 +34,35 @@ html[data-logged-in="true"] body > div > div.max-w-7xl.mx-auto.px-6 {
 }
 
 html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    border: 1px solid #f3d58b;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fff7db, #ffffff);
+    padding: 4px 12px;
     font-size: 0;
+    box-shadow: 0 4px 10px rgba(128, 0, 32, 0.08);
 }
 
-html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight::first-letter {
-    font-size: 18px;
+html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight::before {
+    content: "\2665";
+    color: #d97706;
+    font-size: 14px;
+    line-height: 1;
 }
 
 html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight::after {
-    content: "*****";
-    font-size: 18px;
+    content: "Premium Match";
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #800020;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.25;
 }
 
 .bg-rose-50.rounded-3xl.p-8.text-center.shadow-md {
@@ -118,7 +137,15 @@ div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] {
     margin-top: -66px !important;
 }
 
+div[class*="z-20"][class*="max-w-5xl"][class*="-mt-14"][class*="px-6"] {
+    margin-top: -76px !important;
+}
+
 div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] > div {
+    border-radius: 28px;
+}
+
+div[class*="z-20"][class*="max-w-5xl"][class*="-mt-14"][class*="px-6"] > div {
     border-radius: 28px;
 }
 
@@ -146,11 +173,19 @@ section[class*="bg-gradient-to-b"][class*="from-white"][class*="to-rose-50"][cla
     div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] {
         margin-top: -56px !important;
     }
+
+    div[class*="z-20"][class*="max-w-5xl"][class*="-mt-14"][class*="px-6"] {
+        margin-top: -60px !important;
+    }
 }
 
 @media (max-width: 768px) {
     div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] {
         margin-top: -32px !important;
+    }
+
+    div[class*="z-20"][class*="max-w-5xl"][class*="-mt-14"][class*="px-6"] {
+        margin-top: -38px !important;
     }
 
     section[class*="bg-gradient-to-b"][class*="from-white"][class*="to-rose-50"][class*="-mt-10"] {

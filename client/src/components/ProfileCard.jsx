@@ -20,6 +20,12 @@ export default function ProfileCard({ profile, onView }) {
     const aboutText = profile.aboutMe || "Traditional family with good values.";
     const aboutPreview = aboutText.substring(0, 120);
     const hasMoreAbout = aboutText.length > 120;
+    const rawDisplayName = profile.fullName || "Premium Match";
+    const isStarMaskedName = rawDisplayName.includes("***");
+    const displayName = isStarMaskedName
+        ? `${rawDisplayName.charAt(0).toUpperCase()} • Premium Match`
+        : rawDisplayName;
+    const isPremiumMaskedName = displayName.includes("Premium Match");
 
     return (
         <div
@@ -63,16 +69,23 @@ export default function ProfileCard({ profile, onView }) {
                 {/* Profile Info */}
                 <div className="flex-1 min-w-0">
 
-                    <h3
-                        className="
-                            text-lg
-                            font-bold
-                            text-[#800020]
-                            leading-tight
-                        "
-                    >
-                        {profile.fullName || "Premium Match"}
-                    </h3>
+                    {isPremiumMaskedName ? (
+                        <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-white px-3 py-1 text-sm font-bold text-[#800020] shadow-sm">
+                            <span className="text-amber-500">♥</span>
+                            <span className="truncate">{displayName}</span>
+                        </div>
+                    ) : (
+                        <h3
+                            className="
+                                text-lg
+                                font-bold
+                                text-[#800020]
+                                leading-tight
+                            "
+                        >
+                            {displayName}
+                        </h3>
+                    )}
 
                     {profile.profileNumber && (
                         <p className="mt-1 inline-flex rounded-full bg-[#fff8f2] px-3 py-1 text-xs font-bold text-[#800020] ring-1 ring-[#800020]/15">
