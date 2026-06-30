@@ -15,6 +15,12 @@ import {
     FaTimes
 } from "react-icons/fa";
 
+const legalSections = [
+    { id: "privacy", label: "Privacy" },
+    { id: "purpose", label: "Matrimony Purpose" },
+    { id: "rules", label: "Safety Rules" },
+];
+
 export default function Header() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -22,6 +28,7 @@ export default function Header() {
     const [user, setUser] = useState(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [infoModal, setInfoModal] = useState(null);
+    const [activeLegalSection, setActiveLegalSection] = useState("");
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -98,13 +105,19 @@ export default function Header() {
             event.preventDefault();
 
             if (isLoggedIn) {
+                const buttonText = button?.textContent.trim() || "";
+                const cardText = event.target.closest(".group")?.textContent || "";
+                const selectedPlan = buttonText.includes("Elite") || cardText.includes("Choose Elite")
+                    ? "elite"
+                    : "premium";
+
                 if (isEliteMember) return;
 
-                if (isPremiumMember && button?.textContent.trim() !== "Choose Elite") {
+                if (isPremiumMember && selectedPlan !== "elite") {
                     return;
                 }
 
-                navigate("/membership");
+                navigate(`/payment/${selectedPlan}`);
                 return;
             }
 
@@ -127,13 +140,15 @@ export default function Header() {
         setInfoModal(null);
 
         if (isLoggedIn) {
+            const selectedPlan = planTitle === "Elite" ? "elite" : "premium";
+
             if (isEliteMember) return;
 
-            if (isPremiumMember && planTitle !== "Elite") {
+            if (isPremiumMember && selectedPlan !== "elite") {
                 return;
             }
 
-            navigate("/membership");
+            navigate(`/payment/${selectedPlan}`);
             return;
         }
 
@@ -148,8 +163,96 @@ export default function Header() {
         return isActive ? "nav-link active" : "nav-link";
     };
 
+    const accountLinkClass = (path) =>
+        location.pathname === path && !activeLegalSection ? "account-menu-link active" : "account-menu-link";
+
+    const legalSectionLinkClass = (sectionId) =>
+        location.pathname === "/legal" && activeLegalSection === sectionId
+            ? "account-menu-link active"
+            : "account-menu-link";
+
+    useEffect(() => {
+        if (location.pathname !== "/legal") {
+            setActiveLegalSection("");
+            return;
+        }
+
+        const updateActiveLegalSection = () => {
+            const headerOffset = 190;
+            const visibleSection = legalSections
+                .map((section) => ({
+                    id: section.id,
+                    top: document.getElementById(section.id)?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY,
+                }))
+                .filter((section) => section.top <= headerOffset)
+                .sort((a, b) => b.top - a.top)[0];
+
+            setActiveLegalSection(visibleSection?.id || window.location.hash.replace("#", ""));
+        };
+
+        updateActiveLegalSection();
+        window.addEventListener("scroll", updateActiveLegalSection, { passive: true });
+        window.addEventListener("hashchange", updateActiveLegalSection);
+
+        return () => {
+            window.removeEventListener("scroll", updateActiveLegalSection);
+            window.removeEventListener("hashchange", updateActiveLegalSection);
+        };
+    }, [location.pathname]);
+
+    const goToLegalSection = (sectionId) => {
+        setActiveLegalSection(sectionId);
+
+        if (location.pathname !== "/legal") {
+            navigate(`/legal#${sectionId}`);
+            return;
+        }
+
+        window.history.replaceState(null, "", `/legal#${sectionId}`);
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+    };
+
+    const goToLegalHome = () => {
+        setActiveLegalSection("");
+        setIsMobileMenuOpen(false);
+
+        if (location.pathname !== "/legal") {
+            navigate("/legal");
+            return;
+        }
+
+        window.history.replaceState(null, "", "/legal");
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    };
+
+    const goToHome = () => {
+        setActiveLegalSection("");
+        setInfoModal(null);
+        setIsMobileMenuOpen(false);
+
+        if (location.pathname !== "/") {
+            navigate("/");
+            window.setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }, 0);
+            return;
+        }
+
+        window.history.replaceState(null, "", "/");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
         <div className="fixed top-0 left-0 w-full z-[9999]">
+            <img
+                src={nvLogo}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none fixed right-6 top-[78px] z-[1] h-[150px] w-[150px] rounded-full object-cover opacity-[0.055] mix-blend-multiply md:right-10 md:h-[190px] md:w-[190px]"
+            />
+
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
             </div>
@@ -186,9 +289,13 @@ export default function Header() {
                         </div>
 
                         <nav className="hidden lg:flex items-center text-sm font-medium">
-                            <Link className={navClass("/")} to="/">
+                            <button
+                                type="button"
+                                className={`${navClass("/")} bg-transparent border-0 cursor-pointer`}
+                                onClick={goToHome}
+                            >
                                 Home
-                            </Link>
+                            </button>
 
                             <span className="mx-4 text-amber-500 text-xl font-bold">|</span>
 
@@ -297,9 +404,9 @@ export default function Header() {
                 {isMobileMenuOpen && (
                     <div className="md:hidden bg-white border-t shadow-lg px-6 py-4 space-y-4">
 
-                        <Link to="/" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                        <button type="button" className="mobile-nav-link" onClick={goToHome}>
                             Home
-                        </Link>
+                        </button>
 
                         <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("membership")}>
                             Membership
@@ -317,6 +424,10 @@ export default function Header() {
                             Success Stories
                         </button>
 
+                        <button type="button" className="mobile-nav-link" onClick={goToLegalHome}>
+                            Legal & Terms
+                        </button>
+
                         <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("muhurthalu")}>
                             ముహూర్తాలు
                         </button>
@@ -328,6 +439,26 @@ export default function Header() {
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 Admin
+                            </Link>
+                        )}
+
+                        {canReviewProfiles && (
+                            <Link
+                                to="/admin/payments"
+                                className="mobile-nav-link"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Payments
+                            </Link>
+                        )}
+
+                        {canReviewProfiles && (
+                            <Link
+                                to="/admin/content"
+                                className="mobile-nav-link"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Pages
                             </Link>
                         )}
 
@@ -392,41 +523,73 @@ export default function Header() {
                 <CreateProfileModal onClose={() => setIsCreateProfileOpen(false)} />
             )}
 
-            {isLoggedIn && (
-                <div className="hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
-
-
-                    <Link className="account-menu-link" data-label="Dashboard" to="/dashboard">
-                        Dashboard
-                    </Link>
-
-                    <button
-                        onClick={() => setIsCreateProfileOpen(true)}
-                        className="account-menu-link"
-                        data-label="Profile"
-                    >
-                        Profile
-                    </button>
-
-                    <Link className="account-menu-link" data-label="Sent" to="/sent-interests">
-                        Sent
-                    </Link>
-
-                    <Link className="account-menu-link" data-label="Received" to="/received-interests">
-                        Received
-                    </Link>
-                    {canReviewProfiles && (
-                        <Link className="account-menu-link" data-label="Admin" to="/admin/profiles">
-                            Admin
+            <div className="hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
+                {isLoggedIn ? (
+                    <>
+                        <Link className={accountLinkClass("/dashboard")} data-label="Dashboard" to="/dashboard">
+                            Dashboard
                         </Link>
-                    )}
-                    {canManageUsers && (
-                        <Link className="account-menu-link" data-label="Super Admin" to="/admin/users">
-                            Super Admin
+
+                        <button
+                            onClick={() => setIsCreateProfileOpen(true)}
+                            className="account-menu-link"
+                            data-label="Profile"
+                        >
+                            Profile
+                        </button>
+
+                        <Link className={accountLinkClass("/sent-interests")} data-label="Sent" to="/sent-interests">
+                            Sent
                         </Link>
-                    )}
-                </div>
-            )}
+
+                        <Link className={accountLinkClass("/received-interests")} data-label="Received" to="/received-interests">
+                            Received
+                        </Link>
+                        {canReviewProfiles && (
+                            <Link className={accountLinkClass("/admin/profiles")} data-label="Admin" to="/admin/profiles">
+                                Admin
+                            </Link>
+                        )}
+                        {canReviewProfiles && (
+                            <Link className={accountLinkClass("/admin/payments")} data-label="Payments" to="/admin/payments">
+                                Payments
+                            </Link>
+                        )}
+                        {canReviewProfiles && (
+                            <Link className={accountLinkClass("/admin/content")} data-label="Pages" to="/admin/content">
+                                Pages
+                            </Link>
+                        )}
+                        {canManageUsers && (
+                            <Link className={accountLinkClass("/admin/users")} data-label="Super Admin" to="/admin/users">
+                                Super Admin
+                            </Link>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <button
+                            type="button"
+                            className={accountLinkClass("/legal")}
+                            data-label="Legal & Terms"
+                            onClick={goToLegalHome}
+                        >
+                            Legal & Terms
+                        </button>
+                        {legalSections.map((section) => (
+                            <button
+                                key={section.id}
+                                type="button"
+                                className={legalSectionLinkClass(section.id)}
+                                data-label={section.label}
+                                onClick={() => goToLegalSection(section.id)}
+                            >
+                                {section.label}
+                            </button>
+                        ))}
+                    </>
+                )}
+            </div>
             <LoginModal
                 isOpen={isLoginOpen}
                 onClose={() => setIsLoginOpen(false)}

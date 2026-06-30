@@ -13,10 +13,14 @@ import Membership from "./pages/Membership.jsx";
 import Events from "./pages/Events.jsx";
 import Contact from "./pages/Contact.jsx";
 import SuccessStories from "./pages/SuccessStories.jsx";
+import Muhurthalu from "./pages/Muhurthalu.jsx";
 import LegalInformation from "./pages/LegalInformation.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminProfiles from "./pages/AdminProfiles.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
+import PaymentCheckout from "./pages/PaymentCheckout.jsx";
+import AdminPayments from "./pages/AdminPayments.jsx";
+import AdminPageContent from "./pages/AdminPageContent.jsx";
 
 
 function ProtectedRoute({ children }) {
@@ -101,9 +105,18 @@ function App() {
                 />
 
                 <Route path="/membership" element={<Membership />} />
+                <Route
+                    path="/payment/:plan"
+                    element={
+                        <ProtectedRoute>
+                            <PaymentCheckout />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route path="/events" element={<Events />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/success-stories" element={<SuccessStories />} />
+                <Route path="/muhurthalu" element={<Muhurthalu />} />
                 <Route path="/legal" element={<LegalInformation />} />
                 <Route
                     path="/admin"
@@ -127,6 +140,22 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <AdminUsers />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/payments"
+                    element={
+                        <ProtectedRoute>
+                            <AdminPayments />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/content"
+                    element={
+                        <ProtectedRoute>
+                            <AdminPageContent />
                         </ProtectedRoute>
                     }
                 />

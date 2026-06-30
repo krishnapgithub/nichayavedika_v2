@@ -1,13 +1,11 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 export default function Dashboard() {
-
-    const API_URL = import.meta.env.VITE_API_URL;
-
+    const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
     const userId = savedUser?._id || savedUser?.id;
-    //const userId = "6a39857828603c403e7c71bf";
 
     const [stats, setStats] = useState({
         sent: 0,
@@ -23,25 +21,23 @@ export default function Dashboard() {
 
     const fetchDashboardStats = async () => {
         try {
-            const sentResponse = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/interests/sent/${userId}`
-            );
+            if (!userId) return;
 
-            const receivedResponse = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/interests/received/${userId}`
-            );
+            const [sentResponse, receivedResponse] = await Promise.all([
+                axios.get(`${API_BASE_URL}/api/interests/sent/${userId}`),
+                axios.get(`${API_BASE_URL}/api/interests/received/${userId}`),
+            ]);
 
             const sent = sentResponse.data.interests || [];
             const received = receivedResponse.data.interests || [];
-
             const all = [...sent, ...received];
 
             setStats({
                 sent: sent.length,
                 received: received.length,
-                pending: all.filter((item) => item.status === "Pending").length,
-                accepted: all.filter((item) => item.status === "Accepted").length,
-                rejected: all.filter((item) => item.status === "Rejected").length,
+                pending: all.filter((item) => String(item.status).toLowerCase() === "pending").length,
+                accepted: all.filter((item) => String(item.status).toLowerCase() === "accepted").length,
+                rejected: all.filter((item) => String(item.status).toLowerCase() === "rejected").length,
             });
         } catch (error) {
             console.error("Dashboard stats failed:", error);
@@ -49,37 +45,34 @@ export default function Dashboard() {
     };
 
     return (
-        <>
+        <div className="min-h-screen bg-[#fff8f2] pt-40 px-4 pb-12">
+            <div className="max-w-6xl mx-auto">
+                <h1 className="text-3xl font-bold text-[#800020] mb-2">
+                    Welcome to NichayaVedika
+                </h1>
 
-            <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
-                <div className="max-w-6xl mx-auto">
-                    <h1 className="text-3xl font-bold text-[#800020] mb-2">
-                        Welcome to NichayaVedika ??
-                    </h1>
+                <p className="text-gray-600 mb-8">
+                    Manage your profile, interests, and matches from one place.
+                </p>
 
-                    <p className="text-gray-600 mb-8">
-                        Manage your profile, interests, and matches from one place.
-                    </p>
+                <div className="grid md:grid-cols-5 gap-4 mb-8">
+                    <StatCard title="Sent" count={stats.sent} />
+                    <StatCard title="Received" count={stats.received} />
+                    <StatCard title="Pending" count={stats.pending} />
+                    <StatCard title="Accepted" count={stats.accepted} />
+                    <StatCard title="Rejected" count={stats.rejected} />
+                </div>
 
-                    <div className="grid md:grid-cols-5 gap-4 mb-8">
-                        <StatCard title="?? Sent" count={stats.sent} />
-                        <StatCard title="?? Received" count={stats.received} />
-                        <StatCard title="? Pending" count={stats.pending} />
-                        <StatCard title="? Accepted" count={stats.accepted} />
-                        <StatCard title="? Rejected" count={stats.rejected} />
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <DashboardCard title="?? My Profile" link="/create-profile" />
-                        <DashboardCard title="?? Search Profiles" link="/search" />
-                        <DashboardCard title="?? Sent Interests" link="/sent-interests" />
-                        <DashboardCard title="?? Received Interests" link="/received-interests" />
-                        <DashboardCard title="? Membership" link="/" />
-                        <DashboardCard title="?? Settings" link="/" />
-                    </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                    <DashboardCard title="My Profile" link="/create-profile" />
+                    <DashboardCard title="Search Profiles" link="/search" />
+                    <DashboardCard title="Sent Interests" link="/sent-interests" />
+                    <DashboardCard title="Received Interests" link="/received-interests" />
+                    <DashboardCard title="Membership" link="/membership" />
+                    <DashboardCard title="Settings" link="/" />
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 
@@ -104,4 +97,3 @@ function DashboardCard({ title, link }) {
         </Link>
     );
 }
-

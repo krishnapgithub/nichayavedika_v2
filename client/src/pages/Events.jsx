@@ -1,25 +1,23 @@
 ﻿
 import "../styles/events.css";
+import usePageContent from "../hooks/usePageContent";
 
 export default function Events() {
-    const events = [
+    const fallbackEvents = [
         {
             title: "Telugu Bride & Groom Meet",
-            date: "Coming Soon",
-            venue: "Hyderabad",
-            seats: "Limited Seats",
-            contact: "+91 XXXXX XXXXX",
-            description: "A premium family-friendly gathering for Telugu brides, grooms, and parents.",
+            metaLabel: "Coming Soon",
+            subtitle: "A premium family-friendly gathering for Telugu brides, grooms, and parents.",
+            detailLines: ["Venue: Hyderabad", "Limited Seats", "+91 XXXXX XXXXX"],
         },
         {
             title: "Online Matrimony Introduction Event",
-            date: "Coming Soon",
-            venue: "Online",
-            seats: "Open",
-            contact: "info@nichayavedika.com",
-            description: "Meet suitable profiles through a guided online introduction session.",
+            metaLabel: "Coming Soon",
+            subtitle: "Meet suitable profiles through a guided online introduction session.",
+            detailLines: ["Venue: Online", "Open", "info@nichayavedika.com"],
         },
     ];
+    const { items: events } = usePageContent("events", fallbackEvents);
 
     return (
         <>
@@ -37,13 +35,13 @@ export default function Events() {
                                 <div className="event-badge">Event</div>
 
                                 <h2>{event.title}</h2>
-                                <p className="event-description">{event.description}</p>
+                                <p className="event-description">{event.subtitle}</p>
 
                                 <div className="event-info">
-                                    <p>?? {event.date}</p>
-                                    <p>?? {event.venue}</p>
-                                    <p>?? {event.seats}</p>
-                                    <p>?? {event.contact}</p>
+                                    {event.metaLabel && <p>{event.metaLabel}</p>}
+                                    {(event.detailLines || []).map((line) => (
+                                        <p key={line}>{line}</p>
+                                    ))}
                                 </div>
 
                                 <button>Register Interest</button>

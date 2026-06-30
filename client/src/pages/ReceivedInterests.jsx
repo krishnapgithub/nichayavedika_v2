@@ -18,13 +18,15 @@ export default function ReceivedInterests() {
         try {
             const savedUser = JSON.parse(localStorage.getItem("user"));
 
-            if (!savedUser?._id) {
+            const userId = savedUser?._id || savedUser?.id;
+
+            if (!userId) {
                 toast.error("Please login to view received interests");
                 return;
             }
 
             const response = await axios.get(
-                `${API_BASE_URL}/api/interests/received/${savedUser._id}`
+                `${API_BASE_URL}/api/interests/received/${userId}`
             );
 
             setInterests(response.data.interests || []);
@@ -51,7 +53,7 @@ export default function ReceivedInterests() {
     return (
         <>
 
-            <div className="min-h-screen bg-[#fff8f2] pt-32 px-4 pb-12">
+            <div className="min-h-screen bg-[#fff8f2] pt-40 px-4 pb-12">
                 <div className="max-w-5xl mx-auto">
                     <h1 className="text-3xl font-bold text-[#800020] mb-6">
                         Received Interests

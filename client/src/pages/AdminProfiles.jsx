@@ -374,58 +374,57 @@ export default function AdminProfiles() {
 
                     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
                         {profiles.map((profile) => (
-                            <div key={profile._id} className="rounded-2xl bg-white p-5 shadow">
-                                <div className="flex gap-4 xl:block">
-                                    <img
-                                        src={getPhotoUrl(profile.profilePhoto)}
-                                        alt={profile.fullName || "Profile"}
-                                        className="h-24 w-24 flex-shrink-0 rounded-xl border border-rose-100 bg-[#fff8f2] object-contain p-2 shadow-sm xl:mb-4 xl:h-40 xl:w-full"
-                                    />
+                            <div
+                                key={profile._id}
+                                className="relative overflow-hidden rounded-[28px] border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                            >
+                                <div className="flex gap-4 items-start">
+                                    <div className="w-20 flex-shrink-0">
+                                        <img
+                                            src={getPhotoUrl(profile.profilePhoto)}
+                                            alt={profile.fullName || "Profile"}
+                                            className="h-20 w-20 rounded-[18px] border border-rose-100 bg-[#fff8f2] object-cover shadow-md"
+                                        />
+                                        <p className={`mt-2 flex w-full justify-center rounded-full px-2 py-1 text-[10px] font-bold leading-tight ${getStatusClass(profile.status)}`}>
+                                            {getStatusLabel(profile.status)}
+                                        </p>
+                                    </div>
 
                                     <div className="min-w-0">
                                         {profile.profileNumber && (
-                                            <p className="mb-1 text-xs font-bold text-amber-700">
+                                            <p className="mb-2 inline-flex rounded-full bg-[#fff8f2] px-3 py-1 text-xs font-bold text-[#800020] ring-1 ring-[#800020]/15">
                                                 {profile.profileNumber}
                                             </p>
                                         )}
 
-                                        <h2 className="text-xl font-bold text-[#800020]">
+                                        <h2 className="truncate text-lg font-bold leading-tight text-[#800020]">
                                             {profile.fullName || "Profile"}
                                         </h2>
 
-                                        <p className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(profile.status)}`}>
-                                            {getStatusLabel(profile.status)}
+                                        <p className="mt-2 text-[15px] leading-5 text-gray-700">
+                                            <span className="font-medium">Age:</span>{" "}
+                                            {profile.age || "N/A"}
                                         </p>
 
-                                        <p className="text-sm text-gray-700">
-                                            {profile.gender || "Gender N/A"} | {profile.age || "Age N/A"} yrs | {profile.height || "Height N/A"}
-                                        </p>
-                                        <p className="text-sm text-gray-700">
-                                            {profile.education || "Education N/A"} | {profile.occupation || "Occupation N/A"}
-                                        </p>
-                                        <p className="text-sm text-gray-700">
-                                            {[profile.city, profile.state].filter(Boolean).join(", ") || "Location N/A"}
+                                        <p className="text-[15px] leading-5 text-gray-700">
+                                            {profile.occupation || "Occupation N/A"}
                                         </p>
                                     </div>
                                 </div>
 
-                                <p className="mt-4 line-clamp-3 text-gray-600">
-                                    {profile.aboutMe || "No profile summary provided."}
-                                </p>
-
-                                <div className="mt-5 grid gap-3">
+                                <div className="mt-5 grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedProfile(profile)}
-                                        className="rounded-lg border border-[#800020] px-4 py-2 font-semibold text-[#800020]"
+                                        className="rounded-lg border border-[#800020] px-3 py-2 text-sm font-semibold text-[#800020] hover:bg-white"
                                     >
-                                        View Profile
+                                        View
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={() => updateStatus(profile._id, "approved")}
-                                        className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white"
+                                        className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white"
                                     >
                                         Approve
                                     </button>
@@ -433,7 +432,7 @@ export default function AdminProfiles() {
                                     <button
                                         type="button"
                                         onClick={() => updateStatus(profile._id, "rejected")}
-                                        className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
+                                        className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white"
                                     >
                                         Reject
                                     </button>
@@ -441,7 +440,7 @@ export default function AdminProfiles() {
                                     <button
                                         type="button"
                                         onClick={() => updateStatus(profile._id, "deactivated")}
-                                        className="rounded-lg bg-gray-700 px-4 py-2 font-semibold text-white"
+                                        className="rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white"
                                     >
                                         Deactivate
                                     </button>

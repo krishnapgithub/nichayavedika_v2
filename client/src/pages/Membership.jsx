@@ -1,7 +1,10 @@
 ﻿
 import "../styles/membership.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Membership() {
+    const navigate = useNavigate();
+
     return (
         <>
 
@@ -22,7 +25,7 @@ export default function Membership() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">?0</span>
+                                <span className="text-4xl font-bold">INR 0</span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-gray-600 text-sm">
@@ -33,7 +36,11 @@ export default function Membership() {
                                 <li>? Contact Details Hidden</li>
                             </ul>
 
-                            <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                            <button
+                                type="button"
+                                onClick={() => navigate("/create-profile")}
+                                className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white"
+                            >
                                 Get Started
                             </button>
                         </div>
@@ -54,7 +61,7 @@ export default function Membership() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">?1,999</span>
+                                <span className="text-4xl font-bold">INR 1,999</span>
                                 <span className="block mt-1 text-white/95 text-sm font-medium tracking-[0.5px]">
                                     / 3 Months
                                 </span>
@@ -68,7 +75,11 @@ export default function Membership() {
                                 <li>? WhatsApp Support</li>
                             </ul>
 
-                            <button className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400">
+                            <button
+                                type="button"
+                                onClick={() => navigate("/payment/premium")}
+                                className="w-full mt-6 py-2.5 rounded-xl bg-white text-[#800020] font-bold transition-all duration-300 hover:bg-amber-400"
+                            >
                                 Choose Premium
                             </button>
                         </div>
@@ -81,7 +92,7 @@ export default function Membership() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">?4,999</span>
+                                <span className="text-4xl font-bold">INR 4,999</span>
                                 <span className="block mt-1 text-gray-500 text-sm">
                                     /6 Months
                                 </span>
@@ -95,7 +106,11 @@ export default function Membership() {
                                 <li>? Priority Support</li>
                             </ul>
 
-                            <button className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white">
+                            <button
+                                type="button"
+                                onClick={() => navigate("/payment/elite")}
+                                className="w-full mt-6 py-2.5 rounded-xl border border-[#800020] text-[#800020] font-semibold transition-all duration-300 group-hover:bg-[#800020] group-hover:text-white"
+                            >
                                 Choose Elite
                             </button>
                         </div>

@@ -241,7 +241,7 @@ button.nav-link {
     .account-menu-link::after {
         content: "";
         position: absolute;
-        left: 0;
+        left: 14px;
         bottom: -6px;
         width: 0;
         height: 2px;
@@ -253,9 +253,15 @@ button.nav-link {
         color: #800020;
     }
 
-        .account-menu-link:hover::after {
-            width: 100%;
+        .account-menu-link:hover::after,
+        .account-menu-link.active::after {
+            width: calc(100% - 28px);
         }
+
+    .account-menu-link.active {
+        color: #800020;
+        font-weight: 700;
+    }
 
 .side-menu-link {
     position: relative;

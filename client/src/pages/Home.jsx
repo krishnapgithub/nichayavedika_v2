@@ -24,6 +24,7 @@ function Home() {
     const [profiles, setProfiles] = useState([]);
 
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [isLegalInfoOpen, setIsLegalInfoOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [homeFilters, setHomeFilters] = useState({
@@ -104,6 +105,11 @@ function Home() {
         setSelectedProfile(profile);
     };
 
+    const openLegalSection = (sectionId = "") => {
+        setIsLegalInfoOpen(false);
+        navigate(sectionId ? `/legal#${sectionId}` : "/legal");
+    };
+
     return (
 
 
@@ -126,31 +132,24 @@ function Home() {
                         <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/85 to-[#800020]/15"></div>
                         <div className="absolute inset-0 bg-black/5"></div>
 
-                        <Link
-                            to="/legal"
+                        <button
+                            type="button"
+                            onClick={() => setIsLegalInfoOpen(true)}
                             title="Privacy, Terms & Legal Information"
                             aria-label="Privacy, Terms and Legal Information"
                             className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-[#800020] shadow-lg ring-1 ring-white/50 transition hover:bg-amber-100"
                         >
                             <FaInfoCircle className="text-xl" />
-                        </Link>
+                        </button>
 
                         {/* Watermark Logo */}
-                        <img
-                            src={nvLogo}
-                            alt="Nichaya Vedika"
-                            className="
-        absolute
-        bottom-[-20px]
-        right-[-20px]
-        w-[260px]
-        md:w-[320px]
-        opacity-10
-        pointer-events-none
-        select-none
-        z-[1]
-    "
-                        />
+                        <div className="pointer-events-none absolute bottom-[-24px] right-[-24px] z-[1] h-[260px] w-[260px] overflow-hidden rounded-full opacity-10 md:h-[320px] md:w-[320px]">
+                            <img
+                                src={nvLogo}
+                                alt="Nichaya Vedika"
+                                className="h-full w-full select-none rounded-full object-cover"
+                            />
+                        </div>
 
                         <div className="relative z-10 px-10 pt-4 pb-4 w-full">
                             <div className="max-w-2xl">
@@ -569,6 +568,13 @@ function Home() {
                 onClose={() => setIsRegisterOpen(false)}
             />
 
+            {isLegalInfoOpen && (
+                <LegalInfoPopup
+                    onClose={() => setIsLegalInfoOpen(false)}
+                    onOpenLegalSection={openLegalSection}
+                />
+            )}
+
             {selectedProfile && (
                 <ProfileViewModal
                     profile={selectedProfile}
@@ -582,6 +588,119 @@ function Home() {
             )}
 
         </>
+    );
+}
+
+function LegalInfoPopup({ onClose, onOpenLegalSection }) {
+    useEffect(() => {
+        const handleEscape = (event) => {
+            if (event.key === "Escape") onClose();
+        };
+
+        document.addEventListener("keydown", handleEscape);
+
+        return () => {
+            document.removeEventListener("keydown", handleEscape);
+        };
+    }, [onClose]);
+
+    return (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden bg-black/55 px-4 py-6">
+            <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-rose-100 bg-white px-5 py-4">
+                    <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
+                            User Information Notice
+                        </p>
+                        <h2 className="text-2xl font-bold text-[#800020]">
+                            Privacy, Terms & Legal Information
+                        </h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                        Close
+                    </button>
+                </div>
+
+                <div className="grid gap-5 p-5 lg:grid-cols-[1fr_280px]">
+                    <div className="space-y-4">
+                        <section className="rounded-2xl border border-rose-100 bg-[#fff8f2] p-5">
+                            <h3 className="text-lg font-bold text-[#800020]">
+                                How NichayaVedika Uses Information
+                            </h3>
+                            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+                                We collect and use profile information for registration, matchmaking,
+                                profile review, support, security, memberships, and platform operation.
+                            </p>
+                        </section>
+
+                        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                            <h3 className="text-lg font-bold text-[#800020]">
+                                Matrimony Purpose
+                            </h3>
+                            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+                                This platform is intended for genuine matrimonial introductions and
+                                family-supported marriage discussions only.
+                            </p>
+                        </section>
+
+                        <section className="rounded-2xl border border-rose-100 bg-white p-5">
+                            <h3 className="text-lg font-bold text-[#800020]">
+                                Safety Rules
+                            </h3>
+                            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+                                Users should provide accurate information, upload appropriate photos,
+                                respect privacy, and avoid misuse, harassment, or misleading details.
+                            </p>
+                        </section>
+                    </div>
+
+                    <aside className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+                        <h3 className="text-lg font-bold text-[#800020]">
+                            Read Full Details
+                        </h3>
+                        <p className="mt-2 text-sm text-gray-600">
+                            Open the complete section when you want to review the full policy text.
+                        </p>
+
+                        <div className="mt-4 space-y-3">
+                            <button
+                                type="button"
+                                onClick={() => onOpenLegalSection("privacy")}
+                                className="w-full rounded-xl border border-[#800020] px-4 py-2.5 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
+                            >
+                                Privacy
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onOpenLegalSection("purpose")}
+                                className="w-full rounded-xl border border-[#800020] px-4 py-2.5 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
+                            >
+                                Matrimony Purpose
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onOpenLegalSection("rules")}
+                                className="w-full rounded-xl border border-[#800020] px-4 py-2.5 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
+                            >
+                                Safety Rules
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onOpenLegalSection()}
+                                className="w-full rounded-xl bg-[#800020] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#5c0017]"
+                            >
+                                Legal & Terms
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
     );
 }
 

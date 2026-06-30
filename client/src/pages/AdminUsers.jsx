@@ -106,7 +106,7 @@ export default function AdminUsers() {
     if (!isSuperAdmin) {
         return (
             <>
-                <div className="pt-32 text-center text-red-700 font-bold">
+                <div className="pt-40 text-center text-red-700 font-bold">
                     Access denied. Super Admin only.
                 </div>
             </>
@@ -116,7 +116,7 @@ export default function AdminUsers() {
     return (
         <>
 
-            <div className="min-h-screen bg-[#fff8f2] pt-28 px-3 sm:px-4 pb-12">
+            <div className="min-h-screen bg-[#fff8f2] pt-40 px-3 sm:px-4 pb-12">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-6">
                         <h1 className="text-2xl sm:text-3xl font-bold text-[#800020]">

@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 const modalContent = {
     membership: {
@@ -125,7 +127,14 @@ const modalContent = {
 };
 
 export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipPlan = "free", onMembershipAction }) {
-    const content = modalContent[type];
+    const [dynamicSections, setDynamicSections] = useState(null);
+    const baseContent = modalContent[type];
+    const content = dynamicSections
+        ? {
+            ...baseContent,
+            sections: dynamicSections,
+        }
+        : baseContent;
     const gridClass = content?.columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3";
     const normalizedMembershipPlan = membershipPlan?.toString().toLowerCase();
     const shouldShowMembershipAction = (sectionTitle) => {
@@ -152,6 +161,46 @@ export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipP
             document.removeEventListener("keydown", handleEscape);
         };
     }, [onClose]);
+
+    useEffect(() => {
+        let ignore = false;
+
+        const loadDynamicContent = async () => {
+            if (!["success", "events", "muhurthalu", "contact"].includes(type)) {
+                setDynamicSections(null);
+                return;
+            }
+
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/page-content/public/${type}`);
+                const items = res.data.items || [];
+
+                if (!ignore) {
+                    setDynamicSections(
+                        items.length > 0
+                            ? items.map((item) => ({
+                                title: item.title,
+                                price: item.metaLabel || "",
+                                items: [
+                                    item.subtitle,
+                                    ...(item.detailLines || []),
+                                ].filter(Boolean),
+                            }))
+                            : null
+                    );
+                }
+            } catch (error) {
+                console.error("Load modal content failed:", error);
+                if (!ignore) setDynamicSections(null);
+            }
+        };
+
+        loadDynamicContent();
+
+        return () => {
+            ignore = true;
+        };
+    }, [type]);
 
     if (!content) return null;
 
