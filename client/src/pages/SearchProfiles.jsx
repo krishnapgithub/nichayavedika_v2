@@ -16,7 +16,37 @@ const defaultFilters = {
     ageTo: "",
     caste: "",
     city: "",
+    advancedField: "any",
+    advancedValue: "",
 };
+
+const advancedSearchFields = [
+    ["any", "Any profile field"],
+    ["profileNumber", "Profile Number"],
+    ["fullName", "Full Name"],
+    ["gender", "Bride / Groom"],
+    ["age", "Age"],
+    ["height", "Height"],
+    ["maritalStatus", "Marital Status"],
+    ["motherTongue", "Mother Tongue"],
+    ["religion", "Religion"],
+    ["caste", "Caste"],
+    ["subCaste", "Sub Caste"],
+    ["gothram", "Gothram"],
+    ["education", "Education"],
+    ["occupation", "Occupation"],
+    ["annualIncome", "Annual Income"],
+    ["city", "City"],
+    ["state", "State"],
+    ["country", "Country"],
+    ["familyDetails", "Family Details"],
+    ["contactPreference", "Contact Preference"],
+    ["aboutMe", "About Me"],
+    ["preferredAgeFrom", "Preferred Age From"],
+    ["preferredAgeTo", "Preferred Age To"],
+    ["preferredCaste", "Preferred Caste"],
+    ["preferredLocation", "Preferred Location"],
+];
 
 function SearchProfiles() {
     const [searchParams] = useSearchParams();
@@ -28,6 +58,8 @@ function SearchProfiles() {
         ageTo: searchParams.get("ageTo") || "",
         caste: searchParams.get("caste") || "",
         city: searchParams.get("city") || "",
+        advancedField: searchParams.get("advancedField") || "any",
+        advancedValue: searchParams.get("advancedValue") || "",
     };
 
     const [profiles, setProfiles] = useState([]);
@@ -245,9 +277,75 @@ function SearchProfiles() {
                         disabled={loading}
                         className="rounded-xl border border-[#800020] p-3 font-semibold text-[#800020] hover:bg-[#fff8f2] disabled:cursor-wait disabled:opacity-60"
                     >
-                        Clear
+                        Clear All
                     </button>
 
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-rose-100 bg-[#fff8f2] p-4">
+                    <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold text-[#800020]">
+                                Advanced Search
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                                Select any profile field and search for matching details.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[280px_1fr_160px_160px]">
+                        <select
+                            value={filters.advancedField}
+                            onChange={(e) =>
+                                setFilters({
+                                    ...filters,
+                                    advancedField: e.target.value,
+                                })
+                            }
+                            className="border rounded-xl bg-white p-3"
+                        >
+                            {advancedSearchFields.map(([value, label]) => (
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+
+                        <input
+                            type="text"
+                            placeholder="Enter value to search"
+                            value={filters.advancedValue}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSearch();
+                            }}
+                            onChange={(e) =>
+                                setFilters({
+                                    ...filters,
+                                    advancedValue: e.target.value,
+                                })
+                            }
+                            className="border rounded-xl bg-white p-3"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={handleSearch}
+                            disabled={loading}
+                            className="rounded-xl bg-[#800020] p-3 font-semibold text-white disabled:cursor-wait disabled:opacity-80"
+                        >
+                            Apply
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleClearFilters}
+                            disabled={loading}
+                            className="rounded-xl border border-[#800020] bg-white p-3 font-semibold text-[#800020] hover:bg-[#fff8f2] disabled:cursor-wait disabled:opacity-60"
+                        >
+                            Clear All
+                        </button>
+                    </div>
                 </div>
 
             </div>

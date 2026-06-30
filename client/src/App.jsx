@@ -1,5 +1,7 @@
 ﻿import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import SessionTimeout from "./components/SessionTimeout.jsx";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Header from "./components/Header.jsx";
 import Home from "./pages/Home.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
@@ -39,10 +41,32 @@ function ProtectedRoute({ children }) {
 
 function App() {
     const isLoggedIn = !!localStorage.getItem("user");
+    const location = useLocation();
     console.log("SessionTimeout Loaded", isLoggedIn);
     console.log("Rama & Sita loading..");
 
     //    const navigate = useNavigate();
+
+    useEffect(() => {
+        const id = location.hash.replace("#", "");
+
+        if (!id) return;
+
+        const scrollToHashTarget = () => {
+            document.getElementById(id)?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
+        };
+
+        const frameId = window.requestAnimationFrame(() => {
+            window.setTimeout(scrollToHashTarget, 50);
+        });
+
+        return () => {
+            window.cancelAnimationFrame(frameId);
+        };
+    }, [location.pathname, location.hash]);
 
 
 
@@ -161,7 +185,68 @@ function App() {
                 />
 
             </Routes>
+            <FloatingInfoFooter />
         </>
+    );
+}
+
+function FloatingInfoFooter() {
+    const navigate = useNavigate();
+
+    const goToLegal = (sectionId = "") => {
+        const path = sectionId ? `/legal#${sectionId}` : "/legal";
+
+        navigate(path);
+    };
+
+    const goToFaq = () => {
+        navigate("/#faq");
+    };
+
+    return (
+        <div className="fixed bottom-0 left-0 z-[9998] w-full border-t border-gray-100 bg-white px-2 py-1 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center justify-center whitespace-nowrap text-sm font-medium text-[#800020]">
+                <button
+                    type="button"
+                    onClick={() => goToLegal()}
+                    className="border-0 bg-transparent px-1 py-1 font-medium text-[#374151] transition-colors hover:text-[#800020]"
+                >
+                    Legal
+                </button>
+                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <button
+                    type="button"
+                    onClick={() => goToLegal("privacy")}
+                    className="border-0 bg-transparent px-1 py-1 font-medium text-[#374151] transition-colors hover:text-[#800020]"
+                >
+                    Privacy
+                </button>
+                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <button
+                    type="button"
+                    onClick={() => goToLegal("terms")}
+                    className="border-0 bg-transparent px-1 py-1 font-medium text-[#374151] transition-colors hover:text-[#800020]"
+                >
+                    Terms
+                </button>
+                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <button
+                    type="button"
+                    onClick={goToFaq}
+                    className="border-0 bg-transparent px-1 py-1 font-medium text-[#374151] transition-colors hover:text-[#800020]"
+                >
+                    FAQ
+                </button>
+                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="text-gray-600">
+                    Contact: info@nichayavedika.com
+                </span>
+                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="text-gray-600">
+                    © 2026 NichayaVedika. All Rights Reserved.
+                </span>
+            </div>
+        </div>
     );
 }
 

@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config/api";
 
-import { FaInfoCircle, FaSearch } from "react-icons/fa";
-
 import { Link } from "react-router-dom";
 
 import weddingHero from "../images/wedding-hero.png";
@@ -24,7 +22,6 @@ function Home() {
     const [profiles, setProfiles] = useState([]);
 
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-    const [isLegalInfoOpen, setIsLegalInfoOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [homeFilters, setHomeFilters] = useState({
@@ -105,10 +102,32 @@ function Home() {
         setSelectedProfile(profile);
     };
 
-    const openLegalSection = (sectionId = "") => {
-        setIsLegalInfoOpen(false);
-        navigate(sectionId ? `/legal#${sectionId}` : "/legal");
-    };
+    const faqs = [
+        {
+            question: "How do I create a profile?",
+            answer: "Click Register Free, create your account, and complete your bride or groom profile with accurate family, education, profession, and contact details.",
+        },
+        {
+            question: "Are profiles verified?",
+            answer: "Profiles are reviewed before they are made available so families can browse with better confidence and trust.",
+        },
+        {
+            question: "Can I search before registering?",
+            answer: "Yes. Guests can browse featured and search profiles, but registration is required to view more details and start meaningful communication.",
+        },
+        {
+            question: "How are contact details protected?",
+            answer: "Contact information is kept hidden for free users and shown only according to the selected membership plan and platform rules.",
+        },
+        {
+            question: "What support is available?",
+            answer: "Members can reach the NichayaVedika support team for help with registration, profile updates, membership, and general matchmaking questions.",
+        },
+        {
+            question: "Can I update my profile later?",
+            answer: "Yes. You can update your profile details after logging in so your information stays current and accurate.",
+        },
+    ];
 
     return (
 
@@ -131,16 +150,6 @@ function Home() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/85 to-[#800020]/15"></div>
                         <div className="absolute inset-0 bg-black/5"></div>
-
-                        <button
-                            type="button"
-                            onClick={() => setIsLegalInfoOpen(true)}
-                            title="Privacy, Terms & Legal Information"
-                            aria-label="Privacy, Terms and Legal Information"
-                            className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-[#800020] shadow-lg ring-1 ring-white/50 transition hover:bg-amber-100"
-                        >
-                            <FaInfoCircle className="text-xl" />
-                        </button>
 
                         {/* Watermark Logo */}
                         <div className="pointer-events-none absolute bottom-[-24px] right-[-24px] z-[1] h-[260px] w-[260px] overflow-hidden rounded-full opacity-10 md:h-[320px] md:w-[320px]">
@@ -249,7 +258,6 @@ function Home() {
                         </div>
                     </div>
 
-                    
                     {/* Profiles */}
                     {/* Profiles */}
                     <section className="bg-gradient-to-b from-white to-rose-50 px-0 pb-10 pt-8">
@@ -281,6 +289,41 @@ function Home() {
                                 )}
                             </div>
 
+                        </div>
+                    </section>
+
+                    <section id="faq" className="mt-6 mb-2 bg-white rounded-[32px] border border-rose-100 p-6 shadow-lg md:p-8 scroll-mt-28">
+                        <div className="mx-auto max-w-5xl">
+                            <div className="text-center">
+                                <p className="text-sm font-bold uppercase tracking-[0.18em] text-amber-700">
+                                    Help Center
+                                </p>
+                                <h2 className="mt-2 text-3xl font-bold text-[#800020] md:text-4xl">
+                                    Frequently Asked Questions
+                                </h2>
+                                <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+                                    Quick answers for families getting started with NichayaVedika.
+                                </p>
+                            </div>
+
+                            <div className="mt-8 grid gap-4 md:grid-cols-2">
+                                {faqs.map((faq) => (
+                                    <details
+                                        key={faq.question}
+                                        className="group rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-sm transition hover:border-[#800020]/40 hover:shadow-md"
+                                    >
+                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-base font-bold text-gray-900">
+                                            <span>{faq.question}</span>
+                                            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-xl font-bold text-[#800020] shadow-sm transition group-open:rotate-45">
+                                                +
+                                            </span>
+                                        </summary>
+                                        <p className="mt-4 text-sm leading-6 text-gray-600">
+                                            {faq.answer}
+                                        </p>
+                                    </details>
+                                ))}
+                            </div>
                         </div>
                     </section>
 
@@ -442,7 +485,6 @@ function Home() {
 
                     
 
-
                     <section className="mt-6 mb-2  mb-2nv-section bg-white">
                         <div className="max-w-7xl mx-auto px-6">
 
@@ -508,6 +550,7 @@ function Home() {
                     
                 </main>
             </div>
+            {false && (
             <footer className="bg-[#800020] text-white mt-2">
                 <div className="max-w-7xl mx-auto px-6 py-12">
 
@@ -533,7 +576,11 @@ function Home() {
                         <div>
                             <h4 className="font-semibold mb-3">Support</h4>
                             <ul className="space-y-2 text-white/80">
-                                <li>FAQ</li>
+                                <li>
+                                    <a href="#faq" className="hover:text-white hover:underline">
+                                        FAQ
+                                    </a>
+                                </li>
                                 <li>
                                     <Link to="/legal" className="hover:text-white hover:underline">
                                         Privacy Policy
@@ -563,17 +610,11 @@ function Home() {
 
                 </div>
             </footer>
+            )}
             <RegisterModal
                 isOpen={isRegisterOpen}
                 onClose={() => setIsRegisterOpen(false)}
             />
-
-            {isLegalInfoOpen && (
-                <LegalInfoPopup
-                    onClose={() => setIsLegalInfoOpen(false)}
-                    onOpenLegalSection={openLegalSection}
-                />
-            )}
 
             {selectedProfile && (
                 <ProfileViewModal
@@ -588,119 +629,6 @@ function Home() {
             )}
 
         </>
-    );
-}
-
-function LegalInfoPopup({ onClose, onOpenLegalSection }) {
-    useEffect(() => {
-        const handleEscape = (event) => {
-            if (event.key === "Escape") onClose();
-        };
-
-        document.addEventListener("keydown", handleEscape);
-
-        return () => {
-            document.removeEventListener("keydown", handleEscape);
-        };
-    }, [onClose]);
-
-    return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden bg-black/55 px-4 py-6">
-            <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-rose-100 bg-white px-5 py-4">
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
-                            User Information Notice
-                        </p>
-                        <h2 className="text-2xl font-bold text-[#800020]">
-                            Privacy, Terms & Legal Information
-                        </h2>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                        Close
-                    </button>
-                </div>
-
-                <div className="grid gap-5 p-5 lg:grid-cols-[1fr_280px]">
-                    <div className="space-y-4">
-                        <section className="rounded-2xl border border-rose-100 bg-[#fff8f2] p-5">
-                            <h3 className="text-lg font-bold text-[#800020]">
-                                How NichayaVedika Uses Information
-                            </h3>
-                            <p className="mt-2 text-sm leading-relaxed text-gray-700">
-                                We collect and use profile information for registration, matchmaking,
-                                profile review, support, security, memberships, and platform operation.
-                            </p>
-                        </section>
-
-                        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-                            <h3 className="text-lg font-bold text-[#800020]">
-                                Matrimony Purpose
-                            </h3>
-                            <p className="mt-2 text-sm leading-relaxed text-gray-700">
-                                This platform is intended for genuine matrimonial introductions and
-                                family-supported marriage discussions only.
-                            </p>
-                        </section>
-
-                        <section className="rounded-2xl border border-rose-100 bg-white p-5">
-                            <h3 className="text-lg font-bold text-[#800020]">
-                                Safety Rules
-                            </h3>
-                            <p className="mt-2 text-sm leading-relaxed text-gray-700">
-                                Users should provide accurate information, upload appropriate photos,
-                                respect privacy, and avoid misuse, harassment, or misleading details.
-                            </p>
-                        </section>
-                    </div>
-
-                    <aside className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
-                        <h3 className="text-lg font-bold text-[#800020]">
-                            Read Full Details
-                        </h3>
-                        <p className="mt-2 text-sm text-gray-600">
-                            Open the complete section when you want to review the full policy text.
-                        </p>
-
-                        <div className="mt-4 space-y-3">
-                            <button
-                                type="button"
-                                onClick={() => onOpenLegalSection("privacy")}
-                                className="w-full rounded-xl border border-[#800020] px-4 py-2.5 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
-                            >
-                                Privacy
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onOpenLegalSection("purpose")}
-                                className="w-full rounded-xl border border-[#800020] px-4 py-2.5 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
-                            >
-                                Matrimony Purpose
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onOpenLegalSection("rules")}
-                                className="w-full rounded-xl border border-[#800020] px-4 py-2.5 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
-                            >
-                                Safety Rules
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onOpenLegalSection()}
-                                className="w-full rounded-xl bg-[#800020] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#5c0017]"
-                            >
-                                Legal & Terms
-                            </button>
-                        </div>
-                    </aside>
-                </div>
-            </div>
-        </div>
     );
 }
 

@@ -250,7 +250,7 @@ export default function Header() {
                 src={nvLogo}
                 alt=""
                 aria-hidden="true"
-                className="pointer-events-none fixed right-6 top-[78px] z-[1] h-[150px] w-[150px] rounded-full object-cover opacity-[0.055] mix-blend-multiply md:right-10 md:h-[190px] md:w-[190px]"
+                className="pointer-events-none fixed right-6 top-[78px] z-[1] h-[150px] w-[150px] rounded-full object-cover opacity-[0.13] mix-blend-multiply md:right-10 md:h-[190px] md:w-[190px]"
             />
 
             <div className="bg-[#800020] text-white text-center py-2 text-sm">
@@ -523,73 +523,49 @@ export default function Header() {
                 <CreateProfileModal onClose={() => setIsCreateProfileOpen(false)} />
             )}
 
-            <div className="hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
-                {isLoggedIn ? (
-                    <>
-                        <Link className={accountLinkClass("/dashboard")} data-label="Dashboard" to="/dashboard">
-                            Dashboard
-                        </Link>
+            {isLoggedIn && (
+                <div className="hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
+                    <Link className={accountLinkClass("/dashboard")} data-label="Dashboard" to="/dashboard">
+                        Dashboard
+                    </Link>
 
-                        <button
-                            onClick={() => setIsCreateProfileOpen(true)}
-                            className="account-menu-link"
-                            data-label="Profile"
-                        >
-                            Profile
-                        </button>
+                    <button
+                        onClick={() => setIsCreateProfileOpen(true)}
+                        className="account-menu-link"
+                        data-label="Profile"
+                    >
+                        Profile
+                    </button>
 
-                        <Link className={accountLinkClass("/sent-interests")} data-label="Sent" to="/sent-interests">
-                            Sent
-                        </Link>
+                    <Link className={accountLinkClass("/sent-interests")} data-label="Sent" to="/sent-interests">
+                        Sent
+                    </Link>
 
-                        <Link className={accountLinkClass("/received-interests")} data-label="Received" to="/received-interests">
-                            Received
+                    <Link className={accountLinkClass("/received-interests")} data-label="Received" to="/received-interests">
+                        Received
+                    </Link>
+                    {canReviewProfiles && (
+                        <Link className={accountLinkClass("/admin/profiles")} data-label="Admin" to="/admin/profiles">
+                            Admin
                         </Link>
-                        {canReviewProfiles && (
-                            <Link className={accountLinkClass("/admin/profiles")} data-label="Admin" to="/admin/profiles">
-                                Admin
-                            </Link>
-                        )}
-                        {canReviewProfiles && (
-                            <Link className={accountLinkClass("/admin/payments")} data-label="Payments" to="/admin/payments">
-                                Payments
-                            </Link>
-                        )}
-                        {canReviewProfiles && (
-                            <Link className={accountLinkClass("/admin/content")} data-label="Pages" to="/admin/content">
-                                Pages
-                            </Link>
-                        )}
-                        {canManageUsers && (
-                            <Link className={accountLinkClass("/admin/users")} data-label="Super Admin" to="/admin/users">
-                                Super Admin
-                            </Link>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <button
-                            type="button"
-                            className={accountLinkClass("/legal")}
-                            data-label="Legal & Terms"
-                            onClick={goToLegalHome}
-                        >
-                            Legal & Terms
-                        </button>
-                        {legalSections.map((section) => (
-                            <button
-                                key={section.id}
-                                type="button"
-                                className={legalSectionLinkClass(section.id)}
-                                data-label={section.label}
-                                onClick={() => goToLegalSection(section.id)}
-                            >
-                                {section.label}
-                            </button>
-                        ))}
-                    </>
-                )}
-            </div>
+                    )}
+                    {canReviewProfiles && (
+                        <Link className={accountLinkClass("/admin/payments")} data-label="Payments" to="/admin/payments">
+                            Payments
+                        </Link>
+                    )}
+                    {canReviewProfiles && (
+                        <Link className={accountLinkClass("/admin/content")} data-label="Pages" to="/admin/content">
+                            Pages
+                        </Link>
+                    )}
+                    {canManageUsers && (
+                        <Link className={accountLinkClass("/admin/users")} data-label="Super Admin" to="/admin/users">
+                            Super Admin
+                        </Link>
+                    )}
+                </div>
+            )}
             <LoginModal
                 isOpen={isLoginOpen}
                 onClose={() => setIsLoginOpen(false)}

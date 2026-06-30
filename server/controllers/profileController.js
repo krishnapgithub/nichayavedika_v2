@@ -171,6 +171,8 @@ export const searchProfiles = async (req, res) => {
             state,
             profileNumber,
             search,
+            advancedField,
+            advancedValue,
             page = 1,
             limit = 10,
         } = req.query;
@@ -203,6 +205,65 @@ export const searchProfiles = async (req, res) => {
         if (city) filter.city = new RegExp(city, "i");
         if (state) filter.state = new RegExp(state, "i");
         if (profileNumber) filter.profileNumber = new RegExp(profileNumber, "i");
+
+        const advancedSearchFields = [
+            "profileNumber",
+            "fullName",
+            "gender",
+            "age",
+            "height",
+            "maritalStatus",
+            "motherTongue",
+            "religion",
+            "caste",
+            "subCaste",
+            "gothram",
+            "education",
+            "occupation",
+            "annualIncome",
+            "city",
+            "state",
+            "country",
+            "familyDetails",
+            "contactPreference",
+            "aboutMe",
+            "preferredAgeFrom",
+            "preferredAgeTo",
+            "preferredCaste",
+            "preferredLocation",
+        ];
+
+        if (advancedValue?.trim()) {
+            const trimmedAdvancedValue = advancedValue.trim();
+            const selectedAdvancedField = advancedField || "any";
+            const numericAdvancedFields = ["age", "preferredAgeFrom", "preferredAgeTo"];
+
+            if (selectedAdvancedField === "any") {
+                const advancedRegex = new RegExp(trimmedAdvancedValue, "i");
+                const numericValue = Number(trimmedAdvancedValue);
+                const advancedConditions = advancedSearchFields
+                    .filter((field) => !numericAdvancedFields.includes(field))
+                    .map((field) => ({ [field]: advancedRegex }));
+
+                if (!Number.isNaN(numericValue)) {
+                    numericAdvancedFields.forEach((field) => {
+                        advancedConditions.push({ [field]: numericValue });
+                    });
+                }
+
+                filter.$and.push({ $or: advancedConditions });
+            } else if (advancedSearchFields.includes(selectedAdvancedField)) {
+                if (numericAdvancedFields.includes(selectedAdvancedField)) {
+                    const numericValue = Number(trimmedAdvancedValue);
+
+                    if (!Number.isNaN(numericValue)) {
+                        filter[selectedAdvancedField] = numericValue;
+                    }
+                } else {
+                    filter[selectedAdvancedField] = new RegExp(trimmedAdvancedValue, "i");
+                }
+            }
+        }
 
         if (search?.trim()?.length >= 3) {
             const searchRegex = new RegExp(search.trim(), "i");

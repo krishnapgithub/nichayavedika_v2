@@ -229,7 +229,7 @@ export default function LegalInformation() {
                         </p>
                     </LegalSection>
 
-                    <LegalSection title="10. User Responsibilities">
+                    <LegalSection title="10. Terms & User Responsibilities" id="terms" sectionHeading="Terms">
                         <p>
                             Users are expected to provide accurate information, upload appropriate
                             photos, use the platform only for genuine matrimonial purposes, avoid
