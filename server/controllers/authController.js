@@ -43,9 +43,11 @@ export const registerUser = async (req, res) => {
         });
 
         if (existingUser) {
+            const duplicateField = existingUser.email === cleanEmail ? "email" : "mobile number";
+
             return res.status(409).json({
                 success: false,
-                message: "Registration failed after OTP verification",
+                message: `An account already exists with this ${duplicateField}. Please login using your existing credentials.`,
             });
         }
 
@@ -83,6 +85,15 @@ export const registerUser = async (req, res) => {
         });
     } catch (error) {
         console.error("REGISTER ERROR:", error);
+
+        if (error.code === 11000) {
+            const duplicateField = error.keyPattern?.mobile ? "mobile number" : "email";
+
+            return res.status(409).json({
+                success: false,
+                message: `An account already exists with this ${duplicateField}. Please login using your existing credentials.`,
+            });
+        }
 
         return res.status(500).json({
             success: false,

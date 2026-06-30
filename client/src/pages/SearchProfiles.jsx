@@ -2,6 +2,7 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Link, useSearchParams } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 
 import ProfileCard from "../components/ProfileCard";
 import ProfileViewModal from "../components/ProfileViewModal.jsx";
@@ -38,11 +39,6 @@ function SearchProfiles() {
     const [isGuestProfilePrompt, setIsGuestProfilePrompt] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-    const API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL ||
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000";
-
     const [filters, setFilters] = useState(filtersFromUrl);
 
     const isSearchTextValid = (searchText) => {
@@ -57,7 +53,7 @@ function SearchProfiles() {
         try {
             setLoading(true);
 
-            console.log("API URL:", import.meta.env.VITE_API_URL);
+            console.log("API URL:", API_BASE_URL);
 
             const token = localStorage.getItem("token");
 

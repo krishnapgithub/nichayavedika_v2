@@ -13,6 +13,7 @@ import Membership from "./pages/Membership.jsx";
 import Events from "./pages/Events.jsx";
 import Contact from "./pages/Contact.jsx";
 import SuccessStories from "./pages/SuccessStories.jsx";
+import LegalInformation from "./pages/LegalInformation.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminProfiles from "./pages/AdminProfiles.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
@@ -103,6 +104,7 @@ function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/success-stories" element={<SuccessStories />} />
+                <Route path="/legal" element={<LegalInformation />} />
                 <Route
                     path="/admin"
                     element={

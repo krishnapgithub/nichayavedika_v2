@@ -15,6 +15,7 @@ import {
     searchProfiles,
     getProfileById,
     getPendingProfiles,
+    createAdminAssistedProfile,
     updateProfileStatus,
 } from "../controllers/profileController.js";
 
@@ -129,10 +130,27 @@ router.get(
     getPendingProfiles
 );
 
+router.post(
+    "/admin/assisted-create",
+    protect,
+    adminOnly,
+    upload.fields([
+        { name: "profilePhoto", maxCount: 1 },
+        { name: "stylishPhoto0", maxCount: 1 },
+        { name: "stylishPhoto1", maxCount: 1 },
+    ]),
+    createAdminAssistedProfile
+);
+
 router.put(
     "/admin/:profileId/status",
     protect,
     adminOnly,
+    upload.fields([
+        { name: "profilePhoto", maxCount: 1 },
+        { name: "stylishPhoto0", maxCount: 1 },
+        { name: "stylishPhoto1", maxCount: 1 },
+    ]),
     updateProfileStatus
 );
 

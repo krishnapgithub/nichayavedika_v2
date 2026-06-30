@@ -4,9 +4,14 @@ import { API_BASE_URL } from "../config/api";
 import toast from "react-hot-toast";
 import { isValidEmail } from "../utils/validation";
 
+const CLOUD_STORAGE_CONSENT_KEY = "cloudStorageConsentAccepted";
+
 export default function LoginModal({ isOpen, onClose, setUser }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [cloudStorageConsent, setCloudStorageConsent] = useState(
+        () => localStorage.getItem(CLOUD_STORAGE_CONSENT_KEY) === "true"
+    );
 
     const [forgotEmail, setForgotEmail] = useState("");
     const [otp, setOtp] = useState("");
@@ -18,10 +23,26 @@ export default function LoginModal({ isOpen, onClose, setUser }) {
 
     if (!isOpen) return null;
 
+    const handleCloudStorageConsentChange = (e) => {
+        const isAccepted = e.target.checked;
+        setCloudStorageConsent(isAccepted);
+
+        if (isAccepted) {
+            localStorage.setItem(CLOUD_STORAGE_CONSENT_KEY, "true");
+        } else {
+            localStorage.removeItem(CLOUD_STORAGE_CONSENT_KEY);
+        }
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
         try {
+            if (!cloudStorageConsent) {
+                toast.error("Please accept the information protection agreement to continue");
+                return;
+            }
+
             if (!isValidEmail(email)) {
                 toast.error("Please enter a valid email address");
                 return;
@@ -46,6 +67,7 @@ export default function LoginModal({ isOpen, onClose, setUser }) {
 
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("user", JSON.stringify(res.data.user));
+            localStorage.setItem(CLOUD_STORAGE_CONSENT_KEY, "true");
 
             if (typeof setUser === "function") {
                 setUser(res.data.user);
@@ -162,6 +184,35 @@ export default function LoginModal({ isOpen, onClose, setUser }) {
                             onChange={(e) => setPassword(e.target.value)}
                             className="mb-4 w-full rounded-2xl border border-black px-5 py-4 text-lg outline-none focus:border-[#99002f]"
                         />
+
+                        <label className="mb-5 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700">
+                            <input
+                                type="checkbox"
+                                checked={cloudStorageConsent}
+                                onChange={handleCloudStorageConsentChange}
+                                className="mt-1 h-5 w-5 accent-[#99002f]"
+                            />
+                            <span>
+                                NichayaVedika may store and process my personal information on
+                                protected cloud platforms and uses reasonable administrative,
+                                technical, and organizational safeguards to protect it while my
+                                profile or records are active. Information may be retained as
+                                needed for legal, security, or operational purposes after
+                                deactivation. I acknowledge this notice and agree to continue.
+                                <span className="mt-2 block text-xs text-gray-500">
+                                    Read our{" "}
+                                    <a
+                                        href="/legal"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="font-semibold text-[#99002f] hover:underline"
+                                    >
+                                        Privacy, Terms & Legal Information
+                                    </a>
+                                    {" "}before continuing.
+                                </span>
+                            </span>
+                        </label>
 
                         <div className="mb-6 text-right">
                             <button

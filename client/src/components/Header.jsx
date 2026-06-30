@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import "../styles/home.css";
+import "../styles/home-feature-fixes.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import CreateProfileModal from "./CreateProfileModal";
 import HeaderInfoModal from "./HeaderInfoModal.jsx";
@@ -34,8 +35,31 @@ export default function Header() {
 
     const isLoggedIn = !!user;
     const userRole = user?.role?.toLowerCase?.().trim();
+    const membershipPlan = (
+        user?.membershipPlan ||
+        user?.membershipType ||
+        user?.membership ||
+        "free"
+    ).toString().toLowerCase();
+    const isPremiumMember = membershipPlan === "premium";
+    const isEliteMember = membershipPlan === "elite";
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
     const canManageUsers = userRole === "super_admin";
+
+    useEffect(() => {
+        const shouldMaskNames =
+            !user ||
+            (!["premium", "elite"].includes(membershipPlan) &&
+                !["admin", "oper_admin", "super_admin"].includes(userRole));
+
+        document.documentElement.dataset.maskProfileNames = shouldMaskNames ? "true" : "false";
+        document.documentElement.dataset.loggedIn = user ? "true" : "false";
+
+        return () => {
+            delete document.documentElement.dataset.maskProfileNames;
+            delete document.documentElement.dataset.loggedIn;
+        };
+    }, [membershipPlan, user, userRole]);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -59,9 +83,61 @@ export default function Header() {
         setIsCreateProfileOpen(true);
     };
 
+    useEffect(() => {
+        const rateCardLabels = new Set(["Get Started", "Choose Premium", "Choose Elite"]);
+
+        const handleRateCardClick = (event) => {
+            if (location.pathname !== "/") return;
+
+            const button = event.target.closest("button");
+            const isRateCardButton = button && rateCardLabels.has(button.textContent.trim());
+            const isPremiumCardClick = event.target.closest(".group")?.textContent.includes("Choose Premium");
+
+            if (!isRateCardButton && !isPremiumCardClick) return;
+
+            event.preventDefault();
+
+            if (isLoggedIn) {
+                if (isEliteMember) return;
+
+                if (isPremiumMember && button?.textContent.trim() !== "Choose Elite") {
+                    return;
+                }
+
+                navigate("/membership");
+                return;
+            }
+
+            setIsRegisterOpen(true);
+        };
+
+        document.addEventListener("click", handleRateCardClick);
+
+        return () => {
+            document.removeEventListener("click", handleRateCardClick);
+        };
+    }, [isEliteMember, isLoggedIn, isPremiumMember, location.pathname, navigate]);
+
     const openInfoModal = (type) => {
         setInfoModal(type);
         setIsMobileMenuOpen(false);
+    };
+
+    const handleMembershipAction = (planTitle) => {
+        setInfoModal(null);
+
+        if (isLoggedIn) {
+            if (isEliteMember) return;
+
+            if (isPremiumMember && planTitle !== "Elite") {
+                return;
+            }
+
+            navigate("/membership");
+            return;
+        }
+
+        setIsRegisterOpen(true);
     };
 
     const navClass = (path, modalType = null) => {
@@ -305,17 +381,6 @@ export default function Header() {
                     </div>
                 )}
 
-                <LoginModal
-                    isOpen={isLoginOpen}
-                    onClose={() => {
-                        setIsLoginOpen(false);
-                        const savedUser = localStorage.getItem("user");
-                        if (savedUser) {
-                            setUser(JSON.parse(savedUser));
-                        }
-                    }}
-                />
-
                 <RegisterModal
                     isOpen={isRegisterOpen}
                     onClose={() => setIsRegisterOpen(false)}
@@ -372,6 +437,9 @@ export default function Header() {
                 <HeaderInfoModal
                     type={infoModal}
                     onClose={() => setInfoModal(null)}
+                    isLoggedIn={isLoggedIn}
+                    membershipPlan={membershipPlan}
+                    onMembershipAction={handleMembershipAction}
                 />
             )}
         </div>

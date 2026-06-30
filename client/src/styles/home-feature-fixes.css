@@ -1,0 +1,160 @@
+html {
+    scrollbar-gutter: stable;
+}
+
+body {
+    overflow-y: scroll;
+}
+
+.account-user-menu {
+    gap: 0 !important;
+    border-top: 1px solid #f3e7e7 !important;
+    background: #fffdfb !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    box-shadow: 0 3px 10px rgba(128, 0, 32, 0.06) !important;
+}
+
+.account-user-menu .account-menu-link {
+    padding: 0 14px !important;
+}
+
+.account-user-menu .account-menu-link + .account-menu-link {
+    border-left: 2px solid #d97706 !important;
+}
+
+html[data-logged-in="true"] body > div > div.max-w-7xl.mx-auto.px-6 {
+    padding-top: 128px !important;
+}
+
+@media (min-width: 1024px) {
+    html[data-logged-in="true"] body > div > div.max-w-7xl.mx-auto.px-6 {
+        padding-top: 136px !important;
+    }
+}
+
+html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight {
+    font-size: 0;
+}
+
+html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight::first-letter {
+    font-size: 18px;
+}
+
+html[data-mask-profile-names="true"] h3.text-lg.font-bold.leading-tight::after {
+    content: "*****";
+    font-size: 18px;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md {
+    height: 216px;
+    overflow: hidden;
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md > div:first-child {
+    margin-bottom: 16px;
+    font-size: 0;
+    line-height: 1;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md > div:first-child::before {
+    display: inline-flex;
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md:nth-of-type(1) > div:first-child::before {
+    content: "\1F512";
+    color: #800020;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md:nth-of-type(2) > div:first-child::before {
+    content: "\2713";
+    background: #45c777;
+    color: #ffffff;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md:nth-of-type(3) > div:first-child::before {
+    content: "\2665";
+    color: #ec4899;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md:nth-of-type(4) > div:first-child::before {
+    content: "\260E";
+    color: #d97706;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    line-height: 1.25;
+}
+
+.bg-rose-50.rounded-3xl.p-8.text-center.shadow-md p {
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+section[style*="wedding-hero"] {
+    background-position: center 38% !important;
+    min-height: 360px !important;
+    padding-bottom: 70px !important;
+}
+
+div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] {
+    margin-top: -66px !important;
+}
+
+div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] > div {
+    border-radius: 28px;
+}
+
+section[class*="bg-gradient-to-b"][class*="from-white"][class*="to-rose-50"][class*="-mt-10"] {
+    margin-top: 6px !important;
+    padding-top: 24px !important;
+    padding-bottom: 24px !important;
+}
+
+section[class*="bg-gradient-to-b"][class*="from-white"][class*="to-rose-50"][class*="-mt-10"] h2 {
+    margin-bottom: 4px !important;
+}
+
+section[class*="bg-gradient-to-b"][class*="from-white"][class*="to-rose-50"][class*="-mt-10"] p {
+    margin-top: 0 !important;
+    margin-bottom: 18px !important;
+}
+
+@media (max-width: 1024px) {
+    section[style*="wedding-hero"] {
+        background-position: 68% center !important;
+        min-height: 360px !important;
+    }
+
+    div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] {
+        margin-top: -56px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    div[class*="z-20"][class*="max-w-5xl"][class*="-mt-10"][class*="px-6"] {
+        margin-top: -32px !important;
+    }
+
+    section[class*="bg-gradient-to-b"][class*="from-white"][class*="to-rose-50"][class*="-mt-10"] {
+        margin-top: 6px !important;
+        padding-top: 22px !important;
+    }
+}

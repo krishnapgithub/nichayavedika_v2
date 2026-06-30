@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
-import { FaSearch } from "react-icons/fa";
+import { FaInfoCircle, FaSearch } from "react-icons/fa";
 
 import { Link } from "react-router-dom";
 
@@ -16,11 +17,6 @@ import ProfileCard from "../components/ProfileCard";
 import ProfileViewModal from "../components/ProfileViewModal.jsx";
 import toast from "react-hot-toast";
 
-
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ||
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000";
 
 function Home() {
 
@@ -45,9 +41,12 @@ function Home() {
         try {
             setLoading(true);
 
-            const res = await axios.get(
-                `${API_BASE_URL}/api/profiles/search`
-            );
+            const res = await axios.get(`${API_BASE_URL}/api/profiles/search`, {
+                params: {
+                    page: 1,
+                    limit: 4,
+                },
+            });
 
             setProfiles(res.data.profiles || []);
 
@@ -73,14 +72,7 @@ function Home() {
         { id: 4, name: "Priya Sharma", age: 25, gender: "Bride", caste: "Kshatriya", location: "Chennai", image: "https://randomuser.me/api/portraits/men/32.jpg" },
     ];*/
 
-    const displayProfiles = (profiles || []).slice(0, 4) //profiles.slice(0, 4);
-
-    while (displayProfiles.length < 4) {
-        displayProfiles.push({
-            _id: `dummy-${displayProfiles.length}`,
-            isDummy: true,
-        });
-    }
+    const displayProfiles = (profiles || []).slice(0, 4);
 
     const navigate = useNavigate();
 
@@ -124,14 +116,24 @@ function Home() {
 
                     <section
                         className="relative overflow-hidden text-white min-h-[430px] flex items-center rounded-b-[36px] rounded-t-none shadow-2xl border-x border-b border-rose-100 pb-24 z-10"
-                        style={{
-                            backgroundImage: `url(${weddingHero})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center right",
-                        }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/90 to-[#800020]/10"></div>
-                        <div className="absolute inset-0 bg-black/10"></div>
+                        <div className="absolute inset-0 bg-[#800020]"></div>
+                        <img
+                            src={weddingHero}
+                            alt="Bride and groom exchanging flower garlands"
+                            className="absolute inset-y-0 right-0 h-full w-full object-cover object-right opacity-95"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#800020] via-[#800020]/85 to-[#800020]/15"></div>
+                        <div className="absolute inset-0 bg-black/5"></div>
+
+                        <Link
+                            to="/legal"
+                            title="Privacy, Terms & Legal Information"
+                            aria-label="Privacy, Terms and Legal Information"
+                            className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-[#800020] shadow-lg ring-1 ring-white/50 transition hover:bg-amber-100"
+                        >
+                            <FaInfoCircle className="text-xl" />
+                        </Link>
 
                         {/* Watermark Logo */}
                         <img
@@ -251,7 +253,7 @@ function Home() {
                     
                     {/* Profiles */}
                     {/* Profiles */}
-                    <section className="nv-section bg-gradient-to-b from-white to-rose-50 -mt-10 pt-1">
+                    <section className="bg-gradient-to-b from-white to-rose-50 px-0 py-12">
                         <div className="max-w-7xl mx-auto px-6">
 
                             <h2 className="text-4xl font-bold text-center text-gray-900 mb-2">
@@ -262,9 +264,13 @@ function Home() {
                                 Discover verified brides and grooms from trusted families
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
                                 {loading ? (
                                     <HomeLoadingCards />
+                                ) : displayProfiles.length === 0 ? (
+                                    <div className="rounded-3xl bg-white p-8 text-center text-gray-600 shadow md:col-span-2 xl:col-span-4">
+                                        Featured profiles will appear here soon.
+                                    </div>
                                 ) : (
                                     displayProfiles.slice(0, 8).map((profile) => (
                                         <ProfileCard
@@ -529,8 +535,16 @@ function Home() {
                             <h4 className="font-semibold mb-3">Support</h4>
                             <ul className="space-y-2 text-white/80">
                                 <li>FAQ</li>
-                                <li>Privacy Policy</li>
-                                <li>Terms & Conditions</li>
+                                <li>
+                                    <Link to="/legal" className="hover:text-white hover:underline">
+                                        Privacy Policy
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/legal" className="hover:text-white hover:underline">
+                                        Terms & Conditions
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
 

@@ -6,6 +6,7 @@ import { API_BASE_URL, API_ENDPOINTS } from "../config/api";
 import toast from "react-hot-toast";
 import { isValidEmail } from "../utils/validation";
 
+const CLOUD_STORAGE_CONSENT_KEY = "cloudStorageConsentAccepted";
 
 const validateRegisterForm = () => {
     const nameRegex = /^[A-Za-z\s.'-]+$/;
@@ -63,6 +64,9 @@ const validateRegisterForm = () => {
 export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     const [isOtpOpen, setIsOtpOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cloudStorageConsent, setCloudStorageConsent] = useState(
+        () => localStorage.getItem(CLOUD_STORAGE_CONSENT_KEY) === "true"
+    );
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -115,6 +119,17 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     
     if (!isOpen) return null;
 
+    const handleCloudStorageConsentChange = (e) => {
+        const isAccepted = e.target.checked;
+        setCloudStorageConsent(isAccepted);
+
+        if (isAccepted) {
+            localStorage.setItem(CLOUD_STORAGE_CONSENT_KEY, "true");
+        } else {
+            localStorage.removeItem(CLOUD_STORAGE_CONSENT_KEY);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -157,6 +172,11 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     };
 
     const handleRegister = async () => {
+        if (!cloudStorageConsent) {
+            toast.error("Please accept the information protection agreement to continue");
+            return;
+        }
+
         if (!validateRegisterForm()) return;
 
         try {
@@ -166,6 +186,7 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
                 `${API_BASE_URL}${API_ENDPOINTS.SEND_EMAIL_OTP}`,
                 {
                     email: formData.email.trim().toLowerCase(),
+                    mobile: formData.mobile.trim(),
                 }
             );
 
@@ -201,6 +222,7 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
 
             localStorage.setItem("token", response.data.token);
             localStorage.setItem("user", JSON.stringify(response.data.user));
+            localStorage.setItem(CLOUD_STORAGE_CONSENT_KEY, "true");
 
             // ==========================================
             // Registration Success - Pending Admin Approval
@@ -302,6 +324,35 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
 
                     
                 </div>
+
+                <label className="mt-5 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700">
+                    <input
+                        type="checkbox"
+                        checked={cloudStorageConsent}
+                        onChange={handleCloudStorageConsentChange}
+                        className="mt-1 h-5 w-5 accent-[#800020]"
+                    />
+                    <span>
+                        NichayaVedika may store and process my personal information on
+                        protected cloud platforms and uses reasonable administrative,
+                        technical, and organizational safeguards to protect it while my
+                        profile or records are active. Information may be retained as needed
+                        for legal, security, or operational purposes after deactivation. I
+                        acknowledge this notice and agree to continue.
+                        <span className="mt-2 block text-xs text-gray-500">
+                            Read our{" "}
+                            <a
+                                href="/legal"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-semibold text-[#800020] hover:underline"
+                            >
+                                Privacy, Terms & Legal Information
+                            </a>
+                            {" "}before continuing.
+                        </span>
+                    </span>
+                </label>
 
                 <button
                     onClick={handleRegister}

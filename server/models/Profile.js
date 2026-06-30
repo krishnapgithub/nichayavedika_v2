@@ -110,9 +110,19 @@ const profileSchema = new mongoose.Schema(
             default: "",
         },
 
+        stylishPhotos: {
+            type: [String],
+            default: [],
+        },
+
+        showPhotosToMembers: {
+            type: Boolean,
+            default: true,
+        },
+
         status: {
             type: String,
-            enum: ["pending", "approved", "rejected"],
+            enum: ["pending", "approved", "rejected", "deactivated"],
             default: "pending",
         },
     },

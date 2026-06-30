@@ -39,6 +39,9 @@ const initialFormData = {
     preferredLocation: "",
 
     profilePhoto: null,
+    stylishPhoto1: null,
+    stylishPhoto2: null,
+    showPhotosToMembers: true,
 };
 
 const toDateInputValue = (dateValue) => {
@@ -63,6 +66,7 @@ const getPhotoUrl = (profilePhoto) => {
 export default function CreateProfile({ onClose }) {
     const [formData, setFormData] = useState(initialFormData);
     const [photoPreview, setPhotoPreview] = useState(null);
+    const [stylishPhotoPreviews, setStylishPhotoPreviews] = useState([null, null]);
     const [loading, setLoading] = useState(false);
     const isEditing = Boolean(formData.profileNumber);
 
@@ -111,9 +115,16 @@ export default function CreateProfile({ onClose }) {
                     preferredCaste: profile.preferredCaste || "",
                     preferredLocation: profile.preferredLocation || "",
                     profilePhoto: profile.profilePhoto || null,
+                    stylishPhoto1: null,
+                    stylishPhoto2: null,
+                    showPhotosToMembers: profile.showPhotosToMembers !== false,
                 });
 
                 setPhotoPreview(getPhotoUrl(profile.profilePhoto));
+                setStylishPhotoPreviews([
+                    getPhotoUrl(profile.stylishPhotos?.[0]),
+                    getPhotoUrl(profile.stylishPhotos?.[1]),
+                ]);
             } catch (error) {
                 if (error.response?.status !== 404) {
                     console.log("LOAD PROFILE ERROR:", error.response?.data || error);
@@ -162,24 +173,28 @@ export default function CreateProfile({ onClose }) {
         }));
     };
 
-    const handlePhotoChange = (e) => {
-        const file = e.target.files?.[0];
-
-        if (!file) return;
-
+    const validatePhotoFile = (file) => {
         const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
 
         if (!allowedTypes.includes(file.type)) {
             toast.error("Only JPG, JPEG and PNG files are allowed.");
-            return;
+            return false;
         }
 
         const maxSize = 2 * 1024 * 1024;
 
         if (file.size > maxSize) {
             toast.error("Photo size should be less than 2 MB.");
-            return;
+            return false;
         }
+
+        return true;
+    };
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files?.[0];
+
+        if (!file || !validatePhotoFile(file)) return;
 
         setFormData((prev) => ({
             ...prev,
@@ -187,6 +202,25 @@ export default function CreateProfile({ onClose }) {
         }));
 
         setPhotoPreview(URL.createObjectURL(file));
+    };
+
+    const handleStylishPhotoChange = (index, e) => {
+        const file = e.target.files?.[0];
+
+        if (!file || !validatePhotoFile(file)) return;
+
+        const fieldName = index === 0 ? "stylishPhoto1" : "stylishPhoto2";
+
+        setFormData((prev) => ({
+            ...prev,
+            [fieldName]: file,
+        }));
+
+        setStylishPhotoPreviews((prev) => {
+            const next = [...prev];
+            next[index] = URL.createObjectURL(file);
+            return next;
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -206,7 +240,11 @@ export default function CreateProfile({ onClose }) {
 
             Object.entries(formData).forEach(([key, value]) => {
                 if (value !== null && value !== undefined) {
-                    if (key === "profilePhoto" && !(value instanceof File)) {
+                    if (["profilePhoto", "stylishPhoto1", "stylishPhoto2"].includes(key) && !(value instanceof File)) {
+                        return;
+                    }
+
+                    if (["stylishPhoto1", "stylishPhoto2"].includes(key)) {
                         return;
                     }
 
@@ -220,6 +258,27 @@ export default function CreateProfile({ onClose }) {
                     "Content-Type": "multipart/form-data",
                 },
             });
+
+            const savedProfile = response.data?.profile;
+            const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+            const userId = savedProfile?.user || savedUser?._id || savedUser?.id;
+            const stylishUploads = [formData.stylishPhoto1, formData.stylishPhoto2]
+                .map((file, index) => ({ file, index }))
+                .filter(({ file }) => file instanceof File);
+
+            for (const { file, index } of stylishUploads) {
+                const photoPayload = new FormData();
+                photoPayload.append("profilePhoto", file);
+                photoPayload.append("photoType", "stylish");
+                photoPayload.append("photoSlot", String(index));
+
+                await axios.put(`${API_BASE_URL}/api/profiles/user/${userId}`, photoPayload, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+            }
 
             toast.success(
                 response.data?.message ||
@@ -343,6 +402,29 @@ export default function CreateProfile({ onClose }) {
                         />
                     </Section>
 
+                    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                        <h3 className="mb-3 text-lg font-bold text-[#800020]">
+                            Photo Consent
+                        </h3>
+                        <label className="flex items-start gap-3 text-sm leading-relaxed text-gray-700">
+                            <input
+                                type="checkbox"
+                                checked={formData.showPhotosToMembers}
+                                onChange={(event) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        showPhotosToMembers: event.target.checked,
+                                    }))
+                                }
+                                className="mt-1 h-5 w-5 accent-[#800020]"
+                            />
+                            <span>
+                                Are you okay showing your uploaded photos to other brides or
+                                grooms? If unchecked, your photos will be hidden from members.
+                            </span>
+                        </label>
+                    </section>
+
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                         <h3 className="mb-1 text-lg font-bold text-[#800020]">
                             Profile Photo <span className="text-red-600">*</span>
@@ -370,6 +452,42 @@ export default function CreateProfile({ onClose }) {
                                 required={!photoPreview}
                                 className="w-full rounded-xl border border-gray-300 p-3 text-sm sm:max-w-sm"
                             />
+                        </div>
+
+                        <div className="mt-6 border-t border-gray-100 pt-5">
+                            <h4 className="text-base font-bold text-[#800020]">
+                                Stylish Photos
+                            </h4>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Optional: upload up to 2 additional photos.
+                            </p>
+
+                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                {[0, 1].map((index) => (
+                                    <div key={index} className="rounded-2xl border border-gray-200 bg-[#fff8f2] p-4">
+                                        <div className="mb-3 h-36 overflow-hidden rounded-2xl border border-[#800020]/20 bg-white">
+                                            {stylishPhotoPreviews[index] ? (
+                                                <img
+                                                    src={stylishPhotoPreviews[index]}
+                                                    alt={`Stylish photo ${index + 1} preview`}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-400">
+                                                    Stylish Photo {index + 1}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/jpg"
+                                            onChange={(event) => handleStylishPhotoChange(index, event)}
+                                            className="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
@@ -432,3 +550,4 @@ function Textarea({ className = "", ...props }) {
         />
     );
 }
+

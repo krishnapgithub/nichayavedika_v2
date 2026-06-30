@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import nvLogo from "../images/nvlogo-v1.png";
 import { API_BASE_URL } from "../config/api";
 
@@ -15,15 +16,51 @@ const getPhotoUrl = (profilePhoto) => {
 
 const valueOrDash = (value) => value || "Not provided";
 
+const getSavedUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+        return null;
+    }
+};
+
+const isFullAccessUser = (user, profile) => {
+    const userRole = user?.role?.toLowerCase?.().trim();
+    const membership = (
+        user?.membershipPlan ||
+        user?.membershipType ||
+        user?.membership ||
+        ""
+    ).toString().toLowerCase();
+
+    const isPremiumUser =
+        membership === "premium" ||
+        membership === "elite" ||
+        userRole === "admin" ||
+        userRole === "oper_admin" ||
+        userRole === "super_admin";
+
+    const isOwnProfile =
+        Boolean(profile?.user) &&
+        String(profile.user?._id || profile.user) === String(user?._id || user?.id);
+
+    return Boolean(user && (isPremiumUser || isOwnProfile));
+};
+
 export default function ProfileViewModal({
     profile,
     onClose,
     onApprove,
     onReject,
+    onDeactivate,
+    onSave,
     guestPrompt = false,
     onRegister,
     showAdminActions = false,
 }) {
+    const [adminDraft, setAdminDraft] = useState({});
+    const [adminPhotoFiles, setAdminPhotoFiles] = useState({});
+
     useEffect(() => {
         const handleEscape = (event) => {
             if (event.key === "Escape") onClose();
@@ -43,12 +80,81 @@ export default function ProfileViewModal({
         };
     }, [onClose]);
 
+    useEffect(() => {
+        setAdminDraft({
+            fullName: profile?.fullName || "",
+            gender: profile?.gender || "",
+            dateOfBirth: profile?.dateOfBirth
+                ? new Date(profile.dateOfBirth).toISOString().slice(0, 10)
+                : "",
+            age: profile?.age || "",
+            height: profile?.height || "",
+            maritalStatus: profile?.maritalStatus || "",
+            motherTongue: profile?.motherTongue || "",
+            religion: profile?.religion || "",
+            caste: profile?.caste || "",
+            subCaste: profile?.subCaste || "",
+            gothram: profile?.gothram || "",
+            education: profile?.education || "",
+            occupation: profile?.occupation || "",
+            annualIncome: profile?.annualIncome || "",
+            city: profile?.city || "",
+            state: profile?.state || "",
+            country: profile?.country || "India",
+            familyDetails: profile?.familyDetails || "",
+            contactPreference: profile?.contactPreference || "",
+            aboutMe: profile?.aboutMe || profile?.about || "",
+            preferredAgeFrom: profile?.preferredAgeFrom || "",
+            preferredAgeTo: profile?.preferredAgeTo || "",
+            preferredCaste: profile?.preferredCaste || "",
+            preferredLocation: profile?.preferredLocation || "",
+            profilePhoto: profile?.profilePhoto || "",
+            stylishPhotos: profile?.stylishPhotos || [],
+            showPhotosToMembers: profile?.showPhotosToMembers !== false,
+        });
+        setAdminPhotoFiles({});
+    }, [profile]);
+
     if (!profile) return null;
 
-    const photoUrl = getPhotoUrl(profile.profilePhoto);
+    const viewer = getSavedUser();
+    const effectiveGuestPrompt = guestPrompt && !viewer;
+    const canViewFullDetails = showAdminActions || isFullAccessUser(viewer, profile);
+    const shouldShowLimitedDetails = !effectiveGuestPrompt && !canViewFullDetails;
+    const viewerRole = viewer?.role?.toLowerCase?.().trim();
+    const isAdminViewer = ["admin", "oper_admin", "super_admin"].includes(viewerRole);
+    const isOwnProfile =
+        Boolean(profile?.user) &&
+        String(profile.user?._id || profile.user) === String(viewer?._id || viewer?.id);
+    const canViewProfilePhotos =
+        showAdminActions || isAdminViewer || isOwnProfile || profile.showPhotosToMembers !== false;
+    const photoUrl = canViewProfilePhotos ? getPhotoUrl(profile.profilePhoto) : "";
     const location = [profile.city, profile.state, profile.country]
         .filter(Boolean)
         .join(", ");
+    const updateAdminDraft = (field, value) => {
+        setAdminDraft((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+    const removeStylishPhoto = (index) => {
+        setAdminDraft((prev) => {
+            const stylishPhotos = [...(prev.stylishPhotos || [])];
+            stylishPhotos[index] = "";
+
+            return {
+                ...prev,
+                stylishPhotos,
+            };
+        });
+    };
+    const updateAdminPhotoFile = (field, file) => {
+        setAdminPhotoFiles((prev) => ({
+            ...prev,
+            [field]: file,
+        }));
+    };
 
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden bg-black/55 px-4 py-6">
@@ -72,7 +178,7 @@ export default function ProfileViewModal({
                     </button>
                 </div>
 
-                {guestPrompt && (
+                {effectiveGuestPrompt && (
                     <div className="border-b border-amber-200 bg-gradient-to-r from-[#800020] via-[#9b1235] to-amber-600 px-5 py-4 text-white">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
@@ -97,11 +203,17 @@ export default function ProfileViewModal({
 
                 <div className="grid gap-6 p-5 lg:grid-cols-[260px_1fr]">
                     <div>
-                        <img
-                            src={photoUrl}
-                            alt={profile.fullName || "Profile"}
-                            className="h-72 w-full rounded-2xl object-cover shadow"
-                        />
+                        {photoUrl ? (
+                            <img
+                                src={photoUrl}
+                                alt={profile.fullName || "Profile"}
+                                className="h-72 w-full rounded-2xl object-cover shadow"
+                            />
+                        ) : (
+                            <div className="flex h-72 w-full items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 px-4 text-center text-sm font-bold text-[#800020] shadow">
+                                Photos Hidden
+                            </div>
+                        )}
 
                         <div className="mt-4 rounded-2xl bg-[#fff8f2] p-4 text-sm text-gray-700">
                             <p className="font-bold text-[#800020]">
@@ -112,10 +224,77 @@ export default function ProfileViewModal({
                                 {valueOrDash(profile.caste)}
                             </p>
                         </div>
+
+                        {showAdminActions && (
+                            <div className="mt-4 rounded-2xl border border-rose-100 bg-white p-4">
+                                <h3 className="text-sm font-bold text-[#800020]">Photos</h3>
+                                <label className="mt-3 block rounded-xl border border-rose-100 bg-[#fff8f2] px-3 py-2 text-sm font-bold text-[#800020]">
+                                    Replace Primary Photo
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png"
+                                        onChange={(event) => updateAdminPhotoFile("profilePhoto", event.target.files?.[0] || null)}
+                                        className="mt-2 block w-full text-xs font-medium text-gray-600"
+                                    />
+                                    {adminPhotoFiles.profilePhoto && (
+                                        <span className="mt-1 block truncate text-xs text-gray-500">
+                                            {adminPhotoFiles.profilePhoto.name}
+                                        </span>
+                                    )}
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => updateAdminDraft("profilePhoto", "")}
+                                    className="mt-3 w-full rounded-xl border border-red-200 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
+                                >
+                                    Delete Primary Photo
+                                </button>
+
+                                {[0, 1].map((index) => (
+                                    <label
+                                        key={`stylish-upload-${index}`}
+                                        className="mt-3 block rounded-xl border border-rose-100 bg-[#fff8f2] px-3 py-2 text-sm font-bold text-[#800020]"
+                                    >
+                                        Replace Stylish Photo {index + 1}
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/jpg,image/png"
+                                            onChange={(event) => updateAdminPhotoFile(`stylishPhoto${index}`, event.target.files?.[0] || null)}
+                                            className="mt-2 block w-full text-xs font-medium text-gray-600"
+                                        />
+                                        {adminPhotoFiles[`stylishPhoto${index}`] && (
+                                            <span className="mt-1 block truncate text-xs text-gray-500">
+                                                {adminPhotoFiles[`stylishPhoto${index}`].name}
+                                            </span>
+                                        )}
+                                    </label>
+                                ))}
+
+                                {(adminDraft.stylishPhotos || []).map((photo, index) => (
+                                    photo ? (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            onClick={() => removeStylishPhoto(index)}
+                                            className="mt-2 w-full rounded-xl border border-red-200 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
+                                        >
+                                            Delete Stylish Photo {index + 1}
+                                        </button>
+                                    ) : null
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {guestPrompt ? (
+                    {showAdminActions ? (
+                        <AdminProfileEditor
+                            draft={adminDraft}
+                            onChange={updateAdminDraft}
+                        />
+                    ) : effectiveGuestPrompt ? (
                         <GuestProfilePreview profile={profile} />
+                    ) : shouldShowLimitedDetails ? (
+                        <FreeUserProfilePreview profile={profile} />
                     ) : (
                         <div className="space-y-5">
                             <ProfileSection title="Basic Details">
@@ -152,10 +331,24 @@ export default function ProfileViewModal({
                     <div className="sticky bottom-0 flex flex-wrap justify-end gap-3 border-t border-rose-100 bg-white px-5 py-4">
                         <button
                             type="button"
+                            onClick={() => onSave?.(profile._id, adminDraft, adminPhotoFiles)}
+                            className="rounded-xl bg-[#800020] px-5 py-2 font-semibold text-white hover:bg-[#5c0017]"
+                        >
+                            Save Changes
+                        </button>
+                        <button
+                            type="button"
                             onClick={() => onReject?.(profile._id)}
                             className="rounded-xl bg-red-600 px-5 py-2 font-semibold text-white hover:bg-red-700"
                         >
                             Reject
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onDeactivate?.(profile._id)}
+                            className="rounded-xl bg-gray-700 px-5 py-2 font-semibold text-white hover:bg-gray-800"
+                        >
+                            Deactivate
                         </button>
                         <button
                             type="button"
@@ -177,6 +370,89 @@ function ProfileSection({ title, children }) {
             <h3 className="mb-3 text-lg font-bold text-[#800020]">{title}</h3>
             <div className="grid gap-3 sm:grid-cols-2">{children}</div>
         </section>
+    );
+}
+
+function AdminProfileEditor({ draft, onChange }) {
+    const fields = [
+        ["fullName", "Full Name"],
+        ["gender", "Gender"],
+        ["dateOfBirth", "Date of Birth", "date"],
+        ["age", "Age"],
+        ["height", "Height"],
+        ["maritalStatus", "Marital Status"],
+        ["motherTongue", "Mother Tongue"],
+        ["religion", "Religion"],
+        ["caste", "Caste"],
+        ["subCaste", "Sub Caste"],
+        ["gothram", "Gothram"],
+        ["education", "Education"],
+        ["occupation", "Occupation"],
+        ["annualIncome", "Annual Income"],
+        ["city", "City"],
+        ["state", "State"],
+        ["country", "Country"],
+        ["contactPreference", "Contact Preference"],
+        ["preferredAgeFrom", "Preferred Age From"],
+        ["preferredAgeTo", "Preferred Age To"],
+        ["preferredCaste", "Preferred Caste"],
+        ["preferredLocation", "Preferred Location"],
+    ];
+
+    return (
+        <div className="space-y-5">
+            <section>
+                <h3 className="mb-3 text-lg font-bold text-[#800020]">Admin Edit</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="rounded-xl border border-amber-200 bg-amber-50 p-3 sm:col-span-2">
+                        <span className="text-xs font-semibold uppercase text-gray-500">Photo Consent</span>
+                        <span className="mt-2 flex items-start gap-3 text-sm font-semibold text-gray-800">
+                            <input
+                                type="checkbox"
+                                checked={draft.showPhotosToMembers !== false}
+                                onChange={(event) =>
+                                    onChange("showPhotosToMembers", event.target.checked)
+                                }
+                                className="mt-1 h-5 w-5 accent-[#800020]"
+                            />
+                            Family agreed photos can be shown to other brides or grooms.
+                        </span>
+                    </label>
+
+                    {fields.map(([field, label, type = "text"]) => (
+                        <label key={field} className="rounded-xl border border-rose-100 bg-white p-3">
+                            <span className="text-xs font-semibold uppercase text-gray-500">{label}</span>
+                            <input
+                                type={type}
+                                value={draft[field] || ""}
+                                onChange={(event) => onChange(field, event.target.value)}
+                                className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-[#800020]"
+                            />
+                        </label>
+                    ))}
+
+                    <label className="rounded-xl border border-rose-100 bg-white p-3 sm:col-span-2">
+                        <span className="text-xs font-semibold uppercase text-gray-500">Family Details</span>
+                        <textarea
+                            value={draft.familyDetails || ""}
+                            onChange={(event) => onChange("familyDetails", event.target.value)}
+                            rows="3"
+                            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-[#800020]"
+                        />
+                    </label>
+
+                    <label className="rounded-xl border border-rose-100 bg-white p-3 sm:col-span-2">
+                        <span className="text-xs font-semibold uppercase text-gray-500">About</span>
+                        <textarea
+                            value={draft.aboutMe || ""}
+                            onChange={(event) => onChange("aboutMe", event.target.value)}
+                            rows="3"
+                            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-[#800020]"
+                        />
+                    </label>
+                </div>
+            </section>
+        </div>
     );
 }
 
@@ -208,6 +484,46 @@ function GuestProfilePreview({ profile }) {
                     <LockedInfo label="Family Details" />
                     <LockedInfo label="Preferences" />
                 </div>
+            </section>
+        </div>
+    );
+}
+
+function FreeUserProfilePreview({ profile }) {
+    return (
+        <div className="space-y-5">
+            <ProfileSection title="Profile Preview">
+                <Info label="Age" value={profile.age} />
+                <Info label="Education" value={profile.education} />
+                <Info label="Occupation" value={profile.occupation} />
+                <Info label="City" value={profile.city} />
+                <Info label="Caste" value={profile.caste} />
+                <Info label="About" value={profile.aboutMe || profile.about} wide />
+            </ProfileSection>
+
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <h3 className="text-lg font-bold text-[#800020]">
+                    Locked Details
+                </h3>
+                <p className="mt-1 text-sm text-gray-700">
+                    To view more details, please upgrade to Premium.
+                </p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <LockedInfo label="Height" />
+                    <LockedInfo label="Marital Status" />
+                    <LockedInfo label="Gothram" />
+                    <LockedInfo label="Annual Income" />
+                    <LockedInfo label="Family Details" />
+                    <LockedInfo label="Preferences" />
+                </div>
+
+                <Link
+                    to="/membership"
+                    className="mt-4 inline-flex rounded-xl bg-[#800020] px-5 py-2 text-sm font-bold text-white shadow hover:bg-[#5c0017]"
+                >
+                    Upgrade to Premium
+                </Link>
             </section>
         </div>
     );

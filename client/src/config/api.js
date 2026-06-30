@@ -2,7 +2,9 @@
 // API Base URL
 // ==========================================
 export const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "https://nichayavedika-v2.onrender.com";
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    "https://nichayavedika-v2.onrender.com";
 
 // ==========================================
 // Authentication Endpoints

@@ -90,6 +90,7 @@ export default function ProfilePage() {
         user?.membershipPlan === "premium" ||
         userRole === "admin" ||
         userRole === "super_admin";
+    const isAdminUser = ["admin", "oper_admin", "super_admin"].includes(userRole);
 
     const isOwnProfile =
         Boolean(profile?.user) &&
@@ -97,7 +98,11 @@ export default function ProfilePage() {
 
     const canViewFullProfile = Boolean(user && (isPremiumUser || isOwnProfile));
     const canViewFullDetails = canViewFullProfile;
-    const profilePhotoUrl = getProfilePhotoUrl(profile?.profilePhoto);
+    const canViewProfilePhotos =
+        Boolean(user && (isAdminUser || isOwnProfile || profile?.showPhotosToMembers !== false));
+    const profilePhotoUrl = canViewProfilePhotos
+        ? getProfilePhotoUrl(profile?.profilePhoto)
+        : "";
 
     useEffect(() => {
         if (!profile || !user || isPremiumUser) return;
@@ -223,7 +228,7 @@ export default function ProfilePage() {
                 <div className="profile-detail-card">
                     <div className="profile-top-section">
                         <div className="profile-photo-box">
-                            {canViewFullProfile && profilePhotoUrl ? (
+                            {canViewProfilePhotos && profilePhotoUrl ? (
                                 <img
                                     src={profilePhotoUrl}
                                     alt="Profile"
@@ -232,7 +237,11 @@ export default function ProfilePage() {
                             ) : (
                                 <div className="profile-photo-locked">
                                     <span>ðŸ”’</span>
-                                    <p>Photo Locked</p>
+                                    <p>
+                                        {profile?.showPhotosToMembers === false
+                                            ? "Photos Hidden"
+                                            : "Photo Locked"}
+                                    </p>
                                 </div>
                             )}
                         </div>

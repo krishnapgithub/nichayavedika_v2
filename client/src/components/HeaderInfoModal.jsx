@@ -124,9 +124,22 @@ const modalContent = {
     },
 };
 
-export default function HeaderInfoModal({ type, onClose }) {
+export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipPlan = "free", onMembershipAction }) {
     const content = modalContent[type];
     const gridClass = content?.columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3";
+    const normalizedMembershipPlan = membershipPlan?.toString().toLowerCase();
+    const shouldShowMembershipAction = (sectionTitle) => {
+        if (type !== "membership") return false;
+        if (!isLoggedIn) return true;
+        if (normalizedMembershipPlan === "elite") return false;
+        if (normalizedMembershipPlan === "premium") return sectionTitle === "Elite";
+        return sectionTitle !== "Free";
+    };
+
+    const getMembershipActionLabel = (sectionTitle) => {
+        if (!isLoggedIn) return "Register Free";
+        return sectionTitle === "Elite" ? "Choose Elite" : "Choose Premium";
+    };
 
     useEffect(() => {
         const handleEscape = (event) => {
@@ -138,46 +151,46 @@ export default function HeaderInfoModal({ type, onClose }) {
         return () => {
             document.removeEventListener("keydown", handleEscape);
         };
-    }, []);
+    }, [onClose]);
 
     if (!content) return null;
 
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto bg-black/55 px-4 py-6">
-            <div className="min-h-[420px] w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
-                <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-rose-100 bg-gradient-to-r from-[#800020] to-[#a1123e] px-6 py-5 text-white">
+            <div className="relative max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+                <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-rose-100 bg-white px-5 py-4">
                     <div>
-                        <h2 className="text-3xl font-bold">{content.title}</h2>
-                        <p className="mt-1 text-sm text-white/90">{content.subtitle}</p>
+                        <h2 className="text-2xl font-bold text-[#800020]">{content.title}</h2>
+                        <p className="mt-1 text-sm text-gray-600">{content.subtitle}</p>
                     </div>
 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-full bg-white px-4 py-2 text-sm font-bold text-[#800020]"
+                        className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                     >
                         Close
                     </button>
                 </div>
 
-                <div className={`grid gap-5 p-6 ${gridClass}`}>
+                <div className={`grid gap-5 p-5 ${gridClass}`}>
                     {content.sections.map((section) => (
                         <div
                             key={section.title}
                             className={`rounded-2xl border p-5 shadow-sm ${
                                 section.featured
-                                    ? "border-[#800020] bg-[#800020] text-white"
-                                    : "border-rose-100 bg-[#fff8f2]"
+                                    ? "border-amber-200 bg-amber-50 text-gray-700"
+                                    : "border-rose-100 bg-[#fff8f2] text-gray-700"
                             }`}
                         >
                             {section.featured && (
-                                <span className="mb-3 inline-flex rounded-full bg-amber-300 px-3 py-1 text-xs font-bold text-[#800020]">
+                                <span className="mb-3 inline-flex rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
                                     Most Popular
                                 </span>
                             )}
 
-                            <h3 className="text-xl font-bold">{section.title}</h3>
-                            <p className={`mt-2 text-lg font-bold ${section.featured ? "text-amber-200" : "text-[#800020]"}`}>
+                            <h3 className="text-xl font-bold text-[#800020]">{section.title}</h3>
+                            <p className={`mt-2 text-lg font-bold ${section.featured ? "text-amber-700" : "text-[#800020]"}`}>
                                 {section.price}
                             </p>
 
@@ -186,6 +199,20 @@ export default function HeaderInfoModal({ type, onClose }) {
                                     <li key={item}>✓ {item}</li>
                                 ))}
                             </ul>
+
+                            {shouldShowMembershipAction(section.title) && (
+                                <button
+                                    type="button"
+                                    onClick={() => onMembershipAction?.(section.title)}
+                                    className={`mt-5 w-full rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                                        section.featured
+                                            ? "bg-[#800020] text-white hover:bg-[#5c0017]"
+                                            : "border border-[#800020] text-[#800020] hover:bg-[#800020] hover:text-white"
+                                    }`}
+                                >
+                                    {getMembershipActionLabel(section.title)}
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>

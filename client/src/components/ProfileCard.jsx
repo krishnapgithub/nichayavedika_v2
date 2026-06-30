@@ -15,7 +15,8 @@ const getImageUrl = (profilePhoto) => {
 };
 
 export default function ProfileCard({ profile, onView }) {
-    const imageUrl = getImageUrl(profile.profilePhoto);
+    const canShowPhoto = profile.showPhotosToMembers !== false && profile.profilePhoto;
+    const imageUrl = canShowPhoto ? getImageUrl(profile.profilePhoto) : "";
     const aboutText = profile.aboutMe || "Traditional family with good values.";
     const aboutPreview = aboutText.substring(0, 120);
     const hasMoreAbout = aboutText.length > 120;
@@ -40,18 +41,24 @@ export default function ProfileCard({ profile, onView }) {
             <div className="flex gap-4 items-start">
 
                 {/* Photo */}
-                <img
-                    src={imageUrl}
-                    alt="Profile"
-                    className="
-                        w-20 h-20
-                        rounded-[18px]
-                        object-cover
-                        shadow-md
-                        border border-rose-100
-                        flex-shrink-0
-                    "
-                />
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt="Profile"
+                        className="
+                            w-20 h-20
+                            rounded-[18px]
+                            object-cover
+                            shadow-md
+                            border border-rose-100
+                            flex-shrink-0
+                        "
+                    />
+                ) : (
+                    <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[18px] border border-amber-200 bg-amber-50 px-2 text-center text-[11px] font-bold leading-tight text-[#800020] shadow-md">
+                        Photos Hidden
+                    </div>
+                )}
 
                 {/* Profile Info */}
                 <div className="flex-1 min-w-0">
@@ -64,7 +71,7 @@ export default function ProfileCard({ profile, onView }) {
                             leading-tight
                         "
                     >
-                        {profile.fullName || "Profile Hidden"}
+                        {profile.fullName || "Premium Match"}
                     </h3>
 
                     {profile.profileNumber && (

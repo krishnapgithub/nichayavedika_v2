@@ -1,9 +1,10 @@
-﻿import Otp from "../models/Otp.js";
+import Otp from "../models/Otp.js";
+import User from "../models/User.js";
 import { sendOtpEmail } from "../services/emailService.js";
 
 export const sendEmailOtp = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email, mobile } = req.body;
 
         if (!email) {
             return res.status(400).json({
@@ -13,6 +14,22 @@ export const sendEmailOtp = async (req, res) => {
         }
 
         const cleanEmail = email.toLowerCase().trim();
+        const cleanMobile = mobile?.trim();
+        const existingUser = await User.findOne({
+            $or: [
+                { email: cleanEmail },
+                ...(cleanMobile ? [{ mobile: cleanMobile }] : []),
+            ],
+        });
+
+        if (existingUser) {
+            const duplicateField = existingUser.email === cleanEmail ? "email" : "mobile number";
+
+            return res.status(409).json({
+                success: false,
+                message: `An account already exists with this ${duplicateField}. Please login using your existing credentials.`,
+            });
+        }
 
         await Otp.updateMany(
             {
