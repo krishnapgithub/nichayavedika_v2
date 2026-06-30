@@ -40,6 +40,21 @@ export default function Header() {
         }
     }, []);
 
+    useEffect(() => {
+        if (!isMobileMenuOpen) return;
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [isMobileMenuOpen]);
+
     const isLoggedIn = !!user;
     const userRole = user?.role?.toLowerCase?.().trim();
     const membershipPlan = (
@@ -52,6 +67,7 @@ export default function Header() {
     const isEliteMember = membershipPlan === "elite";
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
     const canManageUsers = userRole === "super_admin";
+    const displayName = user?.fullName?.trim?.() || "User";
 
     useEffect(() => {
         const shouldMaskNames =
@@ -253,21 +269,23 @@ export default function Header() {
                 className="pointer-events-none fixed right-6 top-[78px] z-[1] h-[150px] w-[150px] rounded-full object-cover opacity-[0.13] mix-blend-multiply md:right-10 md:h-[190px] md:w-[190px]"
             />
 
-            <div className="bg-[#800020] text-white text-center py-2 text-sm">
+            <div className="bg-[#800020] px-3 py-1.5 text-center text-xs leading-snug text-white sm:py-2 sm:text-sm">
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
             </div>
 
             <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 relative -top-2">
-                    <div className="flex items-center justify-between h-20">
-                        <div className="flex items-center gap-3">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:relative lg:-top-2">
+                    <div className="flex h-16 items-center justify-between gap-3 sm:h-20">
+                        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
 
                             {/* Small Logo */}
                             <img
                                 src={nvLogo}
                                 alt="నిశ్చయ వేదిక"
-                                className=" h-16
-        w-16
+                                className=" h-12
+        w-12
+        sm:h-16
+        sm:w-16
         rounded-full
         object-cover
         shadow-lg
@@ -276,12 +294,12 @@ export default function Header() {
                             />
 
                             {/* Title & Subtitle */}
-                            <div>
-                                <h1 className="text-3xl font-bold text-[#800020] leading-none">
+                            <div className="min-w-0">
+                                <h1 className="truncate text-xl font-bold leading-none text-[#800020] sm:text-3xl">
                                     నిశ్చయ వేదిక
                                 </h1>
 
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="mt-1 truncate text-[11px] text-gray-500 sm:text-xs">
                                     Trusted Telugu Matrimony
                                 </p>
                             </div>
@@ -354,19 +372,38 @@ export default function Header() {
                             </button>
                         </nav>
 
-                        <button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="lg:hidden text-[#800020] text-2xl"
-                        >
-                            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
-                        </button>
+                        <div className="flex flex-shrink-0 items-center gap-2 lg:hidden">
+                            {user && (
+                                <div className="flex max-w-[132px] items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-2 py-1 text-xs shadow-sm sm:max-w-[190px] sm:px-3">
+                                    <span className="min-w-0 truncate font-semibold text-gray-700">
+                                        Hi, {displayName}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={handleLogout}
+                                        className="flex-shrink-0 border-0 bg-transparent font-semibold text-[#800020]"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                className="flex h-10 w-10 flex-shrink-0 items-center justify-center text-2xl text-[#800020]"
+                                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                                aria-expanded={isMobileMenuOpen}
+                            >
+                                {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                            </button>
+                        </div>
 
                         <div className="hidden lg:flex items-center gap-2">
                             {user ? (
                                 <>
                                     <span className="flex items-center gap-2 text-gray-600 font-medium">
                                         <FaUserCircle className="text-[#800020]" />
-                                        Hi, {user.fullName}
+                                        Hi, {displayName}
                                     </span>
 
                                     <span className="mx-2 text-amber-500 font-semibold">|</span>
@@ -402,7 +439,7 @@ export default function Header() {
                 </div>
 
                 {isMobileMenuOpen && (
-                    <div className="md:hidden bg-white border-t shadow-lg px-6 py-4 space-y-4">
+                    <div className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t bg-white px-4 py-4 shadow-lg sm:px-6 lg:hidden">
 
                         <button type="button" className="mobile-nav-link" onClick={goToHome}>
                             Home
@@ -422,10 +459,6 @@ export default function Header() {
 
                         <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("success")}>
                             Success Stories
-                        </button>
-
-                        <button type="button" className="mobile-nav-link" onClick={goToLegalHome}>
-                            Legal & Terms
                         </button>
 
                         <button type="button" className="mobile-nav-link" onClick={() => openInfoModal("muhurthalu")}>
@@ -466,24 +499,6 @@ export default function Header() {
                             <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                                 Super Admin
                             </Link>
-                        )}
-
-                        {user && (
-                            <>
-                                <div className="text-sm text-gray-600">
-                                    Hi, {user.fullName}
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        handleLogout();
-                                        setIsMobileMenuOpen(false);
-                                    }}
-                                    className="mobile-nav-link text-left w-full"
-                                >
-                                    Logout
-                                </button>
-                            </>
                         )}
 
                         {!user && (

@@ -205,7 +205,7 @@ function FloatingInfoFooter() {
 
     return (
         <div className="fixed bottom-0 left-0 z-[9998] w-full border-t border-gray-100 bg-white px-2 py-1 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-            <div className="flex items-center justify-center whitespace-nowrap text-sm font-medium text-[#800020]">
+            <div className="flex flex-wrap items-center justify-center gap-y-0 text-center text-xs font-medium text-[#800020] sm:flex-nowrap sm:whitespace-nowrap sm:text-sm">
                 <button
                     type="button"
                     onClick={() => goToLegal()}
@@ -213,7 +213,7 @@ function FloatingInfoFooter() {
                 >
                     Legal
                 </button>
-                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="mx-1 text-base font-bold text-amber-500 sm:mx-4 sm:text-xl">|</span>
                 <button
                     type="button"
                     onClick={() => goToLegal("privacy")}
@@ -221,7 +221,7 @@ function FloatingInfoFooter() {
                 >
                     Privacy
                 </button>
-                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="mx-1 text-base font-bold text-amber-500 sm:mx-4 sm:text-xl">|</span>
                 <button
                     type="button"
                     onClick={() => goToLegal("terms")}
@@ -229,7 +229,7 @@ function FloatingInfoFooter() {
                 >
                     Terms
                 </button>
-                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="mx-1 text-base font-bold text-amber-500 sm:mx-4 sm:text-xl">|</span>
                 <button
                     type="button"
                     onClick={goToFaq}
@@ -237,11 +237,11 @@ function FloatingInfoFooter() {
                 >
                     FAQ
                 </button>
-                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="mx-1 text-base font-bold text-amber-500 sm:mx-4 sm:text-xl">|</span>
                 <span className="text-gray-600">
                     Contact: info@nichayavedika.com
                 </span>
-                <span className="mx-2 text-amber-500 text-xl font-bold sm:mx-4">|</span>
+                <span className="mx-1 text-base font-bold text-amber-500 sm:mx-4 sm:text-xl">|</span>
                 <span className="text-gray-600">
                     © 2026 NichayaVedika. All Rights Reserved.
                 </span>

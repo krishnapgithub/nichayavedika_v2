@@ -5,7 +5,7 @@ import ProfileViewModal from "../components/ProfileViewModal.jsx";
 import toast from "react-hot-toast";
 import nvLogo from "../images/nvlogo-v1.png";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 const PROFILE_STATUS_OPTIONS = [
     ["all", "All Profiles"],
     ["approved", "Approved"],
@@ -69,13 +69,6 @@ const getPhotoUrl = (profilePhoto) => {
 const getStatusLabel = (status) => {
     const match = PROFILE_STATUS_OPTIONS.find(([value]) => value === status);
     return match?.[1] || "Pending Approval";
-};
-
-const getStatusClass = (status) => {
-    if (status === "approved") return "bg-green-50 text-green-700 ring-1 ring-green-200";
-    if (status === "rejected") return "bg-red-50 text-red-700 ring-1 ring-red-200";
-    if (status === "deactivated") return "bg-gray-100 text-gray-700 ring-1 ring-gray-300";
-    return "bg-amber-50 text-amber-700 ring-1 ring-amber-200";
 };
 
 export default function AdminProfiles() {
@@ -276,7 +269,7 @@ export default function AdminProfiles() {
         <>
 
             <div className="min-h-screen bg-[#fff8f2] px-4 pb-12 pt-44 lg:pt-56">
-                <div className="mx-auto max-w-6xl">
+                <div className="mx-auto max-w-7xl">
                     <nav className="mb-3 text-sm font-medium text-gray-500">
                         <Link to="/" className="hover:text-[#800020]">
                             Home
@@ -372,78 +365,91 @@ export default function AdminProfiles() {
                         </div>
                     )}
 
-                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-4 xl:grid-cols-2">
                         {profiles.map((profile) => (
                             <div
                                 key={profile._id}
-                                className="relative overflow-hidden rounded-[28px] border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                                className="grid gap-4 rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-4 text-gray-800 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#800020]/30 hover:shadow-xl md:grid-cols-[88px_minmax(0,1fr)]"
                             >
-                                <div className="flex gap-4 items-start">
-                                    <div className="w-20 flex-shrink-0">
-                                        <img
-                                            src={getPhotoUrl(profile.profilePhoto)}
-                                            alt={profile.fullName || "Profile"}
-                                            className="h-20 w-20 rounded-[18px] border border-rose-100 bg-[#fff8f2] object-cover shadow-md"
-                                        />
-                                        <p className={`mt-2 flex w-full justify-center rounded-full px-2 py-1 text-[10px] font-bold leading-tight ${getStatusClass(profile.status)}`}>
-                                            {getStatusLabel(profile.status)}
-                                        </p>
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        {profile.profileNumber && (
-                                            <p className="mb-2 inline-flex rounded-full bg-[#fff8f2] px-3 py-1 text-xs font-bold text-[#800020] ring-1 ring-[#800020]/15">
-                                                {profile.profileNumber}
-                                            </p>
-                                        )}
-
-                                        <h2 className="truncate text-lg font-bold leading-tight text-[#800020]">
-                                            {profile.fullName || "Profile"}
-                                        </h2>
-
-                                        <p className="mt-2 text-[15px] leading-5 text-gray-700">
-                                            <span className="font-medium">Age:</span>{" "}
-                                            {profile.age || "N/A"}
-                                        </p>
-
-                                        <p className="text-[15px] leading-5 text-gray-700">
-                                            {profile.occupation || "Occupation N/A"}
-                                        </p>
-                                    </div>
+                                <div className="flex items-center gap-4 md:block">
+                                    <img
+                                        src={getPhotoUrl(profile.profilePhoto)}
+                                        alt={profile.fullName || "Profile"}
+                                        className="h-20 w-20 flex-shrink-0 rounded-xl border border-rose-100 bg-[#fff8f2] object-cover shadow-md md:h-[88px] md:w-[88px]"
+                                    />
+                                    <p className="mt-0 rounded-full bg-white px-3 py-1 text-center text-[11px] font-bold text-[#800020] ring-1 ring-[#800020]/15 md:mt-2">
+                                        {getStatusLabel(profile.status)}
+                                    </p>
                                 </div>
 
-                                <div className="mt-5 grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedProfile(profile)}
-                                        className="rounded-lg border border-[#800020] px-3 py-2 text-sm font-semibold text-[#800020] hover:bg-white"
-                                    >
-                                        View
-                                    </button>
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h2 className="truncate text-lg font-bold leading-tight text-[#800020]">
+                                            Name: {profile.fullName || "Profile"}
+                                        </h2>
+                                        {profile.profileNumber && (
+                                            <span className="rounded-full bg-[#fff8f2] px-2 py-1 text-xs font-bold text-[#800020] ring-1 ring-[#800020]/15">
+                                                {profile.profileNumber}
+                                            </span>
+                                        )}
+                                    </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => updateStatus(profile._id, "approved")}
-                                        className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white"
-                                    >
-                                        Approve
-                                    </button>
+                                    <div className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                                        <p>
+                                            <span className="font-semibold text-gray-900">Age:</span>{" "}
+                                            {profile.age || "N/A"}
+                                        </p>
+                                        <p className="truncate">
+                                            <span className="font-semibold text-gray-900">Occupation:</span>{" "}
+                                            {profile.occupation || "N/A"}
+                                        </p>
+                                        <p className="truncate">
+                                            <span className="font-semibold text-gray-900">City:</span>{" "}
+                                            {profile.city || "N/A"}
+                                        </p>
+                                        <p className="truncate">
+                                            <span className="font-semibold text-gray-900">Caste:</span>{" "}
+                                            {profile.caste || "N/A"}
+                                        </p>
+                                        <p className="truncate">
+                                            <span className="font-semibold text-gray-900">Education:</span>{" "}
+                                            {profile.education || "N/A"}
+                                        </p>
+                                    </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => updateStatus(profile._id, "rejected")}
-                                        className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white"
-                                    >
-                                        Reject
-                                    </button>
+                                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedProfile(profile)}
+                                            className="rounded-lg border border-[#800020] px-3 py-2 text-sm font-semibold text-[#800020] hover:bg-white"
+                                        >
+                                            View
+                                        </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => updateStatus(profile._id, "deactivated")}
-                                        className="rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white"
-                                    >
-                                        Deactivate
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => updateStatus(profile._id, "approved")}
+                                            className="rounded-lg border border-green-500 bg-white px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"
+                                        >
+                                            Approve
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => updateStatus(profile._id, "rejected")}
+                                            className="rounded-lg border border-red-500 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                                        >
+                                            Reject
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => updateStatus(profile._id, "deactivated")}
+                                            className="rounded-lg border border-orange-500 bg-white px-3 py-2 text-sm font-semibold text-orange-700 hover:bg-orange-50"
+                                        >
+                                            Deactivate
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
