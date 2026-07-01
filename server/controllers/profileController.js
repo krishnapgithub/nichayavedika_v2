@@ -313,6 +313,16 @@ export const searchProfiles = async (req, res) => {
         };
 
         const shouldForceOppositeGender = req.user && !isAdminUser(req.user);
+        const currentUserId = req.user?._id || req.user?.id;
+
+        if (currentUserId && !isAdminUser(req.user)) {
+            filter.$and.push({
+                user: {
+                    $ne: currentUserId,
+                },
+            });
+        }
+
         const requiredGender =
             shouldForceOppositeGender
                 ? getOppositeGender(req.user.gender)
@@ -439,7 +449,7 @@ export const searchProfiles = async (req, res) => {
 
         const profiles = await Profile.find(filter)
             .select(
-                "profileNumber fullName age gender height education occupation city state caste subCaste profilePhoto stylishPhotos showPhotosToMembers aboutMe status"
+                "user profileNumber fullName age gender height education occupation city state caste subCaste profilePhoto stylishPhotos showPhotosToMembers aboutMe status"
             )
             .sort({ createdAt: -1 })
             .skip(skip)
