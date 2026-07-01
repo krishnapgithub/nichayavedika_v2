@@ -92,6 +92,8 @@ export const registerUser = async (req, res) => {
             membershipPlan: "free",
             isEmailVerified: true,
             isMobileVerified: false,
+            status: USER_STATUS.APPROVED,
+            profileStatus: USER_STATUS.PENDING,
         });
 
         const token = generateToken(user._id);
@@ -112,6 +114,8 @@ export const registerUser = async (req, res) => {
                 menuAccess: user.menuAccess,
                 isEmailVerified: user.isEmailVerified,
                 isMobileVerified: user.isMobileVerified,
+                status: user.status,
+                profileStatus: user.profileStatus,
             },
         });
     } catch (error) {
@@ -183,14 +187,10 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // ==========================================
-        // Admin Approval Check
-        // ==========================================
-        if (user.status !== USER_STATUS.APPROVED) {
+        if (user.status === USER_STATUS.REJECTED) {
             return res.status(403).json({
                 success: false,
-                message:
-                    "Your registration is pending admin approval. Please wait for confirmation.",
+                message: "Your account is not active. Please contact admin.",
             });
         }
 
@@ -212,7 +212,8 @@ export const loginUser = async (req, res) => {
                 menuAccess: user.menuAccess,
                 isEmailVerified: user.isEmailVerified,
                 isMobileVerified: user.isMobileVerified,
-                status: user.status, // Added
+                status: user.status,
+                profileStatus: user.profileStatus,
             },
         });
     } catch (error) {

@@ -25,12 +25,12 @@ export const loginUser = async (req, res) => {
     );
 
     // ==========================================
-    // Admin Approval Check
+    // Profile Approval Check
     // ==========================================
     if (user.status !== USER_STATUS.APPROVED) {
         return res.status(403).json({
             success: false,
-            message: "Your registration is pending admin approval.",
+            message: "Your profile is pending admin approval.",
         });
     }
 

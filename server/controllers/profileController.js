@@ -150,15 +150,6 @@ const isAdminUser = (user) => {
     return ["admin", "oper_admin", "super_admin"].includes(role);
 };
 
-const getProfileAgeLimit = async (user) => {
-    if (!user || isAdminUser(user)) return null;
-
-    const profile = await Profile.findOne({ user: user._id || user.id }).select("age");
-    const age = Number(profile?.age);
-
-    return Number.isFinite(age) && age > 0 ? age : null;
-};
-
 const isCloudinaryConfigured = () =>
     Boolean(
         process.env.CLOUDINARY_CLOUD_NAME &&
@@ -326,9 +317,6 @@ export const searchProfiles = async (req, res) => {
             shouldForceOppositeGender
                 ? getOppositeGender(req.user.gender)
                 : normalizeProfileGender(gender);
-        const maxAllowedAge = shouldForceOppositeGender
-            ? await getProfileAgeLimit(req.user)
-            : null;
 
         if (requiredGender) {
             const normalizedGender = requiredGender.trim().toLowerCase();
@@ -428,18 +416,14 @@ export const searchProfiles = async (req, res) => {
             });
         }
 
-        if (ageFrom || ageTo || maxAllowedAge) {
+        if (ageFrom || ageTo) {
             const ageFilter = {};
 
             if (ageFrom) ageFilter.$gte = Number(ageFrom);
 
             const requestedAgeTo = ageTo ? Number(ageTo) : null;
 
-            if (maxAllowedAge && requestedAgeTo) {
-                ageFilter.$lte = Math.min(requestedAgeTo, maxAllowedAge);
-            } else if (maxAllowedAge) {
-                ageFilter.$lte = maxAllowedAge;
-            } else if (requestedAgeTo) {
+            if (requestedAgeTo) {
                 ageFilter.$lte = requestedAgeTo;
             }
 
@@ -512,21 +496,11 @@ export const getProfileById = async (req, res) => {
         const requiredGender = !isAdmin && !isOwnProfile
             ? getOppositeGender(currentUser?.gender)
             : "";
-        const maxAllowedAge = !isAdmin && !isOwnProfile
-            ? await getProfileAgeLimit(currentUser)
-            : null;
 
         if (requiredGender && normalizeProfileGender(profile.gender) !== requiredGender) {
             return res.status(403).json({
                 success: false,
                 message: `Only ${requiredGender} profiles are available for your account`,
-            });
-        }
-
-        if (maxAllowedAge && Number(profile.age) > maxAllowedAge) {
-            return res.status(403).json({
-                success: false,
-                message: `Only profiles up to age ${maxAllowedAge} are available for your account`,
             });
         }
 
@@ -724,6 +698,7 @@ export const createProfile = async (req, res) => {
 
         const profile = await Profile.create({
             ...profileData,
+            status: "pending",
             profileNumber,
         });
 
@@ -1315,6 +1290,10 @@ export const updateProfileStatus = async (req, res) => {
                 gender: effectiveProfileUpdates.gender,
             });
         }
+
+        await User.findByIdAndUpdate(profile.user, {
+            profileStatus: nextStatus,
+        });
 
         return res.json({
             success: true,
