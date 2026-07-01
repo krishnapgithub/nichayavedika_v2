@@ -42,8 +42,6 @@ function ProtectedRoute({ children }) {
 function App() {
     const isLoggedIn = !!localStorage.getItem("user");
     const location = useLocation();
-    console.log("SessionTimeout Loaded", isLoggedIn);
-    console.log("Rama & Sita loading..");
 
     //    const navigate = useNavigate();
 

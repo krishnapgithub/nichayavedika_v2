@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 
 import { API_BASE_URL } from "../config/api";
@@ -34,7 +35,7 @@ export default function OtpModal({
             }
 
         } catch (error) {
-            toast.success(
+            toast.error(
                 error.response?.data?.message ||
                 "OTP verification failed"
             );

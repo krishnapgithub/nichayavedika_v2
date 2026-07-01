@@ -59,10 +59,104 @@ const getExpectedGender = (registeringFor) => {
     return "";
 };
 
+const reviewTrackedFields = [
+    "fullName",
+    "gender",
+    "dateOfBirth",
+    "age",
+    "height",
+    "maritalStatus",
+    "motherTongue",
+    "religion",
+    "caste",
+    "subCaste",
+    "gothram",
+    "education",
+    "occupation",
+    "annualIncome",
+    "city",
+    "state",
+    "country",
+    "familyDetails",
+    "contactPreference",
+    "aboutMe",
+    "preferredAgeFrom",
+    "preferredAgeTo",
+    "preferredCaste",
+    "preferredLocation",
+    "profilePhoto",
+    "stylishPhotos",
+    "showPhotosToMembers",
+];
+
+const normalizeReviewValue = (value) => {
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    if (Array.isArray(value)) return JSON.stringify(value.map((item) => item || ""));
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (value === null || value === undefined) return "";
+
+    return String(value).trim();
+};
+
+const getChangedProfileFields = (existingProfile, profileData) =>
+    reviewTrackedFields.filter((field) =>
+        Object.prototype.hasOwnProperty.call(profileData, field) &&
+        normalizeReviewValue(existingProfile[field]) !== normalizeReviewValue(profileData[field])
+    );
+
+const buildChangeHistoryEntry = (existingProfile, nextData, changedFields, changedBy, source = "user") => {
+    const previousData = {};
+    const newData = {};
+
+    changedFields.forEach((field) => {
+        previousData[field] = existingProfile[field];
+        newData[field] = nextData[field];
+    });
+
+    return {
+        changedAt: new Date(),
+        changedBy,
+        source,
+        changedFields,
+        previousData,
+        newData,
+    };
+};
+
+const pickReviewData = (source, fields) =>
+    fields.reduce((data, field) => {
+        data[field] = source[field];
+        return data;
+    }, {});
+
+const hasPendingProfileChanges = (profile) =>
+    Object.keys(profile?.pendingReviewData || {}).length > 0 ||
+    (profile?.reviewChanges || []).length > 0;
+
+const getLatestReviewChangeEntry = (profile) => {
+    const reviewFields = profile?.reviewChanges || [];
+    const history = [...(profile?.changeHistory || [])].reverse();
+
+    return history.find((entry) =>
+        !entry.revertedAt &&
+        entry.source !== "revert" &&
+        (entry.changedFields || []).some((field) => reviewFields.includes(field))
+    );
+};
+
 const isAdminUser = (user) => {
     const role = user?.role?.toLowerCase?.().trim();
 
     return ["admin", "oper_admin", "super_admin"].includes(role);
+};
+
+const getProfileAgeLimit = async (user) => {
+    if (!user || isAdminUser(user)) return null;
+
+    const profile = await Profile.findOne({ user: user._id || user.id }).select("age");
+    const age = Number(profile?.age);
+
+    return Number.isFinite(age) && age > 0 ? age : null;
 };
 
 const isCloudinaryConfigured = () =>
@@ -118,20 +212,34 @@ export const getPendingProfiles = async (req, res) => {
         const pageLimit = Math.max(Number(limit) || 10, 1);
         const allowedStatuses = ["pending", "approved", "rejected", "deactivated"];
         const filter = {};
+        const andConditions = [];
 
-        if (allowedStatuses.includes(status)) {
+        if (status === "pending") {
+            andConditions.push({
+                $or: [
+                    { status: "pending" },
+                    { reviewChanges: { $exists: true, $ne: [] } },
+                ],
+            });
+        } else if (allowedStatuses.includes(status)) {
             filter.status = status;
         }
 
         if (search.trim()) {
             const searchRegex = new RegExp(search.trim(), "i");
 
-            filter.$or = [
+            andConditions.push({
+                $or: [
                 { profileNumber: searchRegex },
                 { fullName: searchRegex },
                 { mobile: searchRegex },
                 { email: searchRegex },
-            ];
+                ],
+            });
+        }
+
+        if (andConditions.length > 0) {
+            filter.$and = andConditions;
         }
 
         const skip = (currentPage - 1) * pageLimit;
@@ -218,6 +326,9 @@ export const searchProfiles = async (req, res) => {
             shouldForceOppositeGender
                 ? getOppositeGender(req.user.gender)
                 : normalizeProfileGender(gender);
+        const maxAllowedAge = shouldForceOppositeGender
+            ? await getProfileAgeLimit(req.user)
+            : null;
 
         if (requiredGender) {
             const normalizedGender = requiredGender.trim().toLowerCase();
@@ -317,15 +428,26 @@ export const searchProfiles = async (req, res) => {
             });
         }
 
-        if (ageFrom || ageTo) {
+        if (ageFrom || ageTo || maxAllowedAge) {
+            const ageFilter = {};
 
-            filter.age = {};
+            if (ageFrom) ageFilter.$gte = Number(ageFrom);
 
-            if (ageFrom)
-                filter.age.$gte = Number(ageFrom);
+            const requestedAgeTo = ageTo ? Number(ageTo) : null;
 
-            if (ageTo)
-                filter.age.$lte = Number(ageTo);
+            if (maxAllowedAge && requestedAgeTo) {
+                ageFilter.$lte = Math.min(requestedAgeTo, maxAllowedAge);
+            } else if (maxAllowedAge) {
+                ageFilter.$lte = maxAllowedAge;
+            } else if (requestedAgeTo) {
+                ageFilter.$lte = requestedAgeTo;
+            }
+
+            filter.age = {
+                ...(typeof filter.age === "number" ? { $eq: filter.age } : {}),
+                ...(typeof filter.age === "object" && filter.age !== null ? filter.age : {}),
+                ...ageFilter,
+            };
         }
 
         const skip =
@@ -387,6 +509,26 @@ export const getProfileById = async (req, res) => {
         const isPaidMember = ["premium", "elite"].includes(
             currentUser?.membershipPlan
         );
+        const requiredGender = !isAdmin && !isOwnProfile
+            ? getOppositeGender(currentUser?.gender)
+            : "";
+        const maxAllowedAge = !isAdmin && !isOwnProfile
+            ? await getProfileAgeLimit(currentUser)
+            : null;
+
+        if (requiredGender && normalizeProfileGender(profile.gender) !== requiredGender) {
+            return res.status(403).json({
+                success: false,
+                message: `Only ${requiredGender} profiles are available for your account`,
+            });
+        }
+
+        if (maxAllowedAge && Number(profile.age) > maxAllowedAge) {
+            return res.status(403).json({
+                success: false,
+                message: `Only profiles up to age ${maxAllowedAge} are available for your account`,
+            });
+        }
 
         // Admin / Premium see full details
         if (isOwnProfile || isAdmin || isPaidMember) {
@@ -520,11 +662,43 @@ export const createProfile = async (req, res) => {
 
         if (existingProfile) {
             delete profileData.profileNumber;
-            profileData.status = existingProfile.status === "approved" ? "approved" : "pending";
+            const changedFields = getChangedProfileFields(existingProfile, profileData);
+            const hasChanges = changedFields.length > 0;
+            const shouldHoldForReview = existingProfile.status === "approved" && hasChanges;
+            const pendingReviewData = shouldHoldForReview
+                ? pickReviewData(profileData, changedFields)
+                : existingProfile.pendingReviewData || {};
+            const liveUpdateData = shouldHoldForReview
+                ? {}
+                : {
+                    ...profileData,
+                    status: hasChanges ? "pending" : existingProfile.status,
+                };
+            const setPayload = {
+                ...liveUpdateData,
+                reviewChanges: hasChanges ? changedFields : existingProfile.reviewChanges || [],
+                pendingReviewData,
+                reviewSubmittedAt: hasChanges ? new Date() : existingProfile.reviewSubmittedAt,
+            };
+            const updatePayload = {
+                $set: setPayload,
+            };
+
+            if (hasChanges) {
+                updatePayload.$push = {
+                    changeHistory: buildChangeHistoryEntry(
+                        existingProfile,
+                        profileData,
+                        changedFields,
+                        userId,
+                        "user"
+                    ),
+                };
+            }
 
             const updatedProfile = await Profile.findOneAndUpdate(
                 { user: userId },
-                profileData,
+                updatePayload,
                 {
                     new: true,
                     runValidators: true,
@@ -533,7 +707,9 @@ export const createProfile = async (req, res) => {
 
             return res.status(200).json({
                 success: true,
-                message: "Your profile updates have been submitted and are under admin review. Once approved, your profile will be visible in search again.",
+                message: shouldHoldForReview
+                    ? "Your profile changes are under admin review. Your approved profile remains visible until the changes are approved."
+                    : "Your profile updates have been submitted and are under admin review.",
                 profile: updatedProfile,
             });
         }
@@ -842,6 +1018,15 @@ export const ProfilePhoto = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
+        const existingProfile = await Profile.findOne({ user: req.params.userId });
+
+        if (!existingProfile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found",
+            });
+        }
+
         if (Object.prototype.hasOwnProperty.call(req.body, "showPhotosToMembers")) {
             req.body.showPhotosToMembers = toBoolean(req.body.showPhotosToMembers, true);
         }
@@ -852,15 +1037,6 @@ export const updateProfile = async (req, res) => {
 
             if (photoType === "stylish") {
                 const slot = Math.max(0, Math.min(Number(req.body.photoSlot) || 0, 1));
-                const existingProfile = await Profile.findOne({ user: req.params.userId });
-
-                if (!existingProfile) {
-                    return res.status(404).json({
-                        success: false,
-                        message: "Profile not found",
-                    });
-                }
-
                 const stylishPhotos = [...(existingProfile.stylishPhotos || [])];
                 stylishPhotos[slot] = photoPath;
 
@@ -874,9 +1050,46 @@ export const updateProfile = async (req, res) => {
             }
         }
 
+        const changedFields = getChangedProfileFields(existingProfile, req.body);
+        const hasChanges = changedFields.length > 0;
+        const shouldHoldForReview = existingProfile.status === "approved" && hasChanges && !isAdminUser(req.user);
+        const pendingReviewData = shouldHoldForReview
+            ? {
+                ...(existingProfile.pendingReviewData || {}),
+                ...pickReviewData(req.body, changedFields),
+            }
+            : existingProfile.pendingReviewData || {};
+        const liveUpdateData = shouldHoldForReview
+            ? {}
+            : {
+                ...req.body,
+                status: hasChanges ? "pending" : existingProfile.status,
+            };
+        const setPayload = {
+            ...liveUpdateData,
+            reviewChanges: hasChanges ? changedFields : existingProfile.reviewChanges || [],
+            pendingReviewData,
+            reviewSubmittedAt: hasChanges ? new Date() : existingProfile.reviewSubmittedAt,
+        };
+        const updatePayload = {
+            $set: setPayload,
+        };
+
+        if (hasChanges) {
+            updatePayload.$push = {
+                changeHistory: buildChangeHistoryEntry(
+                    existingProfile,
+                    req.body,
+                    changedFields,
+                    req.user?._id || req.user?.id,
+                    isAdminUser(req.user) ? "admin" : "user"
+                ),
+            };
+        }
+
         const profile = await Profile.findOneAndUpdate(
             { user: req.params.userId },
-            req.body,
+            updatePayload,
             {
                 new: true,
                 runValidators: true,
@@ -892,7 +1105,9 @@ export const updateProfile = async (req, res) => {
 
         res.json({
             success: true,
-            message: "Profile updated successfully",
+            message: shouldHoldForReview
+                ? "Your profile changes are under admin review. Your approved profile remains visible until the changes are approved."
+                : "Profile updated successfully",
             profile,
         });
     } catch (error) {
@@ -948,14 +1163,25 @@ export const updateProfileStatus = async (req, res) => {
             "stylishPhotos",
             "showPhotosToMembers",
         ];
+        const numericUpdateFields = ["age", "preferredAgeFrom", "preferredAgeTo"];
         const profileUpdates = {};
 
         allowedUpdateFields.forEach((field) => {
             if (Object.prototype.hasOwnProperty.call(updates, field)) {
-                profileUpdates[field] =
-                    field === "showPhotosToMembers"
-                        ? toBoolean(updates[field], true)
-                        : updates[field];
+                if (field === "showPhotosToMembers") {
+                    profileUpdates[field] = toBoolean(updates[field], true);
+                    return;
+                }
+
+                if (numericUpdateFields.includes(field)) {
+                    profileUpdates[field] =
+                        updates[field] === "" || updates[field] === null
+                            ? null
+                            : Number(updates[field]);
+                    return;
+                }
+
+                profileUpdates[field] = updates[field];
             }
         });
 
@@ -966,6 +1192,28 @@ export const updateProfileStatus = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Gender must be Bride or Groom",
+            });
+        }
+
+        const invalidNumericField = numericUpdateFields.find((field) =>
+            Object.prototype.hasOwnProperty.call(profileUpdates, field) &&
+            profileUpdates[field] !== null &&
+            Number.isNaN(profileUpdates[field])
+        );
+
+        if (invalidNumericField) {
+            return res.status(400).json({
+                success: false,
+                message: `${invalidNumericField} must be a valid number`,
+            });
+        }
+
+        const existingProfile = await Profile.findById(profileId);
+
+        if (!existingProfile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found",
             });
         }
 
@@ -980,15 +1228,6 @@ export const updateProfileStatus = async (req, res) => {
         }
 
         if (stylishUploads.length > 0) {
-            const existingProfile = await Profile.findById(profileId);
-
-            if (!existingProfile) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Profile not found",
-                });
-            }
-
             const stylishPhotos = Array.isArray(profileUpdates.stylishPhotos)
                 ? [...profileUpdates.stylishPhotos]
                 : [...(existingProfile.stylishPhotos || [])];
@@ -1000,12 +1239,67 @@ export const updateProfileStatus = async (req, res) => {
             profileUpdates.stylishPhotos = stylishPhotos;
         }
 
+        const pendingReviewData = existingProfile.pendingReviewData || {};
+        const hasPendingChanges = hasPendingProfileChanges(existingProfile);
+        const latestReviewChangeEntry = getLatestReviewChangeEntry(existingProfile);
+        const legacyRejectData =
+            latestReviewChangeEntry?.previousData && Object.keys(pendingReviewData).length === 0
+                ? latestReviewChangeEntry.previousData
+                : {};
+        const isPendingChangeReview = hasPendingChanges;
+        const isApplyingPendingReview =
+            status === "approved" &&
+            Object.keys(profileUpdates).length === 0 &&
+            Object.keys(pendingReviewData).length > 0;
+        const isRejectingPendingReview = status === "rejected" && isPendingChangeReview;
+        const effectiveProfileUpdates = isRejectingPendingReview
+            ? legacyRejectData
+            : isApplyingPendingReview
+                ? pendingReviewData
+                : profileUpdates;
+        const changedFields = getChangedProfileFields(existingProfile, effectiveProfileUpdates);
+        const nextStatus = isRejectingPendingReview ? "approved" : status;
+        const setPayload = {
+            ...effectiveProfileUpdates,
+            status: nextStatus,
+            ...(status === "approved" || isRejectingPendingReview
+                ? {
+                    reviewChanges: [],
+                    pendingReviewData: {},
+                    reviewSubmittedAt: null,
+                }
+                : {}),
+        };
+        const updatePayload = {
+            $set: setPayload,
+        };
+
+        if (changedFields.length > 0 && !isApplyingPendingReview && !isRejectingPendingReview) {
+            updatePayload.$push = {
+                changeHistory: buildChangeHistoryEntry(
+                    existingProfile,
+                    setPayload,
+                    changedFields,
+                    req.user?._id || req.user?.id,
+                    "admin"
+                ),
+            };
+        }
+
+        if (isRejectingPendingReview && latestReviewChangeEntry) {
+            const historyIndex = existingProfile.changeHistory.findIndex((entry) =>
+                String(entry._id) === String(latestReviewChangeEntry._id)
+            );
+
+            if (historyIndex >= 0) {
+                updatePayload.$set[`changeHistory.${historyIndex}.revertedAt`] = new Date();
+                updatePayload.$set[`changeHistory.${historyIndex}.revertedBy`] = req.user._id;
+            }
+        }
+
         const profile = await Profile.findByIdAndUpdate(
             profileId,
-            {
-                ...profileUpdates,
-                status,
-            },
+            updatePayload,
             { new: true }
         );
 
@@ -1016,15 +1310,19 @@ export const updateProfileStatus = async (req, res) => {
             });
         }
 
-        if (Object.prototype.hasOwnProperty.call(profileUpdates, "gender")) {
+        if (Object.prototype.hasOwnProperty.call(effectiveProfileUpdates, "gender")) {
             await User.findByIdAndUpdate(profile.user, {
-                gender: profileUpdates.gender,
+                gender: effectiveProfileUpdates.gender,
             });
         }
 
         return res.json({
             success: true,
-            message: `Profile ${status} successfully`,
+            message: isRejectingPendingReview
+                ? "Profile changes rejected. Approved profile remains visible."
+                : isApplyingPendingReview
+                    ? "Profile changes approved and applied."
+                    : `Profile ${status} successfully`,
             profile,
         });
     } catch (error) {
@@ -1033,6 +1331,90 @@ export const updateProfileStatus = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Internal server error",
+        });
+    }
+};
+
+export const revertProfileChange = async (req, res) => {
+    try {
+        const { profileId, changeId } = req.params;
+        const profile = await Profile.findById(profileId);
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found",
+            });
+        }
+
+        const changeEntry = profile.changeHistory.id(changeId);
+
+        if (!changeEntry) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile change version not found",
+            });
+        }
+
+        if (changeEntry.revertedAt) {
+            return res.status(400).json({
+                success: false,
+                message: "This change version was already reverted",
+            });
+        }
+
+        const previousData = changeEntry.previousData || {};
+        const changedFields = Object.keys(previousData).filter((field) =>
+            reviewTrackedFields.includes(field)
+        );
+
+        if (changedFields.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "This change version has no reversible profile fields",
+            });
+        }
+
+        const currentData = {};
+        changedFields.forEach((field) => {
+            currentData[field] = profile[field];
+            profile[field] = previousData[field];
+        });
+
+        profile.status = "approved";
+        profile.reviewChanges = [];
+        profile.pendingReviewData = {};
+        profile.reviewSubmittedAt = null;
+        changeEntry.revertedAt = new Date();
+        changeEntry.revertedBy = req.user._id;
+        profile.changeHistory.push({
+            changedAt: new Date(),
+            changedBy: req.user._id,
+            source: "revert",
+            changedFields,
+            previousData: currentData,
+            newData: previousData,
+        });
+
+        await profile.save();
+
+        if (changedFields.includes("gender")) {
+            await User.findByIdAndUpdate(profile.user, {
+                gender: profile.gender,
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Profile restored to the selected previous version",
+            profile,
+        });
+    } catch (error) {
+        console.error("REVERT PROFILE CHANGE ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to revert profile change",
         });
     }
 };

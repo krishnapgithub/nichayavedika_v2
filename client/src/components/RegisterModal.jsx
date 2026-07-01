@@ -14,59 +14,6 @@ const getExpectedGender = (registeringFor) => {
     return "";
 };
 
-const validateRegisterForm = () => {
-    const nameRegex = /^[A-Za-z\s.'-]+$/;
-    const mobileRegex = /^[0-9]{10}$/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,20}$/;
-
-    if (!formData.fullName.trim()) {
-        toast.error("Full Name is required");
-        return false;
-    }
-
-    if (formData.fullName.length > 220) {
-        toast.error("Full Name cannot exceed 220 characters");
-        return false;
-    }
-
-    if (!nameRegex.test(formData.fullName.trim())) {
-        toast.error("Full Name can contain only letters and spaces");
-        return false;
-    }
-
-    if (!mobileRegex.test(formData.mobile)) {
-        toast.error("Please enter a valid 10-digit mobile number");
-        return false;
-    }
-
-    if (!isValidEmail(formData.email)) {
-        toast.error("Please enter a valid email address");
-        return false;
-    }
-
-    if (!formData.registeringFor) {
-        toast.error("Please select Registering For");
-        return false;
-    }
-
-    if (!formData.gender) {
-        toast.error("Please select Gender");
-        return false;
-    }
-
-    if (!passwordRegex.test(formData.password)) {
-        toast.error("Password must be at least 6 characters and include one number");
-        return false;
-    }
-
-    if (formData.email.length > 100) {
-        toast.error("Email cannot exceed 100 characters");
-        return false;
-    }
-
-    return true;
-};
-
 export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
     const [isOtpOpen, setIsOtpOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -124,15 +71,10 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
             return false;
         }
 
-        if (!formData.gender) {
-            toast.error("Please select Gender");
-            return false;
-        }
-
         const expectedGender = getExpectedGender(formData.registeringFor);
 
-        if (expectedGender && formData.gender !== expectedGender) {
-            toast.error(`${formData.registeringFor} registration should be selected as ${expectedGender}`);
+        if (!expectedGender && !formData.gender) {
+            toast.error("Please select Bride or Groom");
             return false;
         }
 
@@ -188,6 +130,15 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
             return;
         }
 
+        if (name === "registeringFor") {
+            setFormData({
+                ...formData,
+                registeringFor: value,
+                gender: getExpectedGender(value),
+            });
+            return;
+        }
+
         setFormData({
             ...formData,
             [name]: value,
@@ -227,12 +178,14 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
         try {
             setLoading(true);
 
+            const profileType = getExpectedGender(formData.registeringFor) || formData.gender;
+
             const registerPayload = {
                 fullName: formData.fullName.trim(),
                 mobile: formData.mobile.trim(),
                 email: formData.email.trim().toLowerCase(),
                 password: formData.password,
-                gender: formData.gender,
+                gender: profileType,
                 registeringFor: formData.registeringFor,
             };
 
@@ -246,6 +199,11 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
             localStorage.setItem("token", response.data.token);
             localStorage.setItem("user", JSON.stringify(response.data.user));
             localStorage.setItem(CLOUD_STORAGE_CONSENT_KEY, "true");
+            window.dispatchEvent(new Event("account:user-updated"));
+
+            if (typeof onLoginSuccess === "function") {
+                onLoginSuccess(response.data.user);
+            }
 
             // ==========================================
             // Registration Success - Pending Admin Approval
@@ -267,12 +225,12 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
 
     return (
         <div
-            className="fixed top-0 left-0 w-screen h-screen z-[99999] bg-black/60 flex items-start justify-center px-4 pt-20"
+            className="fixed inset-0 z-[99999] flex h-[100dvh] w-screen items-start justify-center overflow-y-auto bg-black/60 px-3 py-4 sm:px-4 sm:py-8"
             onClick={onClose}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl p-8"
+                className="relative w-full max-w-xl overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:max-h-[calc(100dvh-4rem)] sm:p-8"
             >
                 <button
                     onClick={onClose}
@@ -280,7 +238,7 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
                 >
                     ✕
                 </button>
-                <div className="bg-[#800020] text-white -mx-8 -mt-8 mb-8 px-8 py-6 rounded-t-3xl">
+                <div className="-mx-5 -mt-5 mb-5 rounded-t-3xl bg-[#800020] px-5 py-5 text-white sm:-mx-8 sm:-mt-8 sm:mb-8 sm:px-8 sm:py-6">
                     <h2 className="text-3xl font-bold text-center">
                         Register Free
                     </h2>
@@ -290,7 +248,7 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
                     </p>
                 </div>
 
-                <div className="mt-8 grid md:grid-cols-2 gap-4">
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
                     <input
                         name="fullName"
                         maxLength={200}
@@ -339,11 +297,13 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
                         <option value="Sister">Sister</option>
                     </select>
 
-                    <select name="gender" value={formData.gender} onChange={handleChange} className="border rounded-xl px-4 py-3">
-                        <option value="">Gender</option>
-                        <option value="Bride">Bride</option>
-                        <option value="Groom">Groom</option>
-                    </select>
+                    {formData.registeringFor === "Self" && (
+                        <select name="gender" value={formData.gender} onChange={handleChange} className="border rounded-xl px-4 py-3">
+                            <option value="">Bride / Groom</option>
+                            <option value="Bride">Bride</option>
+                            <option value="Groom">Groom</option>
+                        </select>
+                    )}
 
                     
                 </div>
@@ -380,7 +340,7 @@ export default function RegisterModal({ isOpen, onClose, onLoginSuccess }) {
                 <button
                     onClick={handleRegister}
                     disabled={loading}
-                    className="w-full mt-6 bg-[#800020] text-white py-3 rounded-xl font-semibold hover:bg-[#5c0017] disabled:opacity-60"
+                    className="mt-5 w-full rounded-xl bg-[#800020] py-3 font-semibold text-white hover:bg-[#5c0017] disabled:opacity-60"
                 >
                     {loading ? "Please wait..." : "Register & Send Email OTP"}
                 </button>

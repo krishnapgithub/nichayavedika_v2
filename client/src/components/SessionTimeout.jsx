@@ -3,15 +3,14 @@
 import { useEffect, useState } from "react";
 import "../styles/sessionTimeout.css";
 
+const WARNING_AFTER_MS = 25 * 60 * 1000;
+const LOGOUT_AFTER_WARNING_MS = 5 * 60 * 1000;
+const WARNING_SECONDS = Math.floor(LOGOUT_AFTER_WARNING_MS / 1000);
+const activityEvents = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+
 export default function SessionTimeout({ isLoggedIn, onLogout }) {
   const [showWarning, setShowWarning] = useState(false);
-    const [countdown, setCountdown] = useState(30);
-
-    
-
-        console.log("SessionTimeout Loaded", isLoggedIn);
-
-    
+  const [countdown, setCountdown] = useState(WARNING_SECONDS);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -22,10 +21,8 @@ export default function SessionTimeout({ isLoggedIn, onLogout }) {
 
       const resetTimers = () => {
 
-          console.log("Timer Reset");
-
           setShowWarning(false);
-          setCountdown(30);
+          setCountdown(WARNING_SECONDS);
 
           clearTimeout(warningTimer);
           clearTimeout(logoutTimer);
@@ -33,25 +30,20 @@ export default function SessionTimeout({ isLoggedIn, onLogout }) {
 
           warningTimer = setTimeout(() => {
 
-              console.log("Session warning shown");
-
               setShowWarning(true);
 
               countdownTimer = setInterval(() => {
-                  setCountdown((prev) => prev - 1);
+                  setCountdown((prev) => Math.max(prev - 1, 0));
               }, 1000);
 
               logoutTimer = setTimeout(() => {
-                  console.log("Logging out...");
                   onLogout();
-              }, 10000);
+              }, LOGOUT_AFTER_WARNING_MS);
 
-          }, 10000);
+          }, WARNING_AFTER_MS);
       };
 
-    const events = ["mousemove", "keydown", "click", "scroll"];
-
-    events.forEach((event) => window.addEventListener(event, resetTimers));
+    activityEvents.forEach((event) => window.addEventListener(event, resetTimers, { passive: true }));
 
     resetTimers();
 
@@ -59,7 +51,7 @@ export default function SessionTimeout({ isLoggedIn, onLogout }) {
       clearTimeout(warningTimer);
       clearTimeout(logoutTimer);
       clearInterval(countdownTimer);
-      events.forEach((event) => window.removeEventListener(event, resetTimers));
+      activityEvents.forEach((event) => window.removeEventListener(event, resetTimers));
     };
   }, [isLoggedIn, onLogout]);
 
@@ -69,10 +61,14 @@ export default function SessionTimeout({ isLoggedIn, onLogout }) {
     <div className="session-overlay">
       <div className="session-popup">
         <h3>Session Expiring Soon</h3>
-        <p>Your session will expire in next few seconds.</p>
+        <p>Your session will expire soon due to inactivity.</p>
         <strong>{countdown} seconds remaining</strong>
 
-        <button onClick={() => window.location.reload()}>
+        <button onClick={() => {
+          setShowWarning(false);
+          setCountdown(WARNING_SECONDS);
+          window.dispatchEvent(new Event("mousemove"));
+        }}>
           Stay Logged In
         </button>
       </div>

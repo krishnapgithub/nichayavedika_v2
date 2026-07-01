@@ -73,6 +73,7 @@ export default function LoginModal({ isOpen, onClose, setUser }) {
                 setUser(res.data.user);
             }
 
+            window.dispatchEvent(new Event("account:user-updated"));
             toast.success("Login successful!");
             onClose();
         } catch (error) {

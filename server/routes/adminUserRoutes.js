@@ -1,5 +1,7 @@
 import express from "express";
 import {
+    getActivityLogs,
+    getAdminAuditLogs,
     getAllUsers,
     updateUserAccess,
     resetUserPassword,
@@ -17,6 +19,20 @@ router.get(
     protect,
     adminUserManagerOnly,
     getAllUsers
+);
+
+router.get(
+    "/activity-logs",
+    protect,
+    adminUserManagerOnly,
+    getActivityLogs
+);
+
+router.get(
+    "/audit-logs",
+    protect,
+    adminUserManagerOnly,
+    getAdminAuditLogs
 );
 
 router.put(

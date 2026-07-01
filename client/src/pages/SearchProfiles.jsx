@@ -86,9 +86,10 @@ function SearchProfiles() {
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [isGuestProfilePrompt, setIsGuestProfilePrompt] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [currentUser, setCurrentUser] = useState(() => getSavedUser());
 
     const [filters, setFilters] = useState(filtersFromUrl);
-    const savedUser = getSavedUser();
+    const savedUser = currentUser;
     const userRole = savedUser?.role?.toLowerCase?.().trim();
     const isAdminUser = ["admin", "oper_admin", "super_admin"].includes(userRole);
     const oppositeGender = !isAdminUser ? getOppositeGender(savedUser?.gender) : "";
@@ -197,6 +198,20 @@ function SearchProfiles() {
     };
 
     useEffect(() => {
+        const syncUserFromStorage = () => {
+            setCurrentUser(getSavedUser());
+        };
+
+        window.addEventListener("account:user-updated", syncUserFromStorage);
+        window.addEventListener("storage", syncUserFromStorage);
+
+        return () => {
+            window.removeEventListener("account:user-updated", syncUserFromStorage);
+            window.removeEventListener("storage", syncUserFromStorage);
+        };
+    }, []);
+
+    useEffect(() => {
         if (!isSearchTextValid(filtersFromUrl.search)) {
             toast.error("Please enter at least 3 characters to search.");
             return;
@@ -214,8 +229,9 @@ function SearchProfiles() {
         };
 
         setFilters(initialFilters);
+        setProfiles([]);
         fetchProfiles(1, initialFilters);
-    }, []);
+    }, [oppositeGender, shouldLockGender]);
 
     return (
 
@@ -238,7 +254,7 @@ function SearchProfiles() {
             {/* Search Filters */}
             <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
 
-                <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                <div className={`grid grid-cols-1 gap-4 ${shouldLockGender ? "md:grid-cols-6" : "md:grid-cols-7"}`}>
 
                     <input
                         type="text"
@@ -256,26 +272,21 @@ function SearchProfiles() {
                         className="border rounded-xl p-3"
                     />
 
-                    <select
-                        value={shouldLockGender ? oppositeGender : filters.gender}
-                        onChange={(e) =>
-                            setFilters({
-                                ...filters,
-                                gender: e.target.value,
-                            })
-                        }
-                        disabled={shouldLockGender}
-                        className="border rounded-xl p-3"
-                    >
-                        <option value="">Bride / Groom</option>
-                        <option value="Bride">Bride</option>
-                        <option value="Groom">Groom</option>
-                    </select>
-
-                    {shouldLockGender && (
-                        <p className="rounded-xl border border-amber-200 bg-[#fff8f2] px-3 py-2 text-sm font-semibold text-[#800020] md:col-span-7">
-                            Showing only {oppositeGender} profiles for your account.
-                        </p>
+                    {!shouldLockGender && (
+                        <select
+                            value={filters.gender}
+                            onChange={(e) =>
+                                setFilters({
+                                    ...filters,
+                                    gender: e.target.value,
+                                })
+                            }
+                            className="border rounded-xl p-3"
+                        >
+                            <option value="">Bride / Groom</option>
+                            <option value="Bride">Bride</option>
+                            <option value="Groom">Groom</option>
+                        </select>
                     )}
 
                     <input

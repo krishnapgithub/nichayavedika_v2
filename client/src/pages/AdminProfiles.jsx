@@ -71,6 +71,25 @@ const getStatusLabel = (status) => {
     return match?.[1] || "Pending Approval";
 };
 
+const formatDateTime = (value) => {
+    if (!value) return "-";
+
+    return new Date(value).toLocaleString("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
+};
+
+const formatHistoryValue = (value) => {
+    if (Array.isArray(value)) return value.filter(Boolean).join(", ") || "-";
+    if (value === true) return "Yes";
+    if (value === false) return "No";
+    if (value === null || value === undefined || value === "") return "-";
+    if (/^\d{4}-\d{2}-\d{2}T/.test(String(value))) return formatDateTime(value);
+
+    return String(value);
+};
+
 const getExpectedGender = (registeringFor) => {
     if (["Son", "Brother"].includes(registeringFor)) return "Groom";
     if (["Daughter", "Sister"].includes(registeringFor)) return "Bride";
@@ -87,6 +106,7 @@ export default function AdminProfiles() {
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
     const [isAssistedCreateOpen, setIsAssistedCreateOpen] = useState(false);
+    const [historyProfile, setHistoryProfile] = useState(null);
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const userRole = loggedInUser?.role?.toLowerCase?.().trim();
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
@@ -188,10 +208,6 @@ export default function AdminProfiles() {
                     payload.append("stylishPhoto1", photoFiles.stylishPhoto1);
                 }
 
-                config.headers = {
-                    ...config.headers,
-                    "Content-Type": "multipart/form-data",
-                };
             }
 
             const res = await axios.put(
@@ -202,6 +218,11 @@ export default function AdminProfiles() {
 
             toast.success("Profile updated");
             setSelectedProfile(res.data.profile);
+            setProfiles((currentProfiles) =>
+                currentProfiles.map((profile) =>
+                    profile._id === res.data.profile?._id ? res.data.profile : profile
+                )
+            );
             fetchPendingProfiles(page, search, statusFilter);
         } catch (error) {
             console.error(error);
@@ -238,6 +259,35 @@ export default function AdminProfiles() {
         } catch (error) {
             console.error(error);
             toast.error(error.response?.data?.message || "Unable to create assisted profile");
+        }
+    };
+
+    const revertProfileChange = async (profileId, changeId) => {
+        const confirmed = window.confirm("Revert this profile to the selected previous version?");
+
+        if (!confirmed) return;
+
+        try {
+            const res = await axios.put(
+                `${API_BASE_URL}/api/profiles/admin/${profileId}/revert/${changeId}`,
+                {},
+                authConfig()
+            );
+
+            toast.success(res.data?.message || "Profile version restored");
+            setHistoryProfile(res.data.profile);
+            setSelectedProfile((current) =>
+                current?._id === res.data.profile?._id ? res.data.profile : current
+            );
+            setProfiles((currentProfiles) =>
+                currentProfiles.map((profile) =>
+                    profile._id === res.data.profile?._id ? res.data.profile : profile
+                )
+            );
+            fetchPendingProfiles(page, search, statusFilter);
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Unable to revert profile version");
         }
     };
 
@@ -372,10 +422,18 @@ export default function AdminProfiles() {
                     )}
 
                     <div className="grid gap-4 xl:grid-cols-2">
-                        {profiles.map((profile) => (
+                        {profiles.map((profile) => {
+                            const hasReviewChanges = (profile.reviewChanges || []).length > 0;
+                            const hasHistory = (profile.changeHistory || []).length > 0;
+
+                            return (
                             <div
                                 key={profile._id}
-                                className="grid gap-4 rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-4 text-gray-800 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#800020]/30 hover:shadow-xl md:grid-cols-[88px_minmax(0,1fr)]"
+                                className={`grid gap-4 rounded-2xl border p-4 text-gray-800 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl md:grid-cols-[88px_minmax(0,1fr)] ${
+                                    hasReviewChanges
+                                        ? "border-amber-300 bg-gradient-to-br from-amber-100 via-white to-rose-50 ring-2 ring-amber-200"
+                                        : "border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 hover:border-[#800020]/30"
+                                }`}
                             >
                                 <div className="flex items-center gap-4 md:block">
                                     <img
@@ -384,8 +442,13 @@ export default function AdminProfiles() {
                                         className="h-20 w-20 flex-shrink-0 rounded-xl border border-rose-100 bg-[#fff8f2] object-cover shadow-md md:h-[88px] md:w-[88px]"
                                     />
                                     <p className="mt-0 rounded-full bg-white px-3 py-1 text-center text-[11px] font-bold text-[#800020] ring-1 ring-[#800020]/15 md:mt-2">
-                                        {getStatusLabel(profile.status)}
+                                        {hasReviewChanges ? "Change Review" : getStatusLabel(profile.status)}
                                     </p>
+                                    {hasReviewChanges && (
+                                        <p className="mt-2 rounded-full bg-amber-500 px-3 py-1 text-center text-[11px] font-bold text-white shadow">
+                                            Modified
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="min-w-0">
@@ -398,7 +461,18 @@ export default function AdminProfiles() {
                                                 {profile.profileNumber}
                                             </span>
                                         )}
+                                        {hasHistory && (
+                                            <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-gray-600 ring-1 ring-gray-200">
+                                                {profile.changeHistory.length} version{profile.changeHistory.length === 1 ? "" : "s"}
+                                            </span>
+                                        )}
                                     </div>
+
+                                    {hasReviewChanges && (
+                                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-[#800020]">
+                                            Changed: {profile.reviewChanges.join(", ")}
+                                        </div>
+                                    )}
 
                                     <div className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
                                         <p>
@@ -423,7 +497,7 @@ export default function AdminProfiles() {
                                         </p>
                                     </div>
 
-                                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
                                         <button
                                             type="button"
                                             onClick={() => setSelectedProfile(profile)}
@@ -434,10 +508,19 @@ export default function AdminProfiles() {
 
                                         <button
                                             type="button"
+                                            onClick={() => setHistoryProfile(profile)}
+                                            disabled={!hasHistory}
+                                            className="rounded-lg border border-amber-500 bg-white px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            History
+                                        </button>
+
+                                        <button
+                                            type="button"
                                             onClick={() => updateStatus(profile._id, "approved")}
                                             className="rounded-lg border border-green-500 bg-white px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"
                                         >
-                                            Approve
+                                            {hasReviewChanges ? "Approve Changes" : "Approve"}
                                         </button>
 
                                         <button
@@ -445,7 +528,7 @@ export default function AdminProfiles() {
                                             onClick={() => updateStatus(profile._id, "rejected")}
                                             className="rounded-lg border border-red-500 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
                                         >
-                                            Reject
+                                            {hasReviewChanges ? "Reject Changes" : "Reject"}
                                         </button>
 
                                         <button
@@ -458,7 +541,8 @@ export default function AdminProfiles() {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {totalPages > 1 && (
@@ -503,7 +587,132 @@ export default function AdminProfiles() {
                     onSave={createAssistedProfile}
                 />
             )}
+
+            {historyProfile && (
+                <ProfileHistoryModal
+                    profile={historyProfile}
+                    onClose={() => setHistoryProfile(null)}
+                    onRevert={revertProfileChange}
+                />
+            )}
         </>
+    );
+}
+
+function ProfileHistoryModal({ profile, onClose, onRevert }) {
+    const history = [...(profile.changeHistory || [])].reverse();
+
+    return (
+        <div className="fixed inset-0 z-[100000] flex items-start justify-center overflow-y-auto bg-black/75 px-3 py-6 backdrop-blur-sm sm:px-6">
+            <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl">
+                <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-rose-100 bg-white px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-xs font-bold uppercase text-amber-600">
+                            {profile.profileNumber || "Profile"}
+                        </p>
+                        <h2 className="text-2xl font-bold text-[#800020]">
+                            Profile Change History
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                            {profile.fullName || "Profile"} has {history.length} saved version{history.length === 1 ? "" : "s"}.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="self-start rounded-full border border-rose-100 px-4 py-2 text-sm font-bold text-[#800020] hover:bg-rose-50 sm:self-auto"
+                    >
+                        Close
+                    </button>
+                </div>
+
+                <div className="max-h-[75vh] overflow-y-auto p-5">
+                    {history.length === 0 ? (
+                        <div className="rounded-2xl bg-[#fff8f2] p-8 text-center font-semibold text-gray-600">
+                            No profile change history yet.
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {history.map((entry, index) => {
+                                const entryId = entry._id || entry.id;
+                                const fields = entry.changedFields || [];
+                                const isReverted = Boolean(entry.revertedAt);
+                                const sourceLabel = entry.source === "revert"
+                                    ? "Revert"
+                                    : entry.source === "admin"
+                                        ? "Admin Edit"
+                                        : "User Edit";
+
+                                return (
+                                    <article key={entryId || index} className="rounded-2xl border border-rose-100 bg-[#fff8f2] p-4">
+                                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                            <div>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="font-bold text-[#800020]">
+                                                        Version {history.length - index}
+                                                    </h3>
+                                                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-gray-600 ring-1 ring-gray-200">
+                                                        {sourceLabel}
+                                                    </span>
+                                                    {isReverted && (
+                                                        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-bold text-gray-600">
+                                                            Reverted
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="mt-1 text-sm font-semibold text-gray-600">
+                                                    Changed: {formatDateTime(entry.changedAt)}
+                                                </p>
+                                                {isReverted && (
+                                                    <p className="mt-1 text-xs font-semibold text-gray-500">
+                                                        Reverted: {formatDateTime(entry.revertedAt)}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => onRevert(profile._id, entryId)}
+                                                disabled={isReverted || entry.source === "revert"}
+                                                className="rounded-xl bg-[#800020] px-4 py-2 text-sm font-bold text-white hover:bg-[#5c0017] disabled:cursor-not-allowed disabled:bg-gray-300"
+                                            >
+                                                Revert to Previous
+                                            </button>
+                                        </div>
+
+                                        <div className="mt-4 overflow-x-auto">
+                                            <table className="min-w-[720px] w-full overflow-hidden rounded-xl bg-white text-sm">
+                                                <thead className="bg-[#800020] text-white">
+                                                    <tr>
+                                                        <th className="p-3 text-left">Field</th>
+                                                        <th className="p-3 text-left">Previous</th>
+                                                        <th className="p-3 text-left">New</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {fields.map((field) => (
+                                                        <tr key={field} className="border-b border-rose-50">
+                                                            <td className="p-3 font-bold text-[#800020]">{field}</td>
+                                                            <td className="p-3 text-gray-700">
+                                                                {formatHistoryValue(entry.previousData?.[field])}
+                                                            </td>
+                                                            <td className="p-3 text-gray-700">
+                                                                {formatHistoryValue(entry.newData?.[field])}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }
 

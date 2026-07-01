@@ -82,9 +82,14 @@ const modalContent = {
     },
     muhurthalu: {
         title: "ముహూర్తాలు",
-        subtitle: "శుభ ముహూర్తాల సమాచారం త్వరలో అందుబాటులో ఉంటుంది.",
-        columns: 2,
+        subtitle: "శుభ ముహూర్తాల సమాచారం, ఈ రోజు తిథి మరియు నక్షత్రము.",
+        columns: 3,
         sections: [
+            {
+                title: "తెలుగు క్యాలెండర్",
+                price: "API / Yearly",
+                items: ["పంచాంగం", "తెలుగు పండుగలు", "మాసం మరియు పక్షం"],
+            },
             {
                 title: "వివాహ ముహూర్తాలు",
                 price: "Coming Soon",
@@ -124,6 +129,26 @@ const modalContent = {
             },
         ],
     },
+};
+
+const toDynamicSections = (items) =>
+    items.map((item) => ({
+        title: item.title,
+        price: item.metaLabel || "",
+        items: [
+            item.subtitle,
+            ...(item.detailLines || []),
+        ].filter(Boolean),
+    }));
+
+const mergeMuhurthaluSections = (items) => {
+    const apiSections = toDynamicSections(items);
+    const apiTitles = new Set(apiSections.map((section) => section.title));
+    const fallbackSections = modalContent.muhurthalu.sections.filter(
+        (section) => !apiTitles.has(section.title)
+    );
+
+    return [...apiSections, ...fallbackSections];
 };
 
 export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipPlan = "free", onMembershipAction }) {
@@ -178,20 +203,17 @@ export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipP
                 if (!ignore) {
                     setDynamicSections(
                         items.length > 0
-                            ? items.map((item) => ({
-                                title: item.title,
-                                price: item.metaLabel || "",
-                                items: [
-                                    item.subtitle,
-                                    ...(item.detailLines || []),
-                                ].filter(Boolean),
-                            }))
+                            ? type === "muhurthalu"
+                                ? mergeMuhurthaluSections(items)
+                                : toDynamicSections(items)
                             : null
                     );
                 }
             } catch (error) {
                 console.error("Load modal content failed:", error);
-                if (!ignore) setDynamicSections(null);
+                if (!ignore) {
+                    setDynamicSections(null);
+                }
             }
         };
 

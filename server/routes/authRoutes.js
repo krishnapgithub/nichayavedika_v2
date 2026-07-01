@@ -5,6 +5,7 @@ import {
     loginUser,
     forgotPassword,
     resetPassword,
+    updateMyAccount,
 } from "../controllers/authController.js";
 
 import {
@@ -28,6 +29,7 @@ const router = express.Router();
 ===================================================== */
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+router.put("/me", protect, updateMyAccount);
 
 /* =====================================================
    EMAIL OTP ROUTES

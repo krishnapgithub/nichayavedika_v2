@@ -371,6 +371,16 @@ button.nav-link {
     border-bottom: 1px solid #f3f4f6;
 }
 
+    .mobile-menu-panel {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .mobile-menu-panel::-webkit-scrollbar {
+        display: none;
+    }
+
     .mobile-nav-link:hover {
         color: #800020;
     }

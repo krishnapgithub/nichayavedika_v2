@@ -12,7 +12,8 @@ import nvLogo from "../images/nvlogo-v1.png";
 import {
     FaUserCircle,
     FaBars,
-    FaTimes
+    FaTimes,
+    FaCog
 } from "react-icons/fa";
 
 const legalSections = [
@@ -20,6 +21,17 @@ const legalSections = [
     { id: "purpose", label: "Matrimony Purpose" },
     { id: "rules", label: "Safety Rules" },
 ];
+
+const hasMenuAccess = (user, key) => {
+    const role = user?.role?.toLowerCase?.().trim();
+
+    if (role === "super_admin") return true;
+    if (!Array.isArray(user?.menuAccess)) {
+        return ["dashboard", "profile"].includes(key);
+    }
+
+    return user.menuAccess.includes(key);
+};
 
 export default function Header() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -67,7 +79,23 @@ export default function Header() {
     const isEliteMember = membershipPlan === "elite";
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
     const canManageUsers = ["admin", "super_admin"].includes(userRole);
+    const userManagementLabel = userRole === "super_admin" ? "Super Admin" : "Users";
+    const canSeeDashboardMenu = hasMenuAccess(user, "dashboard");
+    const canSeeProfileMenu = hasMenuAccess(user, "profile");
+    const canSeeSentMenu = hasMenuAccess(user, "sentInterests");
+    const canSeeReceivedMenu = hasMenuAccess(user, "receivedInterests");
+    const canSeeAdminProfilesMenu = canReviewProfiles && hasMenuAccess(user, "adminProfiles");
+    const canSeeAdminPaymentsMenu = canReviewProfiles && hasMenuAccess(user, "adminPayments");
+    const canSeeAdminContentMenu = canReviewProfiles && hasMenuAccess(user, "adminContent");
+    const canSeeAdminUsersMenu = canManageUsers && hasMenuAccess(user, "adminUsers");
     const displayName = user?.fullName?.trim?.() || "User";
+    const accountInfoRows = [
+        ["Name", user?.fullName],
+        ["Email", user?.email],
+        ["Phone", user?.mobile],
+        ["Registering For", user?.registeringFor],
+        ["Gender", user?.gender],
+    ];
 
     useEffect(() => {
         const shouldMaskNames =
@@ -84,6 +112,19 @@ export default function Header() {
         };
     }, [membershipPlan, user, userRole]);
 
+    useEffect(() => {
+        const syncUserFromStorage = () => {
+            const savedUser = localStorage.getItem("user");
+            setUser(savedUser ? JSON.parse(savedUser) : null);
+        };
+
+        window.addEventListener("account:user-updated", syncUserFromStorage);
+
+        return () => {
+            window.removeEventListener("account:user-updated", syncUserFromStorage);
+        };
+    }, []);
+
     const handleLogout = () => {
         localStorage.clear();
 
@@ -93,6 +134,7 @@ export default function Header() {
         setIsRegisterOpen(false);
         setIsCreateProfileOpen(false);
 
+        window.dispatchEvent(new Event("account:user-updated"));
         toast.success("Logged out successfully!");
 
         navigate("/");
@@ -260,6 +302,46 @@ export default function Header() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const goToAccountSettings = () => {
+        setIsMobileMenuOpen(false);
+        navigate("/dashboard#account-settings");
+    };
+
+    const renderAccountPreview = () => (
+        <div className="absolute right-0 top-full z-[10080] hidden w-[22rem] max-w-[calc(100vw-2rem)] pt-3 group-hover:block group-focus-within:block">
+            <div className="rounded-xl border border-rose-100 bg-white p-4 text-left shadow-2xl">
+                <div className="mb-3 flex items-center justify-between gap-3 border-b border-rose-100 pb-3">
+                    <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase text-amber-600">Registration</p>
+                        <p className="truncate text-sm font-bold text-[#800020]">{displayName}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            goToAccountSettings();
+                        }}
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-[#800020] transition hover:bg-[#800020] hover:text-white"
+                        aria-label="Open account settings"
+                        title="Account settings"
+                    >
+                        <FaCog />
+                    </button>
+                </div>
+
+                <div className="space-y-2">
+                    {accountInfoRows.map(([label, value]) => (
+                        <div key={label} className="grid grid-cols-[96px_minmax(0,1fr)] gap-2 text-xs">
+                            <span className="font-semibold text-gray-500">{label}</span>
+                            <span className="break-words font-medium text-gray-800">{value || "-"}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="fixed top-0 left-0 w-full z-[9999]">
             <img
@@ -273,7 +355,7 @@ export default function Header() {
                 💖 Trusted Telugu Matrimony Platform • Secure • Verified Profiles • Privacy Protected
             </div>
 
-            <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+            <header className="relative z-[10050] bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:relative lg:-top-2">
                     <div className="flex h-16 items-center justify-between gap-3 sm:h-20">
                         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -374,7 +456,7 @@ export default function Header() {
 
                         <div className="flex flex-shrink-0 items-center gap-2 lg:hidden">
                             {user && (
-                                <div className="flex max-w-[132px] items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-2 py-1 text-xs shadow-sm sm:max-w-[190px] sm:px-3">
+                                <div className="group relative flex max-w-[132px] items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-2 py-1 text-xs shadow-sm sm:max-w-[190px] sm:px-3">
                                     <span className="min-w-0 truncate font-semibold text-gray-700">
                                         Hi, {displayName}
                                     </span>
@@ -385,6 +467,7 @@ export default function Header() {
                                     >
                                         Logout
                                     </button>
+                                    {renderAccountPreview()}
                                 </div>
                             )}
 
@@ -401,10 +484,16 @@ export default function Header() {
                         <div className="hidden lg:flex items-center gap-2">
                             {user ? (
                                 <>
-                                    <span className="flex items-center gap-2 text-gray-600 font-medium">
-                                        <FaUserCircle className="text-[#800020]" />
-                                        Hi, {displayName}
-                                    </span>
+                                    <div className="group relative">
+                                        <button
+                                            type="button"
+                                            className="flex items-center gap-2 border-0 bg-transparent text-gray-600 font-medium"
+                                        >
+                                            <FaUserCircle className="text-[#800020]" />
+                                            Hi, {displayName}
+                                        </button>
+                                        {renderAccountPreview()}
+                                    </div>
 
                                     <span className="mx-2 text-amber-500 font-semibold">|</span>
 
@@ -439,7 +528,7 @@ export default function Header() {
                 </div>
 
                 {isMobileMenuOpen && (
-                    <div className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t bg-white px-4 py-4 shadow-lg sm:px-6 lg:hidden">
+                    <div className="mobile-menu-panel max-h-[calc(100vh-5rem)] overflow-y-auto border-t bg-white px-4 py-4 shadow-lg sm:px-6 lg:hidden">
 
                         <button type="button" className="mobile-nav-link" onClick={goToHome}>
                             Home
@@ -473,7 +562,7 @@ export default function Header() {
                             ముహూర్తాలు
                         </button>
 
-                        {canReviewProfiles && (
+                        {canSeeAdminProfilesMenu && (
                             <Link
                                 to="/admin/profiles"
                                 className="mobile-nav-link"
@@ -483,7 +572,7 @@ export default function Header() {
                             </Link>
                         )}
 
-                        {canReviewProfiles && (
+                        {canSeeAdminPaymentsMenu && (
                             <Link
                                 to="/admin/payments"
                                 className="mobile-nav-link"
@@ -493,7 +582,7 @@ export default function Header() {
                             </Link>
                         )}
 
-                        {canReviewProfiles && (
+                        {canSeeAdminContentMenu && (
                             <Link
                                 to="/admin/content"
                                 className="mobile-nav-link"
@@ -503,9 +592,9 @@ export default function Header() {
                             </Link>
                         )}
 
-                        {canManageUsers && (
+                        {canSeeAdminUsersMenu && (
                             <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                                Users
+                                {userManagementLabel}
                             </Link>
                         )}
 
@@ -547,44 +636,52 @@ export default function Header() {
             )}
 
             {isLoggedIn && (
-                <div className="hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
-                    <Link className={accountLinkClass("/dashboard")} data-label="Dashboard" to="/dashboard">
-                        Dashboard
-                    </Link>
+                <div className="relative z-[10000] hidden lg:flex items-center justify-center gap-4 border-t border-gray-100 bg-white/95 py-3 text-sm font-medium shadow-sm account-user-menu">
+                    {canSeeDashboardMenu && (
+                        <Link className={accountLinkClass("/dashboard")} data-label="Dashboard" to="/dashboard">
+                            Dashboard
+                        </Link>
+                    )}
 
-                    <button
-                        onClick={() => setIsCreateProfileOpen(true)}
-                        className="account-menu-link"
-                        data-label="Profile"
-                    >
-                        Profile
-                    </button>
+                    {canSeeProfileMenu && (
+                        <button
+                            onClick={() => setIsCreateProfileOpen(true)}
+                            className="account-menu-link"
+                            data-label="Profile"
+                        >
+                            Profile
+                        </button>
+                    )}
 
-                    <Link className={accountLinkClass("/sent-interests")} data-label="Sent" to="/sent-interests">
-                        Sent
-                    </Link>
+                    {canSeeSentMenu && (
+                        <Link className={accountLinkClass("/sent-interests")} data-label="Sent" to="/sent-interests">
+                            Sent
+                        </Link>
+                    )}
 
-                    <Link className={accountLinkClass("/received-interests")} data-label="Received" to="/received-interests">
-                        Received
-                    </Link>
-                    {canReviewProfiles && (
+                    {canSeeReceivedMenu && (
+                        <Link className={accountLinkClass("/received-interests")} data-label="Received" to="/received-interests">
+                            Received
+                        </Link>
+                    )}
+                    {canSeeAdminProfilesMenu && (
                         <Link className={accountLinkClass("/admin/profiles")} data-label="Admin" to="/admin/profiles">
                             Admin
                         </Link>
                     )}
-                    {canReviewProfiles && (
+                    {canSeeAdminPaymentsMenu && (
                         <Link className={accountLinkClass("/admin/payments")} data-label="Payments" to="/admin/payments">
                             Payments
                         </Link>
                     )}
-                    {canReviewProfiles && (
+                    {canSeeAdminContentMenu && (
                         <Link className={accountLinkClass("/admin/content")} data-label="Pages" to="/admin/content">
                             Pages
                         </Link>
                     )}
-                    {canManageUsers && (
-                        <Link className={accountLinkClass("/admin/users")} data-label="Users" to="/admin/users">
-                            Users
+                    {canSeeAdminUsersMenu && (
+                        <Link className={accountLinkClass("/admin/users")} data-label={userManagementLabel} to="/admin/users">
+                            {userManagementLabel}
                         </Link>
                     )}
                 </div>

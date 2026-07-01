@@ -119,6 +119,21 @@ const userSchema = new mongoose.Schema(
             enum: ["pending", "approved", "rejected"],
             default: "pending",
         },
+
+        menuAccess: {
+            type: [String],
+            enum: [
+                "dashboard",
+                "profile",
+                "sentInterests",
+                "receivedInterests",
+                "adminProfiles",
+                "adminPayments",
+                "adminContent",
+                "adminUsers",
+            ],
+            default: ["dashboard", "profile"],
+        },
     },
     {
         timestamps: true,

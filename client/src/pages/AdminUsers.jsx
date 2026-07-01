@@ -7,9 +7,73 @@ const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000";
 
+const submenuOptions = [
+    ["dashboard", "Dashboard"],
+    ["profile", "Profile"],
+    ["sentInterests", "Sent"],
+    ["receivedInterests", "Received"],
+    ["adminProfiles", "Admin"],
+    ["adminPayments", "Payments"],
+    ["adminContent", "Pages"],
+    ["adminUsers", "Users"],
+];
+
+const defaultMenuAccess = ["dashboard", "profile"];
+
+const getMenuAccess = (user) =>
+    Array.isArray(user?.menuAccess) ? user.menuAccess : defaultMenuAccess;
+
+const formatDateTime = (value) => {
+    if (!value) return "-";
+
+    return new Date(value).toLocaleString("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
+};
+
+const formatChanges = (changes = []) =>
+    changes.length > 0
+        ? changes.map((change) => `${change.field}: ${change.from} -> ${change.to}`).join("; ")
+        : "-";
+
+const formatLocation = (log) => {
+    const location = log.location || {};
+    const place = [
+        location.city,
+        location.region,
+        location.country,
+    ].filter(Boolean).join(", ");
+    const context = [
+        location.timezone,
+        location.language,
+    ].filter(Boolean).join(" | ");
+
+    if (place && context) return `${place} (${context})`;
+    if (place) return place;
+    if (context) return context;
+
+    return log.ipAddress || "-";
+};
+
 export default function AdminUsers() {
     const [users, setUsers] = useState([]);
+    const [activityLogs, setActivityLogs] = useState([]);
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [logCounts, setLogCounts] = useState({
+        activityTotal: 0,
+        guest: 0,
+        loggedIn: 0,
+        auditTotal: 0,
+    });
     const [loading, setLoading] = useState(true);
+    const [logsLoading, setLogsLoading] = useState(false);
+    const [isLogsOpen, setIsLogsOpen] = useState(false);
+    const [activeLogTab, setActiveLogTab] = useState("activity");
+    const [logFilters, setLogFilters] = useState({
+        from: new Date().toISOString().slice(0, 10),
+        to: new Date().toISOString().slice(0, 10),
+    });
     const [quickSearch, setQuickSearch] = useState("");
 
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -34,6 +98,7 @@ export default function AdminUsers() {
                 .includes(normalizedQuickSearch)
         )
         : users;
+    const currentLogs = activeLogTab === "activity" ? activityLogs : auditLogs;
 
     const authConfig = {
         headers: {
@@ -59,9 +124,51 @@ export default function AdminUsers() {
         }
     };
 
+    const fetchLogs = async (filters = logFilters) => {
+        if (!isSuperAdmin || !token) return;
+
+        try {
+            setLogsLoading(true);
+            const params = {
+                ...(filters.from ? { from: filters.from } : {}),
+                ...(filters.to ? { to: filters.to } : {}),
+            };
+            const [activityResponse, auditResponse] = await Promise.all([
+                axios.get(`${API_BASE_URL}/api/admin/activity-logs`, {
+                    ...authConfig,
+                    params,
+                }),
+                axios.get(`${API_BASE_URL}/api/admin/audit-logs`, {
+                    ...authConfig,
+                    params,
+                }),
+            ]);
+
+            setActivityLogs(activityResponse.data.logs || []);
+            setAuditLogs(auditResponse.data.logs || []);
+            setLogCounts({
+                activityTotal: activityResponse.data.totalCount || 0,
+                guest: activityResponse.data.guestCount || 0,
+                loggedIn: activityResponse.data.loggedInCount || 0,
+                auditTotal: auditResponse.data.totalCount || 0,
+            });
+        } catch (error) {
+            console.error("Fetch logs failed:", error);
+            toast.error(error.response?.data?.message || "Unable to load logs");
+        } finally {
+            setLogsLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        if (isLogsOpen) {
+            fetchLogs();
+        }
+    }, [isLogsOpen]);
 
     const updateAccess = async (userId, field, value) => {
         try {
@@ -97,6 +204,7 @@ export default function AdminUsers() {
             );
 
             toast.success("User updated");
+            fetchLogs();
         } catch (error) {
             toast.error(error.response?.data?.message || "Unable to update user");
         }
@@ -115,9 +223,38 @@ export default function AdminUsers() {
             );
 
             toast.success("Password reset successfully");
+            fetchLogs();
         } catch (error) {
             toast.error(error.response?.data?.message || "Unable to reset password");
         }
+    };
+
+    const toggleMenuAccess = (user, menuKey) => {
+        const currentMenuAccess = getMenuAccess(user);
+        const nextMenuAccess = currentMenuAccess.includes(menuKey)
+            ? currentMenuAccess.filter((item) => item !== menuKey)
+            : [...currentMenuAccess, menuKey];
+
+        updateAccess(user._id, "menuAccess", nextMenuAccess);
+    };
+
+    const updateLogFilter = (event) => {
+        const { name, value } = event.target;
+
+        setLogFilters((current) => ({
+            ...current,
+            [name]: value,
+        }));
+    };
+
+    const showAllLogs = () => {
+        const nextFilters = {
+            from: "",
+            to: "",
+        };
+
+        setLogFilters(nextFilters);
+        fetchLogs(nextFilters);
     };
 
     if (!canManageUsers) {
@@ -135,15 +272,27 @@ export default function AdminUsers() {
 
             <div className="min-h-screen bg-[#fff8f2] pt-40 px-3 sm:px-4 pb-12">
                 <div className="max-w-7xl mx-auto">
-                    <div className="mb-6">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-[#800020]">
-                            {isSuperAdmin ? "Super Admin - User Management" : "Admin - User Account Help"}
-                        </h1>
-                        <p className="mt-1 text-sm text-gray-600">
-                            {isSuperAdmin
-                                ? "Manage roles, approval status, memberships, active state, and password resets."
-                                : "Activate/deactivate regular users and reset user passwords."}
-                        </p>
+                    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-[#800020]">
+                                {isSuperAdmin ? "Super Admin - User Management" : "Admin - User Account Help"}
+                            </h1>
+                            <p className="mt-1 text-sm text-gray-600">
+                                {isSuperAdmin
+                                    ? "Manage roles, approval status, memberships, active state, and password resets."
+                                    : "Activate/deactivate regular users and reset user passwords."}
+                            </p>
+                        </div>
+
+                        {isSuperAdmin && (
+                            <button
+                                type="button"
+                                onClick={() => setIsLogsOpen(true)}
+                                className="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white shadow transition hover:bg-[#5f0018]"
+                            >
+                                Open Logs
+                            </button>
+                        )}
                     </div>
 
                     {canManageUsers && (
@@ -174,7 +323,7 @@ export default function AdminUsers() {
                         <>
                             {/* Desktop / Tablet Table */}
                             <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
-                                <table className="min-w-[1150px] w-full text-sm">
+                                <table className="min-w-[1350px] w-full text-sm">
                                     <thead className="bg-[#800020] text-white">
                                         <tr>
                                             <th className="p-3 text-left">Name</th>
@@ -184,6 +333,9 @@ export default function AdminUsers() {
                                             <th className="p-3 text-left">Role</th>
                                             <th className="p-3 text-left">Status</th>
                                             <th className="p-3 text-left">Membership</th>
+                                            {isSuperAdmin && (
+                                                <th className="p-3 text-left">Sub Menu</th>
+                                            )}
                                             <th className="p-3 text-left">Active</th>
                                             <th className="p-3 text-left">Action</th>
                                         </tr>
@@ -192,7 +344,7 @@ export default function AdminUsers() {
                                     <tbody>
                                         {displayedUsers.length === 0 && (
                                             <tr>
-                                                <td colSpan="9" className="p-6 text-center text-gray-600">
+                                                <td colSpan={isSuperAdmin ? 10 : 9} className="p-6 text-center text-gray-600">
                                                     {quickSearch ? "No users match your search." : "No users found."}
                                                 </td>
                                             </tr>
@@ -316,6 +468,24 @@ export default function AdminUsers() {
                                                         <span className="font-semibold text-gray-700">{u.membershipPlan || "free"}</span>
                                                     )}
                                                 </td>
+
+                                                {isSuperAdmin && (
+                                                    <td className="p-3">
+                                                        <div className="grid min-w-[260px] grid-cols-2 gap-2">
+                                                            {submenuOptions.map(([value, label]) => (
+                                                                <label key={value} className="flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={getMenuAccess(u).includes(value)}
+                                                                        onChange={() => toggleMenuAccess(u, value)}
+                                                                        className="accent-[#800020]"
+                                                                    />
+                                                                    <span>{label}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                )}
 
                                                 <td className="p-3">
                                                     <button
@@ -482,6 +652,27 @@ export default function AdminUsers() {
                                                 </select>
                                             </div>
 
+                                            {isSuperAdmin && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-500">
+                                                        Sub Menu
+                                                    </p>
+                                                    <div className="mt-2 grid grid-cols-2 gap-2">
+                                                        {submenuOptions.map(([value, label]) => (
+                                                            <label key={value} className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2 text-sm font-semibold text-gray-700">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={getMenuAccess(u).includes(value)}
+                                                                    onChange={() => toggleMenuAccess(u, value)}
+                                                                    className="accent-[#800020]"
+                                                                />
+                                                                <span>{label}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="grid grid-cols-1 gap-3 pt-2">
                                                 <button
                                                     onClick={() =>
@@ -513,7 +704,185 @@ export default function AdminUsers() {
                         </>
                     )}
                 </div>
-            </div>        </>
+            </div>
+
+            {isSuperAdmin && isLogsOpen && (
+                <div className="fixed inset-0 z-[100000] flex items-start justify-center overflow-y-auto bg-black/60 px-3 py-5 sm:py-8">
+                    <div className="w-full max-w-6xl rounded-2xl bg-white shadow-2xl">
+                        <div className="flex flex-col gap-3 border-b border-rose-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-[#800020]">Logs</h2>
+                                <p className="text-sm text-gray-600">
+                                    Review user, guest, and Super Admin activity by date.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsLogsOpen(false)}
+                                className="self-start rounded-full border border-rose-100 px-4 py-2 text-sm font-bold text-[#800020] hover:bg-rose-50 sm:self-auto"
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                        <div className="border-b border-rose-100 px-4 py-4 sm:px-6">
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                                <div className="flex rounded-xl bg-[#fff8f2] p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveLogTab("activity")}
+                                        className={`rounded-lg px-4 py-2 text-sm font-bold ${activeLogTab === "activity"
+                                            ? "bg-[#800020] text-white"
+                                            : "text-gray-700 hover:bg-white"
+                                            }`}
+                                    >
+                                        User & Guest
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveLogTab("audit")}
+                                        className={`rounded-lg px-4 py-2 text-sm font-bold ${activeLogTab === "audit"
+                                            ? "bg-[#800020] text-white"
+                                            : "text-gray-700 hover:bg-white"
+                                            }`}
+                                    >
+                                        Admin Audit
+                                    </button>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+                                    <label className="text-sm font-bold text-gray-700">
+                                        From
+                                        <input
+                                            type="date"
+                                            name="from"
+                                            value={logFilters.from}
+                                            onChange={updateLogFilter}
+                                            className="mt-1 w-full rounded-xl border border-rose-100 px-3 py-2 text-sm outline-none focus:border-[#800020]"
+                                        />
+                                    </label>
+                                    <label className="text-sm font-bold text-gray-700">
+                                        To
+                                        <input
+                                            type="date"
+                                            name="to"
+                                            value={logFilters.to}
+                                            onChange={updateLogFilter}
+                                            className="mt-1 w-full rounded-xl border border-rose-100 px-3 py-2 text-sm outline-none focus:border-[#800020]"
+                                        />
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => fetchLogs()}
+                                        disabled={logsLoading}
+                                        className="rounded-xl bg-[#800020] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
+                                    >
+                                        Apply
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={showAllLogs}
+                                        disabled={logsLoading}
+                                        className="rounded-xl border border-rose-100 px-5 py-2.5 text-sm font-bold text-[#800020] hover:bg-rose-50 disabled:cursor-wait disabled:opacity-60"
+                                    >
+                                        All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="max-h-[70vh] overflow-y-auto p-4 sm:p-6">
+                            <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <LogCountCard label="Activity Total" value={logCounts.activityTotal} />
+                                <LogCountCard label="Logged-In Users" value={logCounts.loggedIn} />
+                                <LogCountCard label="Guests" value={logCounts.guest} />
+                                <LogCountCard label="Admin Audit" value={logCounts.auditTotal} />
+                            </div>
+
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+                                <span className="font-bold text-gray-700">
+                                    Showing {currentLogs.length} of {activeLogTab === "activity" ? logCounts.activityTotal : logCounts.auditTotal} {activeLogTab === "activity" ? "activity" : "audit"} logs
+                                </span>
+                                {logsLoading && (
+                                    <span className="font-bold text-amber-600">Loading...</span>
+                                )}
+                            </div>
+
+                            {activeLogTab === "activity" ? (
+                                <LogList emptyText="No user or guest logs found for this date range.">
+                                    {activityLogs.map((log) => (
+                                        <ActivityLogRow key={log._id} log={log} />
+                                    ))}
+                                </LogList>
+                            ) : (
+                                <LogList emptyText="No admin audit logs found for this date range.">
+                                    {auditLogs.map((log) => (
+                                        <AuditLogRow key={log._id} log={log} />
+                                    ))}
+                                </LogList>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 
+function LogCountCard({ label, value }) {
+    return (
+        <div className="rounded-xl border border-rose-100 bg-[#fff8f2] px-4 py-3">
+            <p className="text-xs font-bold uppercase text-gray-500">{label}</p>
+            <p className="mt-1 text-2xl font-bold text-[#800020]">{value}</p>
+        </div>
+    );
+}
+
+function LogList({ emptyText, children }) {
+    const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
+
+    return (
+        <div className="rounded-2xl border border-rose-100">
+            {hasRows ? children : (
+                <div className="rounded-2xl bg-[#fff8f2] p-6 text-center text-sm font-semibold text-gray-500">
+                    {emptyText}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ActivityLogRow({ log }) {
+    return (
+        <div className="grid gap-2 border-b border-rose-50 p-4 last:border-0 lg:grid-cols-[1fr_1.6fr_1.1fr_90px_160px] lg:items-center">
+            <div>
+                <p className="font-bold text-[#800020]">{log.userName || "Guest"}</p>
+                <p className="break-all text-xs text-gray-500">{log.userEmail || log.ipAddress || "-"}</p>
+            </div>
+            <p className="break-all text-sm font-semibold text-gray-700">
+                {log.method} {log.path}
+            </p>
+            <p className="break-words text-xs font-semibold text-gray-600">
+                {formatLocation(log)}
+            </p>
+            <p className="text-sm font-bold text-gray-600">Status {log.statusCode}</p>
+            <p className="text-xs font-semibold text-gray-500">{formatDateTime(log.createdAt)}</p>
+        </div>
+    );
+}
+
+function AuditLogRow({ log }) {
+    return (
+        <div className="grid gap-2 border-b border-rose-50 p-4 last:border-0 lg:grid-cols-[1.2fr_1fr_2fr_170px] lg:items-center">
+            <div>
+                <p className="font-bold text-[#800020]">{log.actorName || "Admin"}</p>
+                <p className="break-all text-xs text-gray-500">{log.actorEmail || "-"}</p>
+            </div>
+            <p className="text-sm font-semibold text-gray-700">
+                {log.action} for {log.targetName || "user"}
+            </p>
+            <p className="break-words text-xs text-gray-500">{formatChanges(log.changes)}</p>
+            <p className="text-xs font-semibold text-gray-500">{formatDateTime(log.createdAt)}</p>
+        </div>
+    );
+}

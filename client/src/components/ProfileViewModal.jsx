@@ -18,6 +18,63 @@ const getPhotoUrl = (profilePhoto) => {
 
 const valueOrDash = (value) => value || "Not provided";
 
+const buildAdminDraft = (profile, includePendingReview = false) => {
+    const pendingReviewData = includePendingReview ? profile?.pendingReviewData || {} : {};
+    const source = {
+        ...profile,
+        ...pendingReviewData,
+    };
+
+    return {
+    fullName: source?.fullName || "",
+    gender: source?.gender || "",
+    dateOfBirth: source?.dateOfBirth
+        ? new Date(source.dateOfBirth).toISOString().slice(0, 10)
+        : "",
+    age: source?.age || "",
+    height: source?.height || "",
+    maritalStatus: source?.maritalStatus || "",
+    motherTongue: source?.motherTongue || "",
+    religion: source?.religion || "",
+    caste: source?.caste || "",
+    subCaste: source?.subCaste || "",
+    gothram: source?.gothram || "",
+    education: source?.education || "",
+    occupation: source?.occupation || "",
+    annualIncome: source?.annualIncome || "",
+    city: source?.city || "",
+    state: source?.state || "",
+    country: source?.country || "India",
+    familyDetails: source?.familyDetails || "",
+    contactPreference: source?.contactPreference || "",
+    aboutMe: source?.aboutMe || source?.about || "",
+    preferredAgeFrom: source?.preferredAgeFrom || "",
+    preferredAgeTo: source?.preferredAgeTo || "",
+    preferredCaste: source?.preferredCaste || "",
+    preferredLocation: source?.preferredLocation || "",
+    profilePhoto: source?.profilePhoto || "",
+    stylishPhotos: source?.stylishPhotos || [],
+    showPhotosToMembers: source?.showPhotosToMembers !== false,
+    };
+};
+
+const normalizeDraftValue = (value) => {
+    if (Array.isArray(value)) return JSON.stringify(value.map((item) => item || ""));
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (value === null || value === undefined) return "";
+
+    return String(value).trim();
+};
+
+const getChangedUpdates = (draft, originalDraft) =>
+    Object.keys(draft).reduce((changes, field) => {
+        if (normalizeDraftValue(draft[field]) !== normalizeDraftValue(originalDraft[field])) {
+            changes[field] = draft[field];
+        }
+
+        return changes;
+    }, {});
+
 const getSavedUser = () => {
     try {
         return JSON.parse(localStorage.getItem("user") || "null");
@@ -62,6 +119,7 @@ export default function ProfileViewModal({
 }) {
     const [adminDraft, setAdminDraft] = useState({});
     const [adminPhotoFiles, setAdminPhotoFiles] = useState({});
+    const [adminPhotoPreviews, setAdminPhotoPreviews] = useState({});
     const [sendingInterest, setSendingInterest] = useState(false);
     const [interestSent, setInterestSent] = useState(false);
 
@@ -85,40 +143,11 @@ export default function ProfileViewModal({
     }, [onClose]);
 
     useEffect(() => {
-        setAdminDraft({
-            fullName: profile?.fullName || "",
-            gender: profile?.gender || "",
-            dateOfBirth: profile?.dateOfBirth
-                ? new Date(profile.dateOfBirth).toISOString().slice(0, 10)
-                : "",
-            age: profile?.age || "",
-            height: profile?.height || "",
-            maritalStatus: profile?.maritalStatus || "",
-            motherTongue: profile?.motherTongue || "",
-            religion: profile?.religion || "",
-            caste: profile?.caste || "",
-            subCaste: profile?.subCaste || "",
-            gothram: profile?.gothram || "",
-            education: profile?.education || "",
-            occupation: profile?.occupation || "",
-            annualIncome: profile?.annualIncome || "",
-            city: profile?.city || "",
-            state: profile?.state || "",
-            country: profile?.country || "India",
-            familyDetails: profile?.familyDetails || "",
-            contactPreference: profile?.contactPreference || "",
-            aboutMe: profile?.aboutMe || profile?.about || "",
-            preferredAgeFrom: profile?.preferredAgeFrom || "",
-            preferredAgeTo: profile?.preferredAgeTo || "",
-            preferredCaste: profile?.preferredCaste || "",
-            preferredLocation: profile?.preferredLocation || "",
-            profilePhoto: profile?.profilePhoto || "",
-            stylishPhotos: profile?.stylishPhotos || [],
-            showPhotosToMembers: profile?.showPhotosToMembers !== false,
-        });
+        setAdminDraft(buildAdminDraft(profile, showAdminActions));
         setAdminPhotoFiles({});
+        setAdminPhotoPreviews({});
         setInterestSent(false);
-    }, [profile]);
+    }, [profile, showAdminActions]);
 
     if (!profile) return null;
 
@@ -144,7 +173,15 @@ export default function ProfileViewModal({
         ["premium", "elite"].includes(viewerMembership);
     const canViewProfilePhotos =
         showAdminActions || isAdminViewer || isOwnProfile || profile.showPhotosToMembers !== false;
-    const photoUrl = canViewProfilePhotos ? getPhotoUrl(profile.profilePhoto) : "";
+    const originalAdminDraft = buildAdminDraft(profile);
+    const changedUpdates = getChangedUpdates(adminDraft, originalAdminDraft);
+    const changedFields = Object.keys(changedUpdates);
+    const hasPhotoFileChanges = Object.values(adminPhotoFiles).some(Boolean);
+    const hasAdminChanges = changedFields.length > 0 || hasPhotoFileChanges;
+    const isPendingChangeReview = showAdminActions && (profile.reviewChanges || []).length > 0;
+    const photoUrl = canViewProfilePhotos
+        ? adminPhotoPreviews.profilePhoto || getPhotoUrl(adminDraft.profilePhoto || profile.profilePhoto)
+        : "";
     const location = [profile.city, profile.state, profile.country]
         .filter(Boolean)
         .join(", ");
@@ -166,9 +203,26 @@ export default function ProfileViewModal({
         });
     };
     const updateAdminPhotoFile = (field, file) => {
+        const previewUrl = file ? URL.createObjectURL(file) : "";
+
         setAdminPhotoFiles((prev) => ({
             ...prev,
             [field]: file,
+        }));
+        setAdminPhotoPreviews((prev) => ({
+            ...prev,
+            [field]: previewUrl,
+        }));
+    };
+    const deletePrimaryPhoto = () => {
+        updateAdminDraft("profilePhoto", "");
+        setAdminPhotoFiles((prev) => ({
+            ...prev,
+            profilePhoto: null,
+        }));
+        setAdminPhotoPreviews((prev) => ({
+            ...prev,
+            profilePhoto: "",
         }));
     };
     const handleSendInterest = async () => {
@@ -311,7 +365,7 @@ export default function ProfileViewModal({
                                 </label>
                                 <button
                                     type="button"
-                                    onClick={() => updateAdminDraft("profilePhoto", "")}
+                                    onClick={deletePrimaryPhoto}
                                     className="mt-3 w-full rounded-xl border border-red-200 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
                                 >
                                     Delete Primary Photo
@@ -356,6 +410,7 @@ export default function ProfileViewModal({
                     {showAdminActions ? (
                         <AdminProfileEditor
                             draft={adminDraft}
+                            changedFields={changedFields}
                             onChange={updateAdminDraft}
                         />
                     ) : effectiveGuestPrompt ? (
@@ -396,9 +451,21 @@ export default function ProfileViewModal({
 
                 {showAdminActions && (
                     <div className="sticky bottom-0 flex flex-wrap justify-end gap-3 border-t border-rose-100 bg-white px-5 py-4">
+                        {hasAdminChanges && (
+                            <div className="mr-auto rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-[#800020]">
+                                {changedFields.length + (hasPhotoFileChanges ? 1 : 0)} change{changedFields.length + (hasPhotoFileChanges ? 1 : 0) === 1 ? "" : "s"} ready
+                            </div>
+                        )}
                         <button
                             type="button"
-                            onClick={() => onSave?.(profile._id, adminDraft, adminPhotoFiles)}
+                            onClick={() => {
+                                if (!hasAdminChanges) {
+                                    toast.error("No profile changes to save");
+                                    return;
+                                }
+
+                                onSave?.(profile._id, changedUpdates, adminPhotoFiles);
+                            }}
                             className="rounded-xl bg-[#800020] px-5 py-2 font-semibold text-white hover:bg-[#5c0017]"
                         >
                             Save Changes
@@ -408,7 +475,7 @@ export default function ProfileViewModal({
                             onClick={() => onReject?.(profile._id)}
                             className="rounded-xl bg-red-600 px-5 py-2 font-semibold text-white hover:bg-red-700"
                         >
-                            Reject
+                            {isPendingChangeReview ? "Reject Changes" : "Reject"}
                         </button>
                         <button
                             type="button"
@@ -422,7 +489,7 @@ export default function ProfileViewModal({
                             onClick={() => onApprove?.(profile._id)}
                             className="rounded-xl bg-green-600 px-5 py-2 font-semibold text-white hover:bg-green-700"
                         >
-                            Approve
+                            {isPendingChangeReview ? "Approve Changes" : "Approve"}
                         </button>
                     </div>
                 )}
@@ -440,7 +507,7 @@ function ProfileSection({ title, children }) {
     );
 }
 
-function AdminProfileEditor({ draft, onChange }) {
+function AdminProfileEditor({ draft, changedFields, onChange }) {
     const fields = [
         ["fullName", "Full Name"],
         ["dateOfBirth", "Date of Birth", "date"],
@@ -464,14 +531,36 @@ function AdminProfileEditor({ draft, onChange }) {
         ["preferredCaste", "Preferred Caste"],
         ["preferredLocation", "Preferred Location"],
     ];
+    const isChanged = (field) => changedFields.includes(field);
+    const fieldClass = (field, extra = "") =>
+        `rounded-xl border p-3 transition ${
+            isChanged(field)
+                ? "border-amber-300 bg-amber-50 shadow-[0_0_0_2px_rgba(245,158,11,0.18)]"
+                : "border-rose-100 bg-white"
+        } ${extra}`;
+    const changedLabel = (field) =>
+        isChanged(field) ? (
+            <span className="ml-2 rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-[#800020]">
+                Changed
+            </span>
+        ) : null;
 
     return (
         <div className="space-y-5">
             <section>
-                <h3 className="mb-3 text-lg font-bold text-[#800020]">Admin Edit</h3>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-lg font-bold text-[#800020]">Admin Edit</h3>
+                    {changedFields.length > 0 && (
+                        <p className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-[#800020]">
+                            Highlighted fields were edited
+                        </p>
+                    )}
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="rounded-xl border border-amber-200 bg-amber-50 p-3 sm:col-span-2">
-                        <span className="text-xs font-semibold uppercase text-gray-500">Photo Consent</span>
+                    <label className={fieldClass("showPhotosToMembers", "sm:col-span-2")}>
+                        <span className="text-xs font-semibold uppercase text-gray-500">
+                            Photo Consent {changedLabel("showPhotosToMembers")}
+                        </span>
                         <span className="mt-2 flex items-start gap-3 text-sm font-semibold text-gray-800">
                             <input
                                 type="checkbox"
@@ -486,8 +575,10 @@ function AdminProfileEditor({ draft, onChange }) {
                     </label>
 
                     {fields.map(([field, label, type = "text"]) => (
-                        <label key={field} className="rounded-xl border border-rose-100 bg-white p-3">
-                            <span className="text-xs font-semibold uppercase text-gray-500">{label}</span>
+                        <label key={field} className={fieldClass(field)}>
+                            <span className="text-xs font-semibold uppercase text-gray-500">
+                                {label} {changedLabel(field)}
+                            </span>
                             <input
                                 type={type}
                                 value={draft[field] || ""}
@@ -497,8 +588,10 @@ function AdminProfileEditor({ draft, onChange }) {
                         </label>
                     ))}
 
-                    <label className="rounded-xl border border-rose-100 bg-white p-3">
-                        <span className="text-xs font-semibold uppercase text-gray-500">Gender</span>
+                    <label className={fieldClass("gender")}>
+                        <span className="text-xs font-semibold uppercase text-gray-500">
+                            Gender {changedLabel("gender")}
+                        </span>
                         <select
                             value={draft.gender || ""}
                             onChange={(event) => onChange("gender", event.target.value)}
@@ -510,8 +603,10 @@ function AdminProfileEditor({ draft, onChange }) {
                         </select>
                     </label>
 
-                    <label className="rounded-xl border border-rose-100 bg-white p-3 sm:col-span-2">
-                        <span className="text-xs font-semibold uppercase text-gray-500">Family Details</span>
+                    <label className={fieldClass("familyDetails", "sm:col-span-2")}>
+                        <span className="text-xs font-semibold uppercase text-gray-500">
+                            Family Details {changedLabel("familyDetails")}
+                        </span>
                         <textarea
                             value={draft.familyDetails || ""}
                             onChange={(event) => onChange("familyDetails", event.target.value)}
@@ -520,8 +615,10 @@ function AdminProfileEditor({ draft, onChange }) {
                         />
                     </label>
 
-                    <label className="rounded-xl border border-rose-100 bg-white p-3 sm:col-span-2">
-                        <span className="text-xs font-semibold uppercase text-gray-500">About</span>
+                    <label className={fieldClass("aboutMe", "sm:col-span-2")}>
+                        <span className="text-xs font-semibold uppercase text-gray-500">
+                            About {changedLabel("aboutMe")}
+                        </span>
                         <textarea
                             value={draft.aboutMe || ""}
                             onChange={(event) => onChange("aboutMe", event.target.value)}

@@ -17,6 +17,7 @@ import {
     getPendingProfiles,
     createAdminAssistedProfile,
     updateProfileStatus,
+    revertProfileChange,
 } from "../controllers/profileController.js";
 
 const router = express.Router();
@@ -153,6 +154,13 @@ router.put(
         { name: "stylishPhoto1", maxCount: 1 },
     ]),
     updateProfileStatus
+);
+
+router.put(
+    "/admin/:profileId/revert/:changeId",
+    protect,
+    adminOnly,
+    revertProfileChange
 );
 
 // ==========================================

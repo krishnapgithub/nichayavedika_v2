@@ -125,6 +125,56 @@ const profileSchema = new mongoose.Schema(
             enum: ["pending", "approved", "rejected", "deactivated"],
             default: "pending",
         },
+
+        reviewChanges: {
+            type: [String],
+            default: [],
+        },
+
+        pendingReviewData: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
+
+        reviewSubmittedAt: Date,
+
+        changeHistory: {
+            type: [
+                {
+                    changedAt: {
+                        type: Date,
+                        default: Date.now,
+                    },
+                    changedBy: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+                    source: {
+                        type: String,
+                        enum: ["user", "admin", "revert"],
+                        default: "user",
+                    },
+                    changedFields: {
+                        type: [String],
+                        default: [],
+                    },
+                    previousData: {
+                        type: mongoose.Schema.Types.Mixed,
+                        default: {},
+                    },
+                    newData: {
+                        type: mongoose.Schema.Types.Mixed,
+                        default: {},
+                    },
+                    revertedAt: Date,
+                    revertedBy: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+                },
+            ],
+            default: [],
+        },
     },
     {
         timestamps: true,

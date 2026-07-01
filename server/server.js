@@ -15,6 +15,8 @@ import adminRoutes from "./routes/adminRoutes.js";
 import adminUserRoutes from "./routes/adminUserRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import pageContentRoutes from "./routes/pageContentRoutes.js";
+import panchangRoutes from "./routes/panchangRoutes.js";
+import { activityLogger } from "./middleware/activityLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +39,7 @@ app.use(
         },
     })
 );
+app.use(activityLogger);
 app.use("/api/auth", authRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/uploads", express.static("uploads"));
@@ -45,6 +48,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminUserRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/page-content", pageContentRoutes);
+app.use("/api/panchang", panchangRoutes);
 
 import mongoose from "mongoose";
 

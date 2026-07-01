@@ -26,6 +26,21 @@ const getExpectedGender = (registeringFor) => {
     return "";
 };
 
+const buildUserResponse = (user) => ({
+    id: user._id,
+    fullName: user.fullName,
+    mobile: user.mobile,
+    email: user.email,
+    gender: user.gender,
+    registeringFor: user.registeringFor,
+    role: user.role,
+    membershipPlan: user.membershipPlan,
+    menuAccess: user.menuAccess,
+    isEmailVerified: user.isEmailVerified,
+    isMobileVerified: user.isMobileVerified,
+    status: user.status,
+});
+
 
 
 export const registerUser = async (req, res) => {
@@ -94,6 +109,7 @@ export const registerUser = async (req, res) => {
                 registeringFor: user.registeringFor,
                 role: user.role,
                 membershipPlan: user.membershipPlan,
+                menuAccess: user.menuAccess,
                 isEmailVerified: user.isEmailVerified,
                 isMobileVerified: user.isMobileVerified,
             },
@@ -193,6 +209,7 @@ export const loginUser = async (req, res) => {
                 registeringFor: user.registeringFor,
                 role: user.role,
                 membershipPlan: user.membershipPlan,
+                menuAccess: user.menuAccess,
                 isEmailVerified: user.isEmailVerified,
                 isMobileVerified: user.isMobileVerified,
                 status: user.status, // Added
@@ -204,6 +221,98 @@ export const loginUser = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Internal server error",
+        });
+    }
+};
+
+export const updateMyAccount = async (req, res) => {
+    try {
+        const fullName = String(req.body.fullName || "").trim();
+        const mobile = String(req.body.mobile || "").trim();
+        const gender = String(req.body.gender || "").trim();
+        const registeringFor = String(req.body.registeringFor || "").trim();
+
+        if (!fullName || !mobile || !gender || !registeringFor) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, phone, registering for and gender are required",
+            });
+        }
+
+        if (fullName.length > 200) {
+            return res.status(400).json({
+                success: false,
+                message: "Name must be 200 characters or less",
+            });
+        }
+
+        if (!["Bride", "Groom"].includes(gender)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select Bride or Groom",
+            });
+        }
+
+        if (!["Self", "Son", "Daughter", "Brother", "Sister"].includes(registeringFor)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select a valid registering for option",
+            });
+        }
+
+        const expectedGender = getExpectedGender(registeringFor);
+
+        if (expectedGender && gender !== expectedGender) {
+            return res.status(400).json({
+                success: false,
+                message: `${registeringFor} registration should be selected as ${expectedGender}`,
+            });
+        }
+
+        const duplicateMobile = await User.findOne({
+            _id: { $ne: req.user._id },
+            mobile,
+        });
+
+        if (duplicateMobile) {
+            return res.status(409).json({
+                success: false,
+                message: "An account already exists with this phone number",
+            });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                fullName,
+                mobile,
+                gender,
+                registeringFor,
+            },
+            {
+                new: true,
+                runValidators: true,
+            }
+        ).select("-password");
+
+        return res.json({
+            success: true,
+            message: "Account settings updated",
+            user: buildUserResponse(user),
+        });
+    } catch (error) {
+        console.error("ACCOUNT UPDATE ERROR:", error);
+
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "An account already exists with this phone number",
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to update account settings",
         });
     }
 };
