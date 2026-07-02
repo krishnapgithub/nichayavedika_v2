@@ -79,15 +79,16 @@ export default function Header() {
     const isEliteMember = membershipPlan === "elite";
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
     const canManageUsers = ["admin", "super_admin"].includes(userRole);
-    const userManagementLabel = userRole === "super_admin" ? "Super Admin" : "Users";
-    const canSeeDashboardMenu = hasMenuAccess(user, "dashboard");
-    const canSeeProfileMenu = hasMenuAccess(user, "profile");
-    const canSeeSentMenu = hasMenuAccess(user, "sentInterests");
-    const canSeeReceivedMenu = hasMenuAccess(user, "receivedInterests");
-    const canSeeAdminProfilesMenu = canReviewProfiles && hasMenuAccess(user, "adminProfiles");
-    const canSeeAdminPaymentsMenu = canReviewProfiles && hasMenuAccess(user, "adminPayments");
-    const canSeeAdminContentMenu = canReviewProfiles && hasMenuAccess(user, "adminContent");
-    const canSeeAdminUsersMenu = canManageUsers && hasMenuAccess(user, "adminUsers");
+    const isNormalAdmin = userRole === "admin";
+    const canSeeDashboardMenu = !isNormalAdmin && hasMenuAccess(user, "dashboard");
+    const canSeeProfileMenu = !isNormalAdmin && hasMenuAccess(user, "profile");
+    const canSeeSentMenu = !isNormalAdmin && hasMenuAccess(user, "sentInterests");
+    const canSeeReceivedMenu = !isNormalAdmin && hasMenuAccess(user, "receivedInterests");
+    const canSeeAdminProfilesMenu = canReviewProfiles && (isNormalAdmin || hasMenuAccess(user, "adminProfiles"));
+    const canSeeAdminPaymentsMenu = userRole === "super_admin" && hasMenuAccess(user, "adminPayments");
+    const canSeeAdminContentMenu = userRole === "super_admin" && hasMenuAccess(user, "adminContent");
+    const canSeeAdminUsersMenu = canManageUsers && (userRole === "admin" || hasMenuAccess(user, "adminUsers"));
+    const canSeeSuperAdminMenu = userRole === "super_admin" && hasMenuAccess(user, "adminUsers");
     const displayName = user?.fullName?.trim?.() || "User";
     const accountInfoRows = [
         ["Name", user?.fullName],
@@ -639,7 +640,13 @@ export default function Header() {
 
                                 {canSeeAdminUsersMenu && (
                                     <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                                        {userManagementLabel}
+                                        Users
+                                    </Link>
+                                )}
+
+                                {canSeeSuperAdminMenu && (
+                                    <Link to="/admin/super-admin" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                                        Super Admin
                                     </Link>
                                 )}
                             </div>
@@ -727,8 +734,13 @@ export default function Header() {
                         </Link>
                     )}
                     {canSeeAdminUsersMenu && (
-                        <Link className={accountLinkClass("/admin/users")} data-label={userManagementLabel} to="/admin/users">
-                            {userManagementLabel}
+                        <Link className={accountLinkClass("/admin/users")} data-label="Users" to="/admin/users">
+                            Users
+                        </Link>
+                    )}
+                    {canSeeSuperAdminMenu && (
+                        <Link className={accountLinkClass("/admin/super-admin")} data-label="Super Admin" to="/admin/super-admin">
+                            Super Admin
                         </Link>
                     )}
                 </div>

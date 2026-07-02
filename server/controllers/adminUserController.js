@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Profile from "../models/Profile.js";
+import Payment from "../models/Payment.js";
 import AdminAuditLog from "../models/AdminAuditLog.js";
 import ActivityLog from "../models/ActivityLog.js";
 import { getMembershipPlan } from "../services/membershipPlanService.js";
@@ -86,9 +87,29 @@ export const getAllUsers = async (req, res) => {
 
         const users = await User.find(filter)
             .select(userSelect)
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        res.json({ success: true, users });
+        const userIds = users.map((user) => user._id);
+        const payments = await Payment.find({ user: { $in: userIds } })
+            .sort({ createdAt: -1 })
+            .select("user plan amount currency status receiptNumber membershipExpiryDate createdAt")
+            .lean();
+        const latestPaymentByUser = new Map();
+
+        payments.forEach((payment) => {
+            const userId = String(payment.user);
+
+            if (!latestPaymentByUser.has(userId)) {
+                latestPaymentByUser.set(userId, payment);
+            }
+        });
+        const usersWithPayments = users.map((user) => ({
+            ...user,
+            latestPayment: latestPaymentByUser.get(String(user._id)) || null,
+        }));
+
+        res.json({ success: true, users: usersWithPayments });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -197,13 +218,13 @@ export const updateUserAccess = async (req, res) => {
             }
 
             const requestedFields = Object.keys(req.body || {});
-            const allowedFields = ["isActive", "gender"];
+            const allowedFields = ["isActive"];
             const hasRestrictedField = requestedFields.some((field) => !allowedFields.includes(field));
 
             if (hasRestrictedField) {
                 return res.status(403).json({
                     success: false,
-                    message: "Admin can only activate, deactivate, or update gender for regular users",
+                    message: "Admin can only activate or deactivate regular users",
                 });
             }
         }
@@ -330,6 +351,13 @@ export const updateUserAccess = async (req, res) => {
             );
         }
 
+        if (user && Object.prototype.hasOwnProperty.call(updateData, "isActive")) {
+            await Profile.findOneAndUpdate(
+                { user: user._id },
+                { status: updateData.isActive ? "approved" : "deactivated" }
+            );
+        }
+
         if (user && changes.length > 0) {
             await createAdminAuditLog({
                 req,
@@ -375,10 +403,10 @@ export const resetUserPassword = async (req, res) => {
             });
         }
 
-        if (!isSuperAdmin(req.user) && isPrivilegedUser(targetUser)) {
+        if (!isSuperAdmin(req.user)) {
             return res.status(403).json({
                 success: false,
-                message: "Only Super Admin can reset admin account passwords",
+                message: "Only Super Admin can reset user passwords",
             });
         }
 

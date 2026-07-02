@@ -19,6 +19,19 @@ const submenuOptions = [
 ];
 
 const defaultMenuAccess = ["dashboard", "profile"];
+const ACTIVE_FILTERS = [
+    ["all", "All Users"],
+    ["active", "Active"],
+    ["inactive", "Inactive"],
+];
+
+const paymentStatusClasses = {
+    pending: "bg-amber-50 text-amber-700 border-amber-200",
+    submitted: "bg-blue-50 text-blue-700 border-blue-200",
+    success: "bg-green-50 text-green-700 border-green-200",
+    failed: "bg-red-50 text-red-700 border-red-200",
+    cancelled: "bg-gray-50 text-gray-700 border-gray-200",
+};
 
 const getMenuAccess = (user) =>
     Array.isArray(user?.menuAccess) ? user.menuAccess : defaultMenuAccess;
@@ -52,6 +65,24 @@ const getProfileViewSummary = (user, plans = DEFAULT_PLAN_SETTINGS) => {
     return { limit, used, pending };
 };
 
+const getPaymentSummary = (user) => {
+    const payment = user?.latestPayment;
+
+    if (!payment) {
+        return {
+            label: "No payment",
+            detail: "-",
+            className: "bg-gray-50 text-gray-600 border-gray-200",
+        };
+    }
+
+    return {
+        label: payment.status || "pending",
+        detail: `${payment.plan || "-"} ${payment.currency || "INR"} ${payment.amount || 0}`,
+        className: paymentStatusClasses[payment.status] || paymentStatusClasses.pending,
+    };
+};
+
 const formatLocation = (log) => {
     const location = log.location || {};
     const place = [
@@ -71,7 +102,7 @@ const formatLocation = (log) => {
     return log.ipAddress || "-";
 };
 
-export default function AdminUsers() {
+export default function AdminUsers({ mode = "users" }) {
     const [users, setUsers] = useState([]);
     const [activityLogs, setActivityLogs] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
@@ -91,29 +122,36 @@ export default function AdminUsers() {
     });
     const [quickSearch, setQuickSearch] = useState("");
     const [planSettings, setPlanSettings] = useState(DEFAULT_PLAN_SETTINGS);
+    const [activeFilter, setActiveFilter] = useState("all");
 
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const token = localStorage.getItem("token");
 
     const userRole = loggedInUser?.role?.toLowerCase?.().trim();
 
-    const isSuperAdmin = userRole === "super_admin";
+    const isSuperAdminRole = userRole === "super_admin";
+    const isSuperAdmin = isSuperAdminRole && mode === "super-admin";
     const canManageUsers = userRole === "admin" || userRole === "super_admin";
     const canEditFullAccess = isSuperAdmin;
-    const canEditGender = canManageUsers;
+    const canEditGender = isSuperAdmin;
+    const canToggleActive = canManageUsers;
     const normalizedQuickSearch = quickSearch.trim().toLowerCase();
-    const displayedUsers = normalizedQuickSearch
-        ? users.filter((user) =>
-            [
+    const displayedUsers = users.filter((user) => {
+        const matchesSearch = !normalizedQuickSearch || [
                 user.fullName,
                 user.email,
                 user.mobile,
             ]
                 .join(" ")
                 .toLowerCase()
-                .includes(normalizedQuickSearch)
-        )
-        : users;
+                .includes(normalizedQuickSearch);
+        const matchesActive =
+            activeFilter === "all" ||
+            (activeFilter === "active" && user.isActive) ||
+            (activeFilter === "inactive" && !user.isActive);
+
+        return matchesSearch && matchesActive;
+    });
     const currentLogs = activeLogTab === "activity" ? activityLogs : auditLogs;
 
     const authConfig = {
@@ -302,12 +340,12 @@ export default function AdminUsers() {
                     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-[#800020]">
-                                {isSuperAdmin ? "Super Admin - User Management" : "Admin - User Account Help"}
+                                {isSuperAdmin ? "Super Admin - User Management" : "Admin - Users"}
                             </h1>
                             <p className="mt-1 text-sm text-gray-600">
                                 {isSuperAdmin
                                     ? "Manage roles, approval status, memberships, active state, and password resets."
-                                    : "Activate/deactivate regular users and reset user passwords."}
+                                    : "View user payment information and activate or deactivate regular users."}
                             </p>
                         </div>
 
@@ -324,18 +362,40 @@ export default function AdminUsers() {
 
                     {canManageUsers && (
                         <div className="mb-5 rounded-2xl bg-white p-4 shadow">
-                            <label className="block">
-                                <span className="text-xs font-bold uppercase text-gray-500">
-                                    Quick Search
-                                </span>
-                                <input
-                                    type="search"
-                                    value={quickSearch}
-                                    onChange={(event) => setQuickSearch(event.target.value)}
-                                    placeholder="Search by name, email, or phone"
-                                    className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-[#800020]"
-                                />
-                            </label>
+                            <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+                                <label className="block">
+                                    <span className="text-xs font-bold uppercase text-gray-500">
+                                        Quick Search
+                                    </span>
+                                    <input
+                                        type="search"
+                                        value={quickSearch}
+                                        onChange={(event) => setQuickSearch(event.target.value)}
+                                        placeholder="Search by name, email, or phone"
+                                        className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-[#800020]"
+                                    />
+                                </label>
+
+                                <div>
+                                    <p className="text-xs font-bold uppercase text-gray-500">Active Status</p>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {ACTIVE_FILTERS.map(([value, label]) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setActiveFilter(value)}
+                                                className={`rounded-full border px-4 py-2 text-sm font-bold ${
+                                                    activeFilter === value
+                                                        ? "border-[#800020] bg-[#800020] text-white"
+                                                        : "border-rose-100 bg-white text-gray-700"
+                                                }`}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                             <p className="mt-2 text-sm text-gray-500">
                                 Showing {displayedUsers.length} of {users.length} users
                             </p>
@@ -360,6 +420,7 @@ export default function AdminUsers() {
                                             <th className="p-3 text-left">Role</th>
                                             <th className="p-3 text-left">Status</th>
                                             <th className="p-3 text-left">Membership</th>
+                                            <th className="p-3 text-left">Payment</th>
                                             {isSuperAdmin && (
                                                 <th className="p-3 text-left">Views</th>
                                             )}
@@ -367,14 +428,16 @@ export default function AdminUsers() {
                                                 <th className="p-3 text-left">Sub Menu</th>
                                             )}
                                             <th className="p-3 text-left">Active</th>
-                                            <th className="p-3 text-left">Action</th>
+                                            {isSuperAdmin && (
+                                                <th className="p-3 text-left">Action</th>
+                                            )}
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         {displayedUsers.length === 0 && (
                                             <tr>
-                                                <td colSpan={isSuperAdmin ? 11 : 9} className="p-6 text-center text-gray-600">
+                                                <td colSpan={isSuperAdmin ? 12 : 9} className="p-6 text-center text-gray-600">
                                                     {quickSearch ? "No users match your search." : "No users found."}
                                                 </td>
                                             </tr>
@@ -499,6 +562,23 @@ export default function AdminUsers() {
                                                     )}
                                                 </td>
 
+                                                <td className="p-3">
+                                                    {(() => {
+                                                        const paymentSummary = getPaymentSummary(u);
+
+                                                        return (
+                                                            <div className="min-w-[135px]">
+                                                                <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold capitalize ${paymentSummary.className}`}>
+                                                                    {paymentSummary.label}
+                                                                </span>
+                                                                <p className="mt-1 text-xs font-semibold capitalize text-gray-600">
+                                                                    {paymentSummary.detail}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </td>
+
                                                 {isSuperAdmin && (
                                                     <td className="p-3">
                                                         {(() => {
@@ -538,24 +618,28 @@ export default function AdminUsers() {
 
                                                 <td className="p-3">
                                                     <button
+                                                        type="button"
+                                                        disabled={!canToggleActive}
                                                         onClick={() =>
                                                             updateAccess(u._id, "isActive", !u.isActive)
                                                         }
-                                                        className={`w-full px-3 py-2 rounded-lg text-white ${u.isActive ? "bg-red-600" : "bg-green-600"
-                                                            }`}
+                                                        className={`w-full rounded-lg px-3 py-2 text-white disabled:opacity-60 ${u.isActive ? "bg-red-600" : "bg-green-600"}`}
                                                     >
                                                         {u.isActive ? "Deactivate" : "Activate"}
                                                     </button>
                                                 </td>
 
-                                                <td className="p-3">
-                                                    <button
-                                                        onClick={() => resetPassword(u._id)}
-                                                        className="w-full bg-[#800020] text-white px-3 py-2 rounded-lg"
-                                                    >
-                                                        Reset Password
-                                                    </button>
-                                                </td>
+                                                {isSuperAdmin && (
+                                                    <td className="p-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => resetPassword(u._id)}
+                                                            className="w-full bg-[#800020] text-white px-3 py-2 rounded-lg"
+                                                        >
+                                                            Reset Password
+                                                        </button>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -624,6 +708,27 @@ export default function AdminUsers() {
                                             <p className="text-sm font-semibold text-gray-700">
                                                 Gender: {u.gender || "-"}
                                             </p>
+                                            <div className="mt-3">
+                                                {(() => {
+                                                    const paymentSummary = getPaymentSummary(u);
+
+                                                    return (
+                                                        <div className="rounded-xl border border-rose-100 bg-[#fff8f2] px-3 py-3">
+                                                            <p className="text-xs font-bold uppercase text-gray-500">
+                                                                Payment
+                                                            </p>
+                                                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                                <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold capitalize ${paymentSummary.className}`}>
+                                                                    {paymentSummary.label}
+                                                                </span>
+                                                                <span className="text-sm font-semibold capitalize text-gray-700">
+                                                                    {paymentSummary.detail}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
                                         </div>
 
                                         <div className="space-y-3">
@@ -631,74 +736,94 @@ export default function AdminUsers() {
                                                 <label className="text-xs font-bold text-gray-500">
                                                     Gender
                                                 </label>
-                                                <select
-                                                    value={u.gender || ""}
-                                                    onChange={(e) =>
-                                                        updateAccess(u._id, "gender", e.target.value)
-                                                    }
-                                                    disabled={!canEditGender}
-                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
-                                                >
-                                                    <option value="">Select</option>
-                                                    <option value="Bride">Bride</option>
-                                                    <option value="Groom">Groom</option>
-                                                </select>
+                                                {canEditGender ? (
+                                                    <select
+                                                        value={u.gender || ""}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "gender", e.target.value)
+                                                        }
+                                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                                    >
+                                                        <option value="">Select</option>
+                                                        <option value="Bride">Bride</option>
+                                                        <option value="Groom">Groom</option>
+                                                    </select>
+                                                ) : (
+                                                    <p className="mt-1 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+                                                        {u.gender || "-"}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <div>
                                                 <label className="text-xs font-bold text-gray-500">
                                                     Role
                                                 </label>
-                                                <select
-                                                    value={u.role || "user"}
-                                                    onChange={(e) =>
-                                                        updateAccess(u._id, "role", e.target.value)
-                                                    }
-                                                    disabled={!canEditFullAccess}
-                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
-                                                >
-                                                    <option value="user">user</option>
-                                                    <option value="executive">executive</option>
-                                                    <option value="admin">admin</option>
-                                                    <option value="oper_admin">oper_admin</option>
-                                                    <option value="super_admin">super_admin</option>
-                                                </select>
+                                                {canEditFullAccess ? (
+                                                    <select
+                                                        value={u.role || "user"}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "role", e.target.value)
+                                                        }
+                                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                                    >
+                                                        <option value="user">user</option>
+                                                        <option value="executive">executive</option>
+                                                        <option value="admin">admin</option>
+                                                        <option value="oper_admin">oper_admin</option>
+                                                        <option value="super_admin">super_admin</option>
+                                                    </select>
+                                                ) : (
+                                                    <p className="mt-1 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+                                                        {u.role || "user"}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <div>
                                                 <label className="text-xs font-bold text-gray-500">
                                                     Status
                                                 </label>
-                                                <select
-                                                    value={u.status || "pending"}
-                                                    onChange={(e) =>
-                                                        updateAccess(u._id, "status", e.target.value)
-                                                    }
-                                                    disabled={!canEditFullAccess}
-                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
-                                                >
-                                                    <option value="pending">pending</option>
-                                                    <option value="approved">approved</option>
-                                                    <option value="rejected">rejected</option>
-                                                </select>
+                                                {canEditFullAccess ? (
+                                                    <select
+                                                        value={u.status || "pending"}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "status", e.target.value)
+                                                        }
+                                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                                    >
+                                                        <option value="pending">pending</option>
+                                                        <option value="approved">approved</option>
+                                                        <option value="rejected">rejected</option>
+                                                    </select>
+                                                ) : (
+                                                    <p className="mt-1 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+                                                        {u.status || "pending"}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <div>
                                                 <label className="text-xs font-bold text-gray-500">
                                                     Membership
                                                 </label>
-                                                <select
-                                                    value={u.membershipPlan || "free"}
-                                                    onChange={(e) =>
-                                                        updateAccess(u._id, "membershipPlan", e.target.value)
-                                                    }
-                                                    disabled={!canEditFullAccess}
-                                                    className="mt-1 w-full border rounded-lg px-3 py-2"
-                                                >
-                                                    <option value="free">free</option>
-                                                    <option value="premium">premium</option>
-                                                    <option value="elite">elite</option>
-                                                </select>
+                                                {canEditFullAccess ? (
+                                                    <select
+                                                        value={u.membershipPlan || "free"}
+                                                        onChange={(e) =>
+                                                            updateAccess(u._id, "membershipPlan", e.target.value)
+                                                        }
+                                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                                    >
+                                                        <option value="free">free</option>
+                                                        <option value="premium">premium</option>
+                                                        <option value="elite">elite</option>
+                                                    </select>
+                                                ) : (
+                                                    <p className="mt-1 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+                                                        {u.membershipPlan || "free"}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             {isSuperAdmin && (
@@ -744,21 +869,25 @@ export default function AdminUsers() {
 
                                             <div className="grid grid-cols-1 gap-3 pt-2">
                                                 <button
+                                                    type="button"
+                                                    disabled={!canToggleActive}
                                                     onClick={() =>
                                                         updateAccess(u._id, "isActive", !u.isActive)
                                                     }
-                                                    className={`w-full px-3 py-3 rounded-xl text-white font-semibold ${u.isActive ? "bg-red-600" : "bg-green-600"
-                                                        }`}
+                                                    className={`w-full rounded-xl px-3 py-3 font-semibold text-white disabled:opacity-60 ${u.isActive ? "bg-red-600" : "bg-green-600"}`}
                                                 >
                                                     {u.isActive ? "Deactivate" : "Activate"}
                                                 </button>
 
-                                                <button
-                                                    onClick={() => resetPassword(u._id)}
-                                                    className="w-full bg-[#800020] text-white px-3 py-3 rounded-xl font-semibold"
-                                                >
-                                                    Reset Password
-                                                </button>
+                                                {isSuperAdmin && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => resetPassword(u._id)}
+                                                        className="w-full bg-[#800020] text-white px-3 py-3 rounded-xl font-semibold"
+                                                    >
+                                                        Reset Password
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
