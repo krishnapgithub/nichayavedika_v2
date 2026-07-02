@@ -562,40 +562,87 @@ export default function Header() {
                             ముహూర్తాలు
                         </button>
 
-                        {canSeeAdminProfilesMenu && (
-                            <Link
-                                to="/admin/profiles"
-                                className="mobile-nav-link"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Admin
-                            </Link>
-                        )}
+                        {user && (
+                            <div className="mt-3 border-t border-rose-100 pt-3">
+                                {canSeeDashboardMenu && (
+                                    <Link
+                                        to="/dashboard"
+                                        className="mobile-nav-link"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                )}
 
-                        {canSeeAdminPaymentsMenu && (
-                            <Link
-                                to="/admin/payments"
-                                className="mobile-nav-link"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Payments
-                            </Link>
-                        )}
+                                {canSeeProfileMenu && (
+                                    <button
+                                        type="button"
+                                        className="mobile-nav-link"
+                                        onClick={() => {
+                                            setIsCreateProfileOpen(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                    >
+                                        Profile
+                                    </button>
+                                )}
 
-                        {canSeeAdminContentMenu && (
-                            <Link
-                                to="/admin/content"
-                                className="mobile-nav-link"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Pages
-                            </Link>
-                        )}
+                                {canSeeSentMenu && (
+                                    <Link
+                                        to="/sent-interests"
+                                        className="mobile-nav-link"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Sent
+                                    </Link>
+                                )}
 
-                        {canSeeAdminUsersMenu && (
-                            <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                                {userManagementLabel}
-                            </Link>
+                                {canSeeReceivedMenu && (
+                                    <Link
+                                        to="/received-interests"
+                                        className="mobile-nav-link"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Received
+                                    </Link>
+                                )}
+
+                                {canSeeAdminProfilesMenu && (
+                                    <Link
+                                        to="/admin/profiles"
+                                        className="mobile-nav-link"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Admin
+                                    </Link>
+                                )}
+
+                                {canSeeAdminPaymentsMenu && (
+                                    <Link
+                                        to="/admin/payments"
+                                        className="mobile-nav-link"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Payments
+                                    </Link>
+                                )}
+
+                                {canSeeAdminContentMenu && (
+                                    <Link
+                                        to="/admin/content"
+                                        className="mobile-nav-link"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Pages
+                                    </Link>
+                                )}
+
+                                {canSeeAdminUsersMenu && (
+                                    <Link to="/admin/users" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                                        {userManagementLabel}
+                                    </Link>
+                                )}
+                            </div>
                         )}
 
                         {!user && (
