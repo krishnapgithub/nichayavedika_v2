@@ -8,6 +8,12 @@ import fs from "fs/promises";
 import { getSafeProfile } from "../utils/profilePrivacy.js";
 
 const getUploadedPhotoPath = (file) => (file ? `uploads/${file.filename}` : "");
+const PROFILE_VIEW_LIMITS = {
+    free: 5,
+    premium: 20,
+    elite: 40,
+};
+const SUPPORT_PHONE = "+91 XXXXX XXXXX";
 
 const toBoolean = (value, defaultValue = true) => {
     if (value === undefined || value === null || value === "") return defaultValue;
@@ -36,6 +42,51 @@ const hideProfilePhotos = (profile) => {
 
 const applyPhotoConsent = (profile, user = null) =>
     canSeeProfilePhotos(profile, user) ? profile : hideProfilePhotos(profile);
+
+const getProfileViewLimit = (membershipPlan = "free") =>
+    PROFILE_VIEW_LIMITS[String(membershipPlan || "free").toLowerCase()] ?? PROFILE_VIEW_LIMITS.free;
+
+const getLimitReachedMessage = (membershipPlan = "free") => {
+    const plan = String(membershipPlan || "free").toLowerCase();
+    const limit = getProfileViewLimit(plan);
+    const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+
+    return `You have reached your ${planLabel} plan limit of ${limit} profile views as per the rate card. Please upgrade your membership or contact us at ${SUPPORT_PHONE}.`;
+};
+
+const registerProfileView = async (user, profileId) => {
+    const limit = getProfileViewLimit(user.membershipPlan);
+    const viewedProfileIds = (user.viewedProfileIds || []).map((id) => id.toString());
+    const profileIdText = profileId.toString();
+    const alreadyViewed = viewedProfileIds.includes(profileIdText);
+    const usedViews = Math.max(user.profileViewsUsed || 0, viewedProfileIds.length);
+
+    if (!alreadyViewed && usedViews >= limit) {
+        return {
+            allowed: false,
+            limit,
+            usedViews,
+            remainingViews: 0,
+            message: getLimitReachedMessage(user.membershipPlan),
+        };
+    }
+
+    if (!alreadyViewed) {
+        user.viewedProfileIds = [...(user.viewedProfileIds || []), profileId];
+        user.profileViewsUsed = usedViews + 1;
+        user.profileViewsRemaining = Math.max(limit - user.profileViewsUsed, 0);
+        await user.save();
+    }
+
+    const currentUsedViews = alreadyViewed ? usedViews : user.profileViewsUsed;
+
+    return {
+        allowed: true,
+        limit,
+        usedViews: currentUsedViews,
+        remainingViews: Math.max(limit - currentUsedViews, 0),
+    };
+};
 
 const normalizeProfileGender = (gender) => {
     const value = String(gender || "").trim().toLowerCase();
@@ -234,11 +285,17 @@ export const getPendingProfiles = async (req, res) => {
         }
 
         const skip = (currentPage - 1) * pageLimit;
+        const profileQuery = Profile.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(pageLimit);
+
+        if (req.user?.role === "super_admin") {
+            profileQuery.populate("user", "fullName email mobile role membershipPlan profileViewsUsed profileViewsRemaining viewedProfileIds");
+        }
+
         const [profiles, total] = await Promise.all([
-            Profile.find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(pageLimit),
+            profileQuery,
             Profile.countDocuments(filter),
         ]);
 
@@ -497,12 +554,21 @@ export const getProfileById = async (req, res) => {
             });
         }
 
-        const currentUser = req.user;
+        const currentUser = await User.findById(req.user.id || req.user._id);
+        if (!currentUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
         const isOwnProfile =
             profile.user?.toString() === currentUser?._id?.toString() ||
             profile.user?.toString() === currentUser?.id?.toString();
         const isAdmin =
-            currentUser?.role === "admin" || currentUser?.role === "super_admin";
+            currentUser?.role === "admin" ||
+            currentUser?.role === "oper_admin" ||
+            currentUser?.role === "super_admin";
         const isPaidMember = ["premium", "elite"].includes(
             currentUser?.membershipPlan
         );
@@ -517,11 +583,37 @@ export const getProfileById = async (req, res) => {
             });
         }
 
-        // Admin / Premium see full details
+        if (!isOwnProfile && !isAdmin) {
+            const viewAccess = await registerProfileView(currentUser, profile._id);
+
+            if (!viewAccess.allowed) {
+                return res.status(403).json({
+                    success: false,
+                    canView: false,
+                    code: "PROFILE_VIEW_LIMIT_REACHED",
+                    message: viewAccess.message,
+                    plan: currentUser.membershipPlan || "free",
+                    limit: viewAccess.limit,
+                    usedViews: viewAccess.usedViews,
+                    remainingViews: viewAccess.remainingViews,
+                    supportPhone: SUPPORT_PHONE,
+                });
+            }
+        }
+
+        // Admin / paid members see full details
         if (isOwnProfile || isAdmin || isPaidMember) {
             return res.json({
                 success: true,
                 profile: applyPhotoConsent(profile, currentUser),
+                profileViewLimit: isOwnProfile || isAdmin
+                    ? null
+                    : {
+                        plan: currentUser.membershipPlan || "free",
+                        limit: getProfileViewLimit(currentUser.membershipPlan),
+                        usedViews: currentUser.profileViewsUsed || 0,
+                        remainingViews: currentUser.profileViewsRemaining,
+                    },
             });
         }
 
@@ -544,6 +636,12 @@ export const getProfileById = async (req, res) => {
                 profilePhoto: profile.showPhotosToMembers === false ? "" : profile.profilePhoto,
                 showPhotosToMembers: profile.showPhotosToMembers,
             },
+            profileViewLimit: {
+                plan: currentUser.membershipPlan || "free",
+                limit: getProfileViewLimit(currentUser.membershipPlan),
+                usedViews: currentUser.profileViewsUsed || 0,
+                remainingViews: currentUser.profileViewsRemaining,
+            },
         });
 
     } catch (error) {
@@ -560,7 +658,7 @@ export const getProfileById = async (req, res) => {
 // ==========================================
 // Check whether user can view a full profile
 // Free users -> 5 views only
-// Premium/Admin -> unlimited
+// Paid users follow plan limits; admins are unlimited
 // ==========================================
 export const checkProfileViewAccess = async (req, res) => {
     try {
@@ -576,41 +674,42 @@ export const checkProfileViewAccess = async (req, res) => {
         }
 
         // Admins have unlimited access
-        if (user.role === "admin") {
+        if (["admin", "oper_admin", "super_admin"].includes(user.role)) {
             return res.json({
                 success: true,
                 canView: true,
             });
         }
 
-        // Premium members have unlimited access
-        if (user.membershipPlan === "premium") {
-            return res.json({
-                success: true,
-                canView: true,
-            });
-        }
+        const limit = getProfileViewLimit(user.membershipPlan);
+        const usedViews = Math.max(user.profileViewsUsed || 0, user.viewedProfileIds?.length || 0);
 
-        // Free members can view only 5 profiles
-        if (user.profileViewsUsed >= 5) {
-
+        if (usedViews >= limit) {
             return res.status(403).json({
                 success: false,
                 canView: false,
-                message:
-                    "Free members can view only 5 profiles. Please upgrade to Premium.",
+                code: "PROFILE_VIEW_LIMIT_REACHED",
+                message: getLimitReachedMessage(user.membershipPlan),
+                plan: user.membershipPlan || "free",
+                limit,
+                usedViews,
+                remainingViews: 0,
+                supportPhone: SUPPORT_PHONE,
             });
         }
 
         // Increase profile view count
         user.profileViewsUsed += 1;
+        user.profileViewsRemaining = Math.max(limit - user.profileViewsUsed, 0);
 
         await user.save();
 
         res.json({
             success: true,
             canView: true,
-            remainingViews: 5 - user.profileViewsUsed,
+            limit,
+            usedViews: user.profileViewsUsed,
+            remainingViews: Math.max(limit - user.profileViewsUsed, 0),
         });
 
     } catch (error) {

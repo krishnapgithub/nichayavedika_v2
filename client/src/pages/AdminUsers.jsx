@@ -37,6 +37,21 @@ const formatChanges = (changes = []) =>
         ? changes.map((change) => `${change.field}: ${change.from} -> ${change.to}`).join("; ")
         : "-";
 
+const PROFILE_VIEW_LIMITS = {
+    free: 5,
+    premium: 20,
+    elite: 40,
+};
+
+const getProfileViewSummary = (user) => {
+    const plan = String(user?.membershipPlan || "free").toLowerCase();
+    const limit = PROFILE_VIEW_LIMITS[plan] ?? PROFILE_VIEW_LIMITS.free;
+    const used = Math.max(user?.profileViewsUsed || 0, user?.viewedProfileIds?.length || 0);
+    const pending = Math.max(limit - used, 0);
+
+    return { limit, used, pending };
+};
+
 const formatLocation = (log) => {
     const location = log.location || {};
     const place = [
@@ -323,7 +338,7 @@ export default function AdminUsers() {
                         <>
                             {/* Desktop / Tablet Table */}
                             <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
-                                <table className="min-w-[1350px] w-full text-sm">
+                                <table className="min-w-[1450px] w-full text-sm">
                                     <thead className="bg-[#800020] text-white">
                                         <tr>
                                             <th className="p-3 text-left">Name</th>
@@ -333,6 +348,9 @@ export default function AdminUsers() {
                                             <th className="p-3 text-left">Role</th>
                                             <th className="p-3 text-left">Status</th>
                                             <th className="p-3 text-left">Membership</th>
+                                            {isSuperAdmin && (
+                                                <th className="p-3 text-left">Views</th>
+                                            )}
                                             {isSuperAdmin && (
                                                 <th className="p-3 text-left">Sub Menu</th>
                                             )}
@@ -344,7 +362,7 @@ export default function AdminUsers() {
                                     <tbody>
                                         {displayedUsers.length === 0 && (
                                             <tr>
-                                                <td colSpan={isSuperAdmin ? 10 : 9} className="p-6 text-center text-gray-600">
+                                                <td colSpan={isSuperAdmin ? 11 : 9} className="p-6 text-center text-gray-600">
                                                     {quickSearch ? "No users match your search." : "No users found."}
                                                 </td>
                                             </tr>
@@ -468,6 +486,25 @@ export default function AdminUsers() {
                                                         <span className="font-semibold text-gray-700">{u.membershipPlan || "free"}</span>
                                                     )}
                                                 </td>
+
+                                                {isSuperAdmin && (
+                                                    <td className="p-3">
+                                                        {(() => {
+                                                            const viewSummary = getProfileViewSummary(u);
+
+                                                            return (
+                                                                <div className="min-w-[120px] rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-gray-700">
+                                                                    <p className="text-[#800020]">
+                                                                        {viewSummary.used} / {viewSummary.limit} used
+                                                                    </p>
+                                                                    <p className="mt-1">
+                                                                        {viewSummary.pending} pending
+                                                                    </p>
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </td>
+                                                )}
 
                                                 {isSuperAdmin && (
                                                     <td className="p-3">
@@ -651,6 +688,26 @@ export default function AdminUsers() {
                                                     <option value="elite">elite</option>
                                                 </select>
                                             </div>
+
+                                            {isSuperAdmin && (
+                                                <div className="rounded-xl bg-amber-50 px-3 py-3 text-sm font-semibold text-gray-700">
+                                                    {(() => {
+                                                        const viewSummary = getProfileViewSummary(u);
+
+                                                        return (
+                                                            <>
+                                                                <p className="text-xs font-bold uppercase text-gray-500">
+                                                                    Profile Views
+                                                                </p>
+                                                                <p className="mt-1 text-[#800020]">
+                                                                    {viewSummary.used} / {viewSummary.limit} used
+                                                                </p>
+                                                                <p>{viewSummary.pending} pending</p>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            )}
 
                                             {isSuperAdmin && (
                                                 <div>

@@ -86,6 +86,7 @@ function SearchProfiles() {
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [isGuestProfilePrompt, setIsGuestProfilePrompt] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [limitNotice, setLimitNotice] = useState(null);
     const [currentUser, setCurrentUser] = useState(() => getSavedUser());
 
     const [filters, setFilters] = useState(filtersFromUrl);
@@ -195,7 +196,13 @@ function SearchProfiles() {
             setSelectedProfile(res.data.profile || profile);
         } catch (error) {
             console.log("PROFILE POPUP ERROR:", error.response?.data || error.message);
-            setSelectedProfile(profile);
+            if (error.response?.status === 403 && error.response?.data?.code === "PROFILE_VIEW_LIMIT_REACHED") {
+                setLimitNotice(error.response.data);
+                toast.error(error.response.data.message || "Profile view limit reached.");
+                return;
+            }
+
+            toast.error(error.response?.data?.message || "Unable to open this profile.");
         }
     };
 
@@ -496,6 +503,13 @@ function SearchProfiles() {
             />
         )}
 
+        {limitNotice && (
+            <ProfileLimitNotice
+                notice={limitNotice}
+                onClose={() => setLimitNotice(null)}
+            />
+        )}
+
         <RegisterModal
             isOpen={isRegisterOpen}
             onClose={() => setIsRegisterOpen(false)}
@@ -504,6 +518,60 @@ function SearchProfiles() {
         </>
     );
     
+}
+
+function ProfileLimitNotice({ notice, onClose }) {
+    const plan = String(notice?.plan || "free");
+    const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+    const limit = notice?.limit || 5;
+    const supportPhone = notice?.supportPhone || "+91 XXXXX XXXXX";
+
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 px-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-[#800020]">
+                    Profile view limit reached
+                </div>
+
+                <h2 className="text-2xl font-bold text-gray-900">
+                    {planLabel} plan includes {limit} profile views
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-gray-600">
+                    {notice?.message ||
+                        `You have reached your ${planLabel} plan limit as per the rate card. Please upgrade your membership or contact us at ${supportPhone}.`}
+                </p>
+
+                <div className="mt-5 rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
+                    Contact us: <span className="font-semibold">{supportPhone}</span>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <Link
+                        to="/membership"
+                        onClick={onClose}
+                        className="flex-1 rounded-xl bg-[#800020] px-4 py-3 text-center text-sm font-bold text-white"
+                    >
+                        Upgrade
+                    </Link>
+                    <Link
+                        to="/contact"
+                        onClick={onClose}
+                        className="flex-1 rounded-xl border border-[#800020] px-4 py-3 text-center text-sm font-bold text-[#800020]"
+                    >
+                        Contact Us
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-xl px-4 py-3 text-sm font-semibold text-gray-600"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function SearchLoadingCards() {

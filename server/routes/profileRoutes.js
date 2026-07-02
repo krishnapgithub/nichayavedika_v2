@@ -105,8 +105,8 @@ router.get(
 
 // ==========================================
 // Free User Profile View Limit
-// Premium/Admin = unlimited
-// Free = max 5 profiles
+// Free/Premium/Elite follow plan limits
+// Admin = unlimited
 // ==========================================
 router.post(
     "/profile-view",

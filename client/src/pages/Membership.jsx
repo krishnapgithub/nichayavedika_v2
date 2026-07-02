@@ -100,6 +100,7 @@ export default function Membership() {
 
                             <ul className="mt-5 space-y-2 text-gray-600 text-sm">
                                 <li>? Everything in Premium</li>
+                                <li>? Up to 40 Profile Views</li>
                                 <li>? Dedicated Relationship Manager</li>
                                 <li>? Profile Boost</li>
                                 <li>? Exclusive Matches</li>

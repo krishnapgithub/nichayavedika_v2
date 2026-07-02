@@ -22,7 +22,7 @@ const PLANS = {
         label: "Elite",
         amount: "INR 4,999",
         duration: "6 Months",
-        views: "50 profile views",
+        views: "40 profile views",
         benefits: [
             "Everything in Premium",
             "Dedicated relationship manager",

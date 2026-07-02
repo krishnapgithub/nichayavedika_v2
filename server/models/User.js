@@ -113,6 +113,12 @@ const userSchema = new mongoose.Schema(
             default: 0
         },
 
+        viewedProfileIds: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "Profile",
+            default: [],
+        },
+
 
         profileStatus: {
             type: String,

@@ -9,8 +9,6 @@ const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000";
 
-const FREE_PROFILE_VIEW_LIMIT = 5;
-
 const getProfilePhotoUrl = (profilePhoto) => {
     if (!profilePhoto) return "";
     if (profilePhoto.startsWith("http")) return profilePhoto;
@@ -39,7 +37,7 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [viewLimitReached, setViewLimitReached] = useState(false);
+    const [limitNotice, setLimitNotice] = useState(null);
 
     useEffect(() => {
         const savedUser = getSavedUser();
@@ -73,6 +71,11 @@ export default function ProfilePage() {
                 setProfile(response.data.profile || response.data);
             } catch (error) {
                 console.error("Fetch Profile Error:", error);
+                if (error.response?.status === 403 && error.response?.data?.code === "PROFILE_VIEW_LIMIT_REACHED") {
+                    setLimitNotice(error.response.data);
+                    return;
+                }
+
                 toast.error(error.response?.data?.message || "Failed to load profile");
             } finally {
                 setLoading(false);
@@ -86,9 +89,13 @@ export default function ProfilePage() {
 
     const isPremiumUser =
         user?.membership === "premium" ||
+        user?.membership === "elite" ||
         user?.membershipType === "premium" ||
+        user?.membershipType === "elite" ||
         user?.membershipPlan === "premium" ||
+        user?.membershipPlan === "elite" ||
         userRole === "admin" ||
+        userRole === "oper_admin" ||
         userRole === "super_admin";
     const isAdminUser = ["admin", "oper_admin", "super_admin"].includes(userRole);
 
@@ -103,27 +110,6 @@ export default function ProfilePage() {
     const profilePhotoUrl = canViewProfilePhotos
         ? getProfilePhotoUrl(profile?.profilePhoto)
         : "";
-
-    useEffect(() => {
-        if (!profile || !user || isPremiumUser) return;
-
-        const storageKey = `viewedProfiles_${user._id || user.id || "guest"}`;
-
-        const viewedProfiles = JSON.parse(
-            localStorage.getItem(storageKey) || "[]"
-        );
-
-        if (viewedProfiles.includes(profile._id)) return;
-
-        if (viewedProfiles.length >= FREE_PROFILE_VIEW_LIMIT) {
-            setViewLimitReached(true);
-            toast.error("Free profile view limit reached. Please upgrade.");
-            return;
-        }
-
-        viewedProfiles.push(profile._id);
-        localStorage.setItem(storageKey, JSON.stringify(viewedProfiles));
-    }, [profile, user, isPremiumUser]);
 
     const handleSendInterest = async (profileId) => {
         try {
@@ -170,15 +156,19 @@ export default function ProfilePage() {
         );
     }
 
-    if (viewLimitReached) {
+    if (limitNotice) {
+        const plan = String(limitNotice.plan || "free");
+        const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+        const limit = limitNotice.limit || 5;
+
         return (
             <>
                 <div className="profile-page-container">
                     <div className="upgrade-box">
-                        <h3>Free View Limit Reached ðŸ”’</h3>
+                        <h3>Profile View Limit Reached</h3>
                         <p>
-                            You have viewed 5 profiles with your free membership. Please
-                            upgrade to continue viewing more profiles.
+                            {limitNotice.message ||
+                                `You have reached your ${planLabel} plan limit of ${limit} profile views as per the rate card. Please upgrade or contact us.`}
                         </p>
 
                         <Link to="/membership" className="upgrade-btn">

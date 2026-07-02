@@ -96,6 +96,22 @@ const getExpectedGender = (registeringFor) => {
     return "";
 };
 
+const PROFILE_VIEW_LIMITS = {
+    free: 5,
+    premium: 20,
+    elite: 40,
+};
+
+const getProfileViewSummary = (profile) => {
+    const user = profile?.user && typeof profile.user === "object" ? profile.user : {};
+    const plan = String(user.membershipPlan || profile?.membershipPlan || "free").toLowerCase();
+    const limit = PROFILE_VIEW_LIMITS[plan] ?? PROFILE_VIEW_LIMITS.free;
+    const used = Math.max(user.profileViewsUsed || 0, user.viewedProfileIds?.length || 0);
+    const pending = Math.max(limit - used, 0);
+
+    return { limit, used, pending, plan };
+};
+
 export default function AdminProfiles() {
     const [profiles, setProfiles] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -110,6 +126,7 @@ export default function AdminProfiles() {
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const userRole = loggedInUser?.role?.toLowerCase?.().trim();
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
+    const isSuperAdmin = userRole === "super_admin";
 
     const authConfig = () => ({
         headers: {
@@ -425,6 +442,7 @@ export default function AdminProfiles() {
                         {profiles.map((profile) => {
                             const hasReviewChanges = (profile.reviewChanges || []).length > 0;
                             const hasHistory = (profile.changeHistory || []).length > 0;
+                            const viewSummary = getProfileViewSummary(profile);
 
                             return (
                             <div
@@ -495,6 +513,12 @@ export default function AdminProfiles() {
                                             <span className="font-semibold text-gray-900">Education:</span>{" "}
                                             {profile.education || "N/A"}
                                         </p>
+                                        {isSuperAdmin && (
+                                            <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-gray-700 sm:col-span-2">
+                                                <span className="font-bold text-[#800020]">Views:</span>{" "}
+                                                {viewSummary.used} / {viewSummary.limit} used, {viewSummary.pending} pending
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">

@@ -17,6 +17,14 @@ const allowedMenuAccess = [
     "adminContent",
     "adminUsers",
 ];
+const PROFILE_VIEW_LIMITS = {
+    free: 5,
+    premium: 20,
+    elite: 40,
+};
+
+const getProfileViewLimit = (membershipPlan = "free") =>
+    PROFILE_VIEW_LIMITS[String(membershipPlan || "free").toLowerCase()] ?? PROFILE_VIEW_LIMITS.free;
 
 const formatAuditValue = (value) => {
     if (Array.isArray(value)) return value.join(", ");
@@ -73,9 +81,12 @@ export const getAllUsers = async (req, res) => {
         const filter = isSuperAdmin(req.user)
             ? {}
             : { role: "user" };
+        const userSelect = isSuperAdmin(req.user)
+            ? "-password"
+            : "-password -profileViewsRemaining -profileViewsUsed -viewedProfileIds";
 
         const users = await User.find(filter)
-            .select("-password")
+            .select(userSelect)
             .sort({ createdAt: -1 });
 
         res.json({ success: true, users });
@@ -268,6 +279,14 @@ export const updateUserAccess = async (req, res) => {
 
         if (req.body.membershipPlan !== undefined) {
             updateData.membershipPlan = req.body.membershipPlan;
+            const usedViews = Math.max(
+                targetUser.profileViewsUsed || 0,
+                targetUser.viewedProfileIds?.length || 0
+            );
+            updateData.profileViewsRemaining = Math.max(
+                getProfileViewLimit(req.body.membershipPlan) - usedViews,
+                0
+            );
         }
 
         if (isSuperAdmin(req.user) && req.body.menuAccess !== undefined) {
@@ -299,7 +318,11 @@ export const updateUserAccess = async (req, res) => {
             id,
             { $set: updateData },
             { returnDocument: "after" }
-        ).select("-password");
+        ).select(
+            isSuperAdmin(req.user)
+                ? "-password"
+                : "-password -profileViewsRemaining -profileViewsUsed -viewedProfileIds"
+        );
 
         if (user && Object.prototype.hasOwnProperty.call(updateData, "gender")) {
             await Profile.findOneAndUpdate(

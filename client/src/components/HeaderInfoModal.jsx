@@ -34,6 +34,7 @@ const modalContent = {
                 price: "₹4,999 / 6 Months",
                 items: [
                     "Everything in Premium",
+                    "Up to 40 profile views",
                     "Dedicated relationship manager",
                     "Profile boost",
                     "Priority support",

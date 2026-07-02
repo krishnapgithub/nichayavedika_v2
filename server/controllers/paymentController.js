@@ -14,7 +14,7 @@ const PLAN_DETAILS = {
         label: "Elite",
         amount: 4999,
         durationDays: 180,
-        profileViews: 50,
+        profileViews: 40,
     },
 };
 
