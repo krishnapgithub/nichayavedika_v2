@@ -64,22 +64,6 @@ const getOppositeGender = (gender) => {
     return "";
 };
 
-const getProfileOwnerId = (profile) => {
-    const owner = profile?.user;
-
-    if (!owner) return "";
-    if (typeof owner === "string") return owner;
-    return owner._id || owner.id || "";
-};
-
-const excludeOwnProfile = (profiles, user) => {
-    const userId = String(user?._id || user?.id || "");
-
-    if (!userId) return profiles;
-
-    return profiles.filter((profile) => String(getProfileOwnerId(profile)) !== userId);
-};
-
 function SearchProfiles() {
     const [searchParams] = useSearchParams();
     const filtersFromUrl = {
@@ -154,17 +138,11 @@ function SearchProfiles() {
             console.log("SEARCH RESPONSE:", res.data);
 
             const rawProfiles = res.data.profiles || [];
-            const visibleProfiles = excludeOwnProfile(rawProfiles, savedUser);
-            const removedOwnProfileCount = rawProfiles.length - visibleProfiles.length;
-            const nextTotal = Math.max(
-                0,
-                Number(res.data.total || 0) - removedOwnProfileCount
-            );
 
-            setProfiles(visibleProfiles);
+            setProfiles(rawProfiles);
             setPage(Number(res.data.page || pageToLoad));
-            setTotalPages(Math.max(1, Math.ceil(nextTotal / PAGE_SIZE)));
-            setTotal(nextTotal);
+            setTotalPages(Math.max(1, Math.ceil(Number(res.data.total || 0) / PAGE_SIZE)));
+            setTotal(Number(res.data.total || 0));
         } catch (error) {
             console.log("SEARCH ERROR:", error.response?.data || error.message);
             toast.error(error.response?.data?.message || "Search failed");
@@ -255,7 +233,7 @@ function SearchProfiles() {
         setFilters(initialFilters);
         setProfiles([]);
         fetchProfiles(1, initialFilters);
-    }, [oppositeGender, shouldLockGender]);
+    }, [searchParams, oppositeGender, shouldLockGender]);
 
     return (
 

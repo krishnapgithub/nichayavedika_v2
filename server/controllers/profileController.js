@@ -312,16 +312,8 @@ export const searchProfiles = async (req, res) => {
             ],
         };
 
-        const shouldForceOppositeGender = req.user && !isAdminUser(req.user);
         const currentUserId = req.user?._id || req.user?.id;
-
-        if (currentUserId && !isAdminUser(req.user)) {
-            filter.$and.push({
-                user: {
-                    $ne: currentUserId,
-                },
-            });
-        }
+        const shouldForceOppositeGender = req.user && !isAdminUser(req.user);
 
         const requiredGender =
             shouldForceOppositeGender
@@ -337,9 +329,20 @@ export const searchProfiles = async (req, res) => {
                         ? "^\\s*(bride|female)\\s*$"
                         : `^\\s*${requiredGender.trim()}\\s*$`;
 
-            filter.$and.push({
+            const genderCondition = {
                 gender: new RegExp(genderPattern, "i"),
-            });
+            };
+
+            filter.$and.push(
+                shouldForceOppositeGender && currentUserId
+                    ? {
+                        $or: [
+                            { user: currentUserId },
+                            genderCondition,
+                        ],
+                    }
+                    : genderCondition
+            );
         }
         if (caste) filter.caste = new RegExp(caste, "i");
         if (subCaste) filter.subCaste = new RegExp(subCaste, "i");
