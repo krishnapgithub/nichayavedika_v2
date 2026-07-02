@@ -2,26 +2,18 @@ import crypto from "crypto";
 import axios from "axios";
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
-
-const PLAN_DETAILS = {
-    premium: {
-        label: "Premium",
-        amount: 1999,
-        durationDays: 90,
-        profileViews: 20,
-    },
-    elite: {
-        label: "Elite",
-        amount: 4999,
-        durationDays: 180,
-        profileViews: 40,
-    },
-};
+import { getMembershipPlan } from "../services/membershipPlanService.js";
 
 const createReceiptNumber = () =>
     `NV-PAY-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 
-const getPlanDetails = (plan) => PLAN_DETAILS[String(plan || "").toLowerCase()];
+const getPlanDetails = async (plan) => {
+    const planKey = String(plan || "").toLowerCase();
+
+    if (!["premium", "elite"].includes(planKey)) return null;
+
+    return getMembershipPlan(planKey);
+};
 
 const getRazorpayConfig = () => ({
     keyId: process.env.RAZORPAY_KEY_ID,
@@ -51,10 +43,18 @@ const verifyRazorpaySignature = ({ orderId, paymentId, signature }) => {
 };
 
 const activateMembership = async (payment, verifiedBy = null) => {
-    const planDetails = getPlanDetails(payment.plan);
+    const planDetails = await getPlanDetails(payment.plan);
+
+    if (!planDetails) {
+        throw new Error("Membership plan settings not found.");
+    }
+
     const startDate = payment.membershipStartDate || new Date();
     const expiryDate = new Date(startDate);
-    expiryDate.setDate(expiryDate.getDate() + planDetails.durationDays);
+    const durationDays = payment.durationDays || planDetails.durationDays;
+    const profileViews = payment.profileViews || planDetails.profileViews;
+
+    expiryDate.setDate(expiryDate.getDate() + durationDays);
 
     payment.status = "success";
     payment.membershipStartDate = startDate;
@@ -68,7 +68,7 @@ const activateMembership = async (payment, verifiedBy = null) => {
     await User.findByIdAndUpdate(payment.user, {
         membershipPlan: payment.plan,
         membershipExpiresAt: expiryDate,
-        profileViewsRemaining: planDetails.profileViews,
+        profileViewsRemaining: profileViews,
         profileViewsUsed: 0,
     });
 
@@ -78,7 +78,7 @@ const activateMembership = async (payment, verifiedBy = null) => {
 export const createPaymentRequest = async (req, res) => {
     try {
         const planKey = String(req.body.plan || "").toLowerCase();
-        const planDetails = getPlanDetails(planKey);
+        const planDetails = await getPlanDetails(planKey);
 
         if (!planDetails) {
             return res.status(400).json({
@@ -92,6 +92,7 @@ export const createPaymentRequest = async (req, res) => {
             plan: planKey,
             amount: planDetails.amount,
             durationDays: planDetails.durationDays,
+            profileViews: planDetails.profileViews,
             receiptNumber: createReceiptNumber(),
         });
 
@@ -120,7 +121,7 @@ export const createRazorpayOrder = async (req, res) => {
         }
 
         const planKey = String(req.body.plan || "").toLowerCase();
-        const planDetails = getPlanDetails(planKey);
+        const planDetails = await getPlanDetails(planKey);
 
         if (!planDetails) {
             return res.status(400).json({
@@ -157,6 +158,7 @@ export const createRazorpayOrder = async (req, res) => {
             plan: planKey,
             amount: planDetails.amount,
             durationDays: planDetails.durationDays,
+            profileViews: planDetails.profileViews,
             receiptNumber,
             provider: "razorpay",
             razorpayOrderId: orderRes.data.id,

@@ -14,11 +14,23 @@ const statusClasses = {
     cancelled: "bg-gray-50 text-gray-700 border-gray-200",
 };
 
+const defaultPlanSettings = {
+    free: { label: "Free", amount: 0, durationDays: 0, profileViews: 5 },
+    premium: { label: "Premium", amount: 1999, durationDays: 90, profileViews: 20 },
+    elite: { label: "Elite", amount: 4999, durationDays: 180, profileViews: 40 },
+};
+
+const planOrder = ["free", "premium", "elite"];
+
 export default function AdminPayments() {
     const [payments, setPayments] = useState([]);
     const [status, setStatus] = useState("all");
     const [loading, setLoading] = useState(true);
     const [updatingId, setUpdatingId] = useState("");
+    const [planSettings, setPlanSettings] = useState(defaultPlanSettings);
+    const [savingPlans, setSavingPlans] = useState(false);
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const isSuperAdmin = user.role === "super_admin";
 
     const fetchPayments = async (nextStatus = status) => {
         try {
@@ -37,7 +49,18 @@ export default function AdminPayments() {
 
     useEffect(() => {
         fetchPayments();
+        fetchPlanSettings();
     }, []);
+
+    const fetchPlanSettings = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/payments/plans`);
+
+            setPlanSettings({ ...defaultPlanSettings, ...(res.data.plans || {}) });
+        } catch (error) {
+            console.error("Load plan settings failed:", error);
+        }
+    };
 
     const changeFilter = (nextStatus) => {
         setStatus(nextStatus);
@@ -63,6 +86,36 @@ export default function AdminPayments() {
             toast.error(error.response?.data?.message || "Unable to update payment");
         } finally {
             setUpdatingId("");
+        }
+    };
+
+    const updatePlanField = (planKey, field, value) => {
+        setPlanSettings((prev) => ({
+            ...prev,
+            [planKey]: {
+                ...prev[planKey],
+                [field]: field === "label" ? value : Number(value),
+            },
+        }));
+    };
+
+    const savePlanSettings = async (event) => {
+        event.preventDefault();
+
+        try {
+            setSavingPlans(true);
+            const res = await axios.put(
+                `${API_BASE_URL}/api/payments/admin/plans`,
+                { plans: planSettings },
+                { headers: authHeader() }
+            );
+
+            setPlanSettings({ ...defaultPlanSettings, ...(res.data.plans || {}) });
+            toast.success(res.data.message || "Rate card updated");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Unable to update rate card");
+        } finally {
+            setSavingPlans(false);
         }
     };
 
@@ -95,6 +148,91 @@ export default function AdminPayments() {
                         ))}
                     </div>
                 </div>
+
+                {isSuperAdmin && (
+                    <form
+                        onSubmit={savePlanSettings}
+                        className="mb-6 overflow-hidden rounded-2xl border border-rose-100 bg-white p-4 shadow sm:p-5"
+                    >
+                        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-amber-700">Super admin</p>
+                                <h2 className="text-xl font-bold text-[#800020] sm:text-2xl">Rate Card Settings</h2>
+                                <p className="text-sm text-gray-600">
+                                    Update plan amount, duration, and profile view limit shown to members.
+                                </p>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={savingPlans}
+                                className="w-full rounded-xl bg-[#800020] px-5 py-3 font-bold text-white disabled:opacity-60 md:w-auto md:flex-none"
+                            >
+                                {savingPlans ? "Saving..." : "Save Rate Card"}
+                            </button>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {planOrder.map((planKey) => {
+                                const plan = planSettings[planKey] || defaultPlanSettings[planKey];
+                                const isFree = planKey === "free";
+
+                                return (
+                                    <div key={planKey} className="rounded-xl border border-rose-100 bg-rose-50 p-4">
+                                        <h3 className="mb-3 text-lg font-bold capitalize text-[#800020]">
+                                            {planKey}
+                                        </h3>
+
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <label className="block text-sm font-semibold text-gray-700 sm:col-span-2">
+                                                Plan Name
+                                                <input
+                                                    value={plan.label}
+                                                    onChange={(e) => updatePlanField(planKey, "label", e.target.value)}
+                                                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#800020]"
+                                                />
+                                            </label>
+
+                                            <label className="block text-sm font-semibold text-gray-700">
+                                                Amount (INR)
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={plan.amount}
+                                                    disabled={isFree}
+                                                    onChange={(e) => updatePlanField(planKey, "amount", e.target.value)}
+                                                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#800020] disabled:bg-gray-100"
+                                                />
+                                            </label>
+
+                                            <label className="block text-sm font-semibold text-gray-700">
+                                                Duration (Days)
+                                                <input
+                                                    type="number"
+                                                    min={isFree ? "0" : "1"}
+                                                    value={plan.durationDays}
+                                                    disabled={isFree}
+                                                    onChange={(e) => updatePlanField(planKey, "durationDays", e.target.value)}
+                                                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#800020] disabled:bg-gray-100"
+                                                />
+                                            </label>
+
+                                            <label className="block text-sm font-semibold text-gray-700 sm:col-span-2">
+                                                Profile View Limit
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={plan.profileViews}
+                                                    onChange={(e) => updatePlanField(planKey, "profileViews", e.target.value)}
+                                                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#800020]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </form>
+                )}
 
                 {loading ? (
                     <div className="bg-white rounded-2xl shadow p-6 text-center font-semibold text-[#800020]">

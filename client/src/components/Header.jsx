@@ -198,7 +198,7 @@ export default function Header() {
         setInfoModal(null);
 
         if (isLoggedIn) {
-            const selectedPlan = planTitle === "Elite" ? "elite" : "premium";
+            const selectedPlan = String(planTitle).toLowerCase() === "elite" ? "elite" : "premium";
 
             if (isEliteMember) return;
 

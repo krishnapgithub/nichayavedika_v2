@@ -32,6 +32,21 @@ const PLANS = {
     },
 };
 
+const formatAmount = (amount) =>
+    `INR ${Number(amount || 0).toLocaleString("en-IN")}`;
+
+const formatDuration = (days) => {
+    const totalDays = Number(days || 0);
+
+    if (!totalDays) return "";
+    if (totalDays % 30 === 0) {
+        const months = totalDays / 30;
+        return `${months} ${months === 1 ? "Month" : "Months"}`;
+    }
+
+    return `${totalDays} Days`;
+};
+
 const loadRazorpayScript = () =>
     new Promise((resolve) => {
         if (window.Razorpay) {
@@ -48,7 +63,23 @@ const loadRazorpayScript = () =>
 
 export default function PaymentCheckout() {
     const { plan } = useParams();
-    const selectedPlan = useMemo(() => PLANS[plan?.toLowerCase()], [plan]);
+    const [planSettings, setPlanSettings] = useState({});
+    const selectedPlan = useMemo(() => {
+        const planKey = plan?.toLowerCase();
+        const basePlan = PLANS[planKey];
+        const configuredPlan = planSettings[planKey];
+
+        if (!basePlan) return null;
+        if (!configuredPlan) return basePlan;
+
+        return {
+            ...basePlan,
+            label: configuredPlan.label || basePlan.label,
+            amount: formatAmount(configuredPlan.amount),
+            duration: formatDuration(configuredPlan.durationDays),
+            views: `${configuredPlan.profileViews} profile views`,
+        };
+    }, [plan, planSettings]);
     const [payment, setPayment] = useState(null);
     const [paymentReference, setPaymentReference] = useState("");
     const [notes, setNotes] = useState("");
@@ -70,6 +101,28 @@ export default function PaymentCheckout() {
 
     useEffect(() => {
         loadHistory();
+    }, []);
+
+    useEffect(() => {
+        let ignore = false;
+
+        const loadPlanSettings = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/payments/plans`);
+
+                if (!ignore) {
+                    setPlanSettings(res.data.plans || {});
+                }
+            } catch (error) {
+                console.error("Load plan settings failed:", error);
+            }
+        };
+
+        loadPlanSettings();
+
+        return () => {
+            ignore = true;
+        };
     }, []);
 
     const createRequest = async () => {

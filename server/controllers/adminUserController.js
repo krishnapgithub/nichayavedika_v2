@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Profile from "../models/Profile.js";
 import AdminAuditLog from "../models/AdminAuditLog.js";
 import ActivityLog from "../models/ActivityLog.js";
+import { getMembershipPlan } from "../services/membershipPlanService.js";
 
 const isSuperAdmin = (user) => user?.role === "super_admin";
 const isPrivilegedUser = (user) => user?.role && user.role !== "user";
@@ -17,14 +18,12 @@ const allowedMenuAccess = [
     "adminContent",
     "adminUsers",
 ];
-const PROFILE_VIEW_LIMITS = {
-    free: 5,
-    premium: 20,
-    elite: 40,
-};
+const getProfileViewLimit = async (membershipPlan = "free") => {
+    const plan = await getMembershipPlan(membershipPlan);
+    const freePlan = plan ? null : await getMembershipPlan("free");
 
-const getProfileViewLimit = (membershipPlan = "free") =>
-    PROFILE_VIEW_LIMITS[String(membershipPlan || "free").toLowerCase()] ?? PROFILE_VIEW_LIMITS.free;
+    return plan?.profileViews ?? freePlan?.profileViews ?? 5;
+};
 
 const formatAuditValue = (value) => {
     if (Array.isArray(value)) return value.join(", ");
@@ -284,7 +283,7 @@ export const updateUserAccess = async (req, res) => {
                 targetUser.viewedProfileIds?.length || 0
             );
             updateData.profileViewsRemaining = Math.max(
-                getProfileViewLimit(req.body.membershipPlan) - usedViews,
+                await getProfileViewLimit(req.body.membershipPlan) - usedViews,
                 0
             );
         }

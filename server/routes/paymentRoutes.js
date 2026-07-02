@@ -9,11 +9,16 @@ import {
     updatePaymentStatus,
     verifyRazorpayPayment,
 } from "../controllers/paymentController.js";
+import {
+    getPublicMembershipPlans,
+    updateAdminMembershipPlans,
+} from "../controllers/membershipPlanController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { adminOnly } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
+router.get("/plans", getPublicMembershipPlans);
 router.post("/", protect, createPaymentRequest);
 router.post("/razorpay/order", protect, createRazorpayOrder);
 router.post("/razorpay/verify", protect, verifyRazorpayPayment);
@@ -22,6 +27,7 @@ router.get("/my", protect, getMyPayments);
 router.put("/:id/reference", protect, submitPaymentReference);
 
 router.get("/admin/all", protect, adminOnly, getAdminPayments);
+router.put("/admin/plans", protect, adminOnly, updateAdminMembershipPlans);
 router.put("/admin/:id/status", protect, adminOnly, updatePaymentStatus);
 
 export default router;

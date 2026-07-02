@@ -142,6 +142,66 @@ const toDynamicSections = (items) =>
         ].filter(Boolean),
     }));
 
+const formatAmount = (amount) =>
+    `INR ${Number(amount || 0).toLocaleString("en-IN")}`;
+
+const formatDuration = (days) => {
+    const totalDays = Number(days || 0);
+
+    if (!totalDays) return "";
+    if (totalDays % 30 === 0) {
+        const months = totalDays / 30;
+        return `${months} ${months === 1 ? "Month" : "Months"}`;
+    }
+
+    return `${totalDays} Days`;
+};
+
+const toMembershipSections = (plans) => {
+    const free = plans?.free || {};
+    const premium = plans?.premium || {};
+    const elite = plans?.elite || {};
+
+    return [
+        {
+            planKey: "free",
+            title: free.label || "Free",
+            price: formatAmount(free.amount),
+            items: [
+                "Create profile",
+                "Browse approved profiles",
+                "View limited details",
+                `Up to ${free.profileViews ?? 5} profile views`,
+                "Contact details hidden",
+            ],
+        },
+        {
+            planKey: "premium",
+            title: premium.label || "Premium",
+            price: `${formatAmount(premium.amount)} / ${formatDuration(premium.durationDays)}`,
+            featured: true,
+            items: [
+                `Up to ${premium.profileViews ?? 20} profile views`,
+                "Send interests",
+                "View contact details",
+                "Priority listing",
+            ],
+        },
+        {
+            planKey: "elite",
+            title: elite.label || "Elite",
+            price: `${formatAmount(elite.amount)} / ${formatDuration(elite.durationDays)}`,
+            items: [
+                "Everything in Premium",
+                `Up to ${elite.profileViews ?? 40} profile views`,
+                "Dedicated relationship manager",
+                "Profile boost",
+                "Priority support",
+            ],
+        },
+    ];
+};
+
 const mergeMuhurthaluSections = (items) => {
     const apiSections = toDynamicSections(items);
     const apiTitles = new Set(apiSections.map((section) => section.title));
@@ -163,17 +223,21 @@ export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipP
         : baseContent;
     const gridClass = content?.columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3";
     const normalizedMembershipPlan = membershipPlan?.toString().toLowerCase();
-    const shouldShowMembershipAction = (sectionTitle) => {
+    const shouldShowMembershipAction = (section) => {
+        const planKey = section.planKey || section.title;
+
         if (type !== "membership") return false;
         if (!isLoggedIn) return true;
         if (normalizedMembershipPlan === "elite") return false;
-        if (normalizedMembershipPlan === "premium") return sectionTitle === "Elite";
-        return sectionTitle !== "Free";
+        if (normalizedMembershipPlan === "premium") return planKey === "elite" || section.title === "Elite";
+        return planKey !== "free" && section.title !== "Free";
     };
 
-    const getMembershipActionLabel = (sectionTitle) => {
+    const getMembershipActionLabel = (section) => {
+        const planKey = section.planKey || section.title;
+
         if (!isLoggedIn) return "Register Free";
-        return sectionTitle === "Elite" ? "Choose Elite" : "Choose Premium";
+        return planKey === "elite" || section.title === "Elite" ? "Choose Elite" : "Choose Premium";
     };
 
     useEffect(() => {
@@ -192,6 +256,22 @@ export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipP
         let ignore = false;
 
         const loadDynamicContent = async () => {
+            if (type === "membership") {
+                try {
+                    const res = await axios.get(`${API_BASE_URL}/api/payments/plans`);
+
+                    if (!ignore) {
+                        setDynamicSections(toMembershipSections(res.data.plans || {}));
+                    }
+                } catch (error) {
+                    console.error("Load membership plans failed:", error);
+                    if (!ignore) {
+                        setDynamicSections(null);
+                    }
+                }
+                return;
+            }
+
             if (!["success", "events", "muhurthalu", "contact"].includes(type)) {
                 setDynamicSections(null);
                 return;
@@ -272,17 +352,17 @@ export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipP
                                 ))}
                             </ul>
 
-                            {shouldShowMembershipAction(section.title) && (
+                            {shouldShowMembershipAction(section) && (
                                 <button
                                     type="button"
-                                    onClick={() => onMembershipAction?.(section.title)}
+                                    onClick={() => onMembershipAction?.(section.planKey || section.title)}
                                     className={`mt-5 w-full rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                                         section.featured
                                             ? "bg-[#800020] text-white hover:bg-[#5c0017]"
                                             : "border border-[#800020] text-[#800020] hover:bg-[#800020] hover:text-white"
                                     }`}
                                 >
-                                    {getMembershipActionLabel(section.title)}
+                                    {getMembershipActionLabel(section)}
                                 </button>
                             )}
                         </div>

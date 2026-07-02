@@ -96,16 +96,16 @@ const getExpectedGender = (registeringFor) => {
     return "";
 };
 
-const PROFILE_VIEW_LIMITS = {
-    free: 5,
-    premium: 20,
-    elite: 40,
+const DEFAULT_PLAN_SETTINGS = {
+    free: { profileViews: 5 },
+    premium: { profileViews: 20 },
+    elite: { profileViews: 40 },
 };
 
-const getProfileViewSummary = (profile) => {
+const getProfileViewSummary = (profile, plans = DEFAULT_PLAN_SETTINGS) => {
     const user = profile?.user && typeof profile.user === "object" ? profile.user : {};
     const plan = String(user.membershipPlan || profile?.membershipPlan || "free").toLowerCase();
-    const limit = PROFILE_VIEW_LIMITS[plan] ?? PROFILE_VIEW_LIMITS.free;
+    const limit = plans[plan]?.profileViews ?? plans.free?.profileViews ?? 5;
     const used = Math.max(user.profileViewsUsed || 0, user.viewedProfileIds?.length || 0);
     const pending = Math.max(limit - used, 0);
 
@@ -123,6 +123,7 @@ export default function AdminProfiles() {
     const [total, setTotal] = useState(0);
     const [isAssistedCreateOpen, setIsAssistedCreateOpen] = useState(false);
     const [historyProfile, setHistoryProfile] = useState(null);
+    const [planSettings, setPlanSettings] = useState(DEFAULT_PLAN_SETTINGS);
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const userRole = loggedInUser?.role?.toLowerCase?.().trim();
     const canReviewProfiles = ["admin", "oper_admin", "super_admin"].includes(userRole);
@@ -136,7 +137,18 @@ export default function AdminProfiles() {
 
     useEffect(() => {
         fetchPendingProfiles(1, "", "all");
+        fetchPlanSettings();
     }, []);
+
+    const fetchPlanSettings = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/payments/plans`);
+
+            setPlanSettings({ ...DEFAULT_PLAN_SETTINGS, ...(res.data.plans || {}) });
+        } catch (error) {
+            console.error("Load plan settings failed:", error);
+        }
+    };
 
     const fetchPendingProfiles = async (
         pageToLoad = page,
@@ -442,7 +454,7 @@ export default function AdminProfiles() {
                         {profiles.map((profile) => {
                             const hasReviewChanges = (profile.reviewChanges || []).length > 0;
                             const hasHistory = (profile.changeHistory || []).length > 0;
-                            const viewSummary = getProfileViewSummary(profile);
+                            const viewSummary = getProfileViewSummary(profile, planSettings);
 
                             return (
                             <div

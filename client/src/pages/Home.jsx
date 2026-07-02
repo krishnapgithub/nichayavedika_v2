@@ -31,6 +31,27 @@ const getOppositeGender = (gender) => {
     return "";
 };
 
+const defaultPlans = {
+    free: { amount: 0, durationDays: 0, profileViews: 5 },
+    premium: { amount: 1999, durationDays: 90, profileViews: 20 },
+    elite: { amount: 4999, durationDays: 180, profileViews: 40 },
+};
+
+const formatAmount = (amount) =>
+    `INR ${Number(amount || 0).toLocaleString("en-IN")}`;
+
+const formatDuration = (days) => {
+    const totalDays = Number(days || 0);
+
+    if (!totalDays) return "";
+    if (totalDays % 30 === 0) {
+        const months = totalDays / 30;
+        return `${months} ${months === 1 ? "Month" : "Months"}`;
+    }
+
+    return `${totalDays} Days`;
+};
+
 function Home() {
 
     const [likedProfiles, setLikedProfiles] = useState([]);
@@ -40,6 +61,7 @@ function Home() {
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [plans, setPlans] = useState(defaultPlans);
     const [homeFilters, setHomeFilters] = useState({
         search: "",
         gender: "",
@@ -70,6 +92,28 @@ function Home() {
         setProfiles([]);
         fetchProfiles();
     }, [oppositeGender, shouldLockGender, token]);
+
+    useEffect(() => {
+        let ignore = false;
+
+        const loadPlans = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/payments/plans`);
+
+                if (!ignore) {
+                    setPlans({ ...defaultPlans, ...(res.data.plans || {}) });
+                }
+            } catch (error) {
+                console.error("Load membership plans failed:", error);
+            }
+        };
+
+        loadPlans();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
 
 
     const fetchProfiles = async () => {
@@ -383,14 +427,14 @@ function Home() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">₹0</span>
+                                <span className="text-4xl font-bold">{formatAmount(plans.free.amount)}</span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-gray-600 text-sm">
                                 <li>✓ Create Profile</li>
                                 <li>✓ Browse Profiles</li>
                                 <li>✓ View Limited Details</li>
-                                <li>✓ Up to 5 Profile Views</li>
+                                <li>✓ Up to {plans.free.profileViews} Profile Views</li>
                                 <li>✗ Contact Details Hidden</li>
                             </ul>
 
@@ -415,14 +459,14 @@ function Home() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">₹1,999</span>
+                                <span className="text-4xl font-bold">{formatAmount(plans.premium.amount)}</span>
                                 <span className="block mt-1 text-white/95 text-sm font-medium tracking-[0.5px]">
-                                    / 3 Months
+                                    / {formatDuration(plans.premium.durationDays)}
                                 </span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-sm">
-                                <li>✓ Up to 20 Profile Views</li>
+                                <li>✓ Up to {plans.premium.profileViews} Profile Views</li>
                                 <li>✓ Send Interests</li>
                                 <li>✓ View Contact Details</li>
                                 <li>✓ Priority Listing</li>
@@ -442,15 +486,15 @@ function Home() {
                             </h3>
 
                             <div className="text-center mt-3">
-                                <span className="text-4xl font-bold">₹4,999</span>
+                                <span className="text-4xl font-bold">{formatAmount(plans.elite.amount)}</span>
                                 <span className="block mt-1 text-gray-500 text-sm">
-                                    /6 Months
+                                    / {formatDuration(plans.elite.durationDays)}
                                 </span>
                             </div>
 
                             <ul className="mt-5 space-y-2 text-gray-600 text-sm">
                                 <li>✓ Everything in Premium</li>
-                                <li>✓ Up to 40 Profile Views</li>
+                                <li>✓ Up to {plans.elite.profileViews} Profile Views</li>
                                 <li>✓ Dedicated Relationship Manager</li>
                                 <li>✓ Profile Boost</li>
                                 <li>✓ Exclusive Matches</li>

@@ -24,6 +24,11 @@ const paymentSchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
+        profileViews: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
         status: {
             type: String,
             enum: ["pending", "submitted", "success", "failed", "cancelled"],

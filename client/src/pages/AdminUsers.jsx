@@ -37,15 +37,15 @@ const formatChanges = (changes = []) =>
         ? changes.map((change) => `${change.field}: ${change.from} -> ${change.to}`).join("; ")
         : "-";
 
-const PROFILE_VIEW_LIMITS = {
-    free: 5,
-    premium: 20,
-    elite: 40,
+const DEFAULT_PLAN_SETTINGS = {
+    free: { profileViews: 5 },
+    premium: { profileViews: 20 },
+    elite: { profileViews: 40 },
 };
 
-const getProfileViewSummary = (user) => {
+const getProfileViewSummary = (user, plans = DEFAULT_PLAN_SETTINGS) => {
     const plan = String(user?.membershipPlan || "free").toLowerCase();
-    const limit = PROFILE_VIEW_LIMITS[plan] ?? PROFILE_VIEW_LIMITS.free;
+    const limit = plans[plan]?.profileViews ?? plans.free?.profileViews ?? 5;
     const used = Math.max(user?.profileViewsUsed || 0, user?.viewedProfileIds?.length || 0);
     const pending = Math.max(limit - used, 0);
 
@@ -90,6 +90,7 @@ export default function AdminUsers() {
         to: new Date().toISOString().slice(0, 10),
     });
     const [quickSearch, setQuickSearch] = useState("");
+    const [planSettings, setPlanSettings] = useState(DEFAULT_PLAN_SETTINGS);
 
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const token = localStorage.getItem("token");
@@ -139,6 +140,16 @@ export default function AdminUsers() {
         }
     };
 
+    const fetchPlanSettings = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/payments/plans`);
+
+            setPlanSettings({ ...DEFAULT_PLAN_SETTINGS, ...(res.data.plans || {}) });
+        } catch (error) {
+            console.error("Load plan settings failed:", error);
+        }
+    };
+
     const fetchLogs = async (filters = logFilters) => {
         if (!isSuperAdmin || !token) return;
 
@@ -177,6 +188,7 @@ export default function AdminUsers() {
 
     useEffect(() => {
         fetchUsers();
+        fetchPlanSettings();
     }, []);
 
     useEffect(() => {
@@ -490,7 +502,7 @@ export default function AdminUsers() {
                                                 {isSuperAdmin && (
                                                     <td className="p-3">
                                                         {(() => {
-                                                            const viewSummary = getProfileViewSummary(u);
+                                                            const viewSummary = getProfileViewSummary(u, planSettings);
 
                                                             return (
                                                                 <div className="min-w-[120px] rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-gray-700">
@@ -692,7 +704,7 @@ export default function AdminUsers() {
                                             {isSuperAdmin && (
                                                 <div className="rounded-xl bg-amber-50 px-3 py-3 text-sm font-semibold text-gray-700">
                                                     {(() => {
-                                                        const viewSummary = getProfileViewSummary(u);
+                                                        const viewSummary = getProfileViewSummary(u, planSettings);
 
                                                         return (
                                                             <>

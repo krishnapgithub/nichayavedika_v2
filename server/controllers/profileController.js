@@ -6,13 +6,9 @@ import bcrypt from "bcryptjs";
 import fs from "fs/promises";
 
 import { getSafeProfile } from "../utils/profilePrivacy.js";
+import { getMembershipPlan } from "../services/membershipPlanService.js";
 
 const getUploadedPhotoPath = (file) => (file ? `uploads/${file.filename}` : "");
-const PROFILE_VIEW_LIMITS = {
-    free: 5,
-    premium: 20,
-    elite: 40,
-};
 const SUPPORT_PHONE = "+91 XXXXX XXXXX";
 
 const toBoolean = (value, defaultValue = true) => {
@@ -43,19 +39,23 @@ const hideProfilePhotos = (profile) => {
 const applyPhotoConsent = (profile, user = null) =>
     canSeeProfilePhotos(profile, user) ? profile : hideProfilePhotos(profile);
 
-const getProfileViewLimit = (membershipPlan = "free") =>
-    PROFILE_VIEW_LIMITS[String(membershipPlan || "free").toLowerCase()] ?? PROFILE_VIEW_LIMITS.free;
+const getProfileViewLimit = async (membershipPlan = "free") => {
+    const plan = await getMembershipPlan(membershipPlan);
+    const freePlan = plan ? null : await getMembershipPlan("free");
 
-const getLimitReachedMessage = (membershipPlan = "free") => {
+    return plan?.profileViews ?? freePlan?.profileViews ?? 5;
+};
+
+const getLimitReachedMessage = async (membershipPlan = "free") => {
     const plan = String(membershipPlan || "free").toLowerCase();
-    const limit = getProfileViewLimit(plan);
+    const limit = await getProfileViewLimit(plan);
     const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
 
     return `You have reached your ${planLabel} plan limit of ${limit} profile views as per the rate card. Please upgrade your membership or contact us at ${SUPPORT_PHONE}.`;
 };
 
 const registerProfileView = async (user, profileId) => {
-    const limit = getProfileViewLimit(user.membershipPlan);
+    const limit = await getProfileViewLimit(user.membershipPlan);
     const viewedProfileIds = (user.viewedProfileIds || []).map((id) => id.toString());
     const profileIdText = profileId.toString();
     const alreadyViewed = viewedProfileIds.includes(profileIdText);
@@ -67,7 +67,7 @@ const registerProfileView = async (user, profileId) => {
             limit,
             usedViews,
             remainingViews: 0,
-            message: getLimitReachedMessage(user.membershipPlan),
+            message: await getLimitReachedMessage(user.membershipPlan),
         };
     }
 
@@ -601,6 +601,8 @@ export const getProfileById = async (req, res) => {
             }
         }
 
+        const currentProfileViewLimit = await getProfileViewLimit(currentUser.membershipPlan);
+
         // Admin / paid members see full details
         if (isOwnProfile || isAdmin || isPaidMember) {
             return res.json({
@@ -610,7 +612,7 @@ export const getProfileById = async (req, res) => {
                     ? null
                     : {
                         plan: currentUser.membershipPlan || "free",
-                        limit: getProfileViewLimit(currentUser.membershipPlan),
+                        limit: currentProfileViewLimit,
                         usedViews: currentUser.profileViewsUsed || 0,
                         remainingViews: currentUser.profileViewsRemaining,
                     },
@@ -638,7 +640,7 @@ export const getProfileById = async (req, res) => {
             },
             profileViewLimit: {
                 plan: currentUser.membershipPlan || "free",
-                limit: getProfileViewLimit(currentUser.membershipPlan),
+                limit: currentProfileViewLimit,
                 usedViews: currentUser.profileViewsUsed || 0,
                 remainingViews: currentUser.profileViewsRemaining,
             },
@@ -681,7 +683,7 @@ export const checkProfileViewAccess = async (req, res) => {
             });
         }
 
-        const limit = getProfileViewLimit(user.membershipPlan);
+        const limit = await getProfileViewLimit(user.membershipPlan);
         const usedViews = Math.max(user.profileViewsUsed || 0, user.viewedProfileIds?.length || 0);
 
         if (usedViews >= limit) {
@@ -689,7 +691,7 @@ export const checkProfileViewAccess = async (req, res) => {
                 success: false,
                 canView: false,
                 code: "PROFILE_VIEW_LIMIT_REACHED",
-                message: getLimitReachedMessage(user.membershipPlan),
+                message: await getLimitReachedMessage(user.membershipPlan),
                 plan: user.membershipPlan || "free",
                 limit,
                 usedViews,
