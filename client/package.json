@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/clean.ps1 -Client",
+    "clean:deps": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/clean.ps1 -Client -NodeModules",
     "lint": "eslint .",
     "preview": "vite preview"
   },

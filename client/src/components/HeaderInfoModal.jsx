@@ -227,8 +227,8 @@ export default function HeaderInfoModal({ type, onClose, isLoggedIn, membershipP
     if (!content) return null;
 
     return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto bg-black/55 px-4 py-6">
-            <div className="relative max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <div className={`fixed inset-x-0 bottom-0 z-[10000] flex items-start justify-center overflow-y-auto bg-black/55 px-4 py-6 ${isLoggedIn ? "top-[7.75rem] lg:top-[11.5rem]" : "top-[7.75rem]"}`}>
+            <div className="relative max-h-[calc(100vh-9.5rem)] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl lg:max-h-[calc(100vh-13.25rem)]">
                 <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-rose-100 bg-white px-5 py-4">
                     <div>
                         <h2 className="text-2xl font-bold text-[#800020]">{content.title}</h2>

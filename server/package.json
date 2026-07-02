@@ -5,6 +5,10 @@
     "main": "server.js",
     "scripts": {
         "dev": "nodemon server.js",
+        "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/clean.ps1 -Server",
+        "clean:deps": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/clean.ps1 -Server -NodeModules",
+        "delete:non-admin-users": "node scripts/deleteNonAdminUsers.js",
+        "delete:user": "node scripts/deleteUserAndProfile.js",
         "start": "node server.js"
     },
     "keywords": [],

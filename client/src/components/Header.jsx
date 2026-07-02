@@ -356,7 +356,7 @@ export default function Header() {
             </div>
 
             <header className="relative z-[10050] bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:relative lg:-top-2">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:relative">
                     <div className="flex h-16 items-center justify-between gap-3 sm:h-20">
                         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
 
@@ -377,7 +377,7 @@ export default function Header() {
 
                             {/* Title & Subtitle */}
                             <div className="min-w-0">
-                                <h1 className="truncate text-xl font-bold leading-none text-[#800020] sm:text-3xl">
+                                <h1 className="truncate text-xl font-bold leading-tight text-[#800020] sm:text-3xl">
                                     నిశ్చయ వేదిక
                                 </h1>
 
